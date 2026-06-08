@@ -1,0 +1,57 @@
+{
+  "@@locale": "uk",
+
+  "appTitle": "Тріумф",
+  "@appTitle": { "description": "Application name" },
+
+  "tabTeam": "Команда",
+  "@tabTeam": { "description": "Bottom nav: Team tab" },
+
+  "tabRating": "Рейтинг",
+  "@tabRating": { "description": "Bottom nav: Rating tab" },
+
+  "tabBelts": "Пояси",
+  "@tabBelts": { "description": "Bottom nav: Belts tab" },
+
+  "tabSettings": "Налаштування",
+  "@tabSettings": { "description": "Bottom nav: Settings tab" },
+
+  "searchByLastName": "Пошук за прізвищем...",
+  "@searchByLastName": { "description": "Search field hint in team list" },
+
+  "filterBelt": "Пояс",
+  "@filterBelt": { "description": "Belt filter chip label" },
+
+  "filterBirthYear": "Рік н.",
+  "@filterBirthYear": { "description": "Birth year filter chip label" },
+
+  "filterCoach": "Тренер",
+  "@filterCoach": { "description": "Coach filter chip label" },
+
+  "emptyTeamCoach": "Команда порожня\nДодайте першого спортсмена або\nімпортуйте список з CSV у Налаштуваннях",
+  "@emptyTeamCoach": { "description": "Empty state message for coach" },
+
+  "emptyTeamParent": "Список порожній",
+  "@emptyTeamParent": { "description": "Empty state message for parent" },
+
+  "addAthlete": "Додати спортсмена",
+  "@addAthlete": { "description": "FAB / action label to add athlete" },
+
+  "labelPoints": "балів",
+  "@labelPoints": { "description": "Points unit label" },
+
+  "labelBirthYear": "{year} р.н.",
+  "@labelBirthYear": {
+    "description": "Birth year with suffix",
+    "placeholders": { "year": { "type": "int" } }
+  },
+
+  "roleCoach": "Тренер",
+  "@roleCoach": { "description": "Role: coach" },
+
+  "roleParent": "Батьки",
+  "@roleParent": { "description": "Role: parent" },
+
+  "roleAthlete": "Спортсмен",
+  "@roleAthlete": { "description": "Role: athlete" }
+}

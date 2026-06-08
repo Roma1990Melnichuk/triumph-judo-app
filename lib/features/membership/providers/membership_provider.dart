@@ -1,0 +1,106 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../../core/models/membership_model.dart';
+import '../../auth/providers/auth_provider.dart';
+
+// Single membership per athlete — Firestore doc ID = athleteId
+final membershipByAthleteProvider =
+    StreamProvider.family<MembershipModel?, String>((ref, athleteId) {
+  final db = ref.watch(firestoreProvider);
+  return db
+      .collection('memberships')
+      .doc(athleteId)
+      .snapshots()
+      .map((s) => s.exists && s.data() != null
+          ? MembershipModel.fromMap(s.data()!, athleteId)
+          : null);
+});
+
+// All memberships — for coach overview
+final allMembershipsProvider = StreamProvider<List<MembershipModel>>((ref) {
+  final db = ref.watch(firestoreProvider);
+  return db.collection('memberships').snapshots().map((s) =>
+      s.docs.map((d) => MembershipModel.fromMap(d.data(), d.id)).toList());
+});
+
+// athleteId → MembershipStatus map for team list indicators
+final membershipStatusMapProvider =
+    Provider<Map<String, MembershipStatus>>((ref) {
+  final all = ref.watch(allMembershipsProvider).value ?? [];
+  return {for (final m in all) m.athleteId: m.status};
+});
+
+// athleteId → endDate map for team list cards
+final membershipEndDateMapProvider =
+    Provider<Map<String, DateTime>>((ref) {
+  final all = ref.watch(allMembershipsProvider).value ?? [];
+  return {for (final m in all) m.athleteId: m.endDate};
+});
+
+// Counts for coach home overview card
+final membershipSummaryProvider =
+    Provider<({int active, int expiringSoon, int expired})>((ref) {
+  final all = ref.watch(allMembershipsProvider).value ?? [];
+  return (
+    active: all.where((m) => m.status == MembershipStatus.active).length,
+    expiringSoon: all.where((m) => m.isExpiringSoon).length,
+    expired: all.where((m) => m.isExpired).length,
+  );
+});
+
+// Current parent user's child membership
+final myChildMembershipProvider = StreamProvider<MembershipModel?>((ref) {
+  final user = ref.watch(currentUserModelProvider).value;
+  if (user == null || user.isCoach) return Stream.value(null);
+  final childId =
+      user.childIds.isNotEmpty ? user.childIds.first : user.childId;
+  if (childId == null) return Stream.value(null);
+  final db = ref.watch(firestoreProvider);
+  return db
+      .collection('memberships')
+      .doc(childId)
+      .snapshots()
+      .map((s) => s.exists && s.data() != null
+          ? MembershipModel.fromMap(s.data()!, childId)
+          : null);
+});
+
+// CRUD notifier
+class MembershipNotifier extends StateNotifier<AsyncValue<void>> {
+  MembershipNotifier(this._db) : super(const AsyncValue.data(null));
+
+  final FirebaseFirestore _db;
+
+  Future<void> setMembership({
+    required String athleteId,
+    required String planName,
+    required DateTime startDate,
+    required DateTime endDate,
+    required double amount,
+    int? totalSessions,
+    String currency = 'UAH',
+  }) async {
+    state = const AsyncValue.loading();
+    try {
+      final data = <String, dynamic>{
+        'athleteId': athleteId,
+        'planName': planName,
+        'startDate': Timestamp.fromDate(startDate),
+        'endDate': Timestamp.fromDate(endDate),
+        'amount': amount,
+        'currency': currency,
+        'sessionsUsed': 0,
+      };
+      if (totalSessions != null) data['totalSessions'] = totalSessions;
+      await _db.collection('memberships').doc(athleteId).set(data);
+      state = const AsyncValue.data(null);
+    } catch (e, st) {
+      state = AsyncValue.error(e, st);
+      rethrow;
+    }
+  }
+}
+
+final membershipNotifierProvider =
+    StateNotifierProvider<MembershipNotifier, AsyncValue<void>>(
+        (ref) => MembershipNotifier(ref.watch(firestoreProvider)));

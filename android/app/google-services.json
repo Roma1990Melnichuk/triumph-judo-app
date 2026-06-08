@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "1056792883157",
+    "project_id": "judo-club-2a7b3",
+    "storage_bucket": "judo-club-2a7b3.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:1056792883157:android:d3c9a29a97b56ca906d75c",
+        "android_client_info": {
+          "package_name": "com.judoclub.judo_app"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDvMj8C6Dw5Kcm3JhITfr599eyeThEc5o0"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

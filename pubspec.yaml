@@ -1,0 +1,70 @@
+name: judo_app
+description: Додаток для управління дзюдо-клубом
+publish_to: 'none'
+version: 1.0.0+1
+
+environment:
+  sdk: '>=3.3.0 <4.0.0'
+
+dependencies:
+  flutter:
+    sdk: flutter
+  flutter_localizations:
+    sdk: flutter
+  intl: ^0.20.2
+  firebase_core: ^3.6.0
+  firebase_auth: ^5.3.1
+  cloud_firestore: ^5.4.4
+  firebase_storage: ^12.3.2
+  firebase_analytics: ^11.3.5
+  firebase_crashlytics: ^4.1.3
+  firebase_messaging: ^15.1.3
+  flutter_riverpod: ^2.6.1
+  go_router: ^14.3.0
+  image_picker: ^1.1.2
+  cached_network_image: ^3.4.1
+  uuid: ^4.5.1
+  flutter_slidable: ^3.1.1
+  file_picker: ^9.0.0
+  csv: ^6.0.0
+  connectivity_plus: ^6.0.0
+  google_fonts: ^6.2.1
+  webview_flutter: ^4.10.0
+  fl_chart: ^0.69.0
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^4.0.0
+  fake_cloud_firestore: ^3.0.3
+  flutter_launcher_icons: ^0.14.3
+  flutter_native_splash: ^2.4.3
+  image: ^4.2.0
+
+flutter_launcher_icons:
+  android: "launcher_icon"
+  ios: true
+  image_path_android: "assets/images/triumph_icon_generated.png"
+  image_path_ios: "assets/images/triumph_logo.png"
+  min_sdk_android: 21
+  # Adaptive icon for Android 8+ (squircle shape, full text visible)
+  adaptive_icon_background: "#D50000"
+  adaptive_icon_foreground: "assets/images/triumph_icon_fg.png"
+  web:
+    generate: false
+
+flutter_native_splash:
+  color: "#050000"
+  image: assets/images/triumph_logo.png
+  android: true
+  ios: false
+  android_gravity: center
+  fullscreen: false
+
+flutter:
+  uses-material-design: true
+  assets:
+    - assets/images/
+    - assets/belts/
+    - assets/achievements/
+    - assets/icons/

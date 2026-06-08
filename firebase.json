@@ -1,0 +1,28 @@
+{
+  "firestore": {
+    "indexes": "firestore.indexes.json"
+  },
+  "flutter": {
+    "platforms": {
+      "android": {
+        "default": {
+          "projectId": "judo-club-2a7b3",
+          "appId": "1:1056792883157:android:d3c9a29a97b56ca906d75c",
+          "fileOutput": "android/app/google-services.json"
+        }
+      },
+      "dart": {
+        "lib/firebase_options.dart": {
+          "projectId": "judo-club-2a7b3",
+          "configurations": {
+            "android": "1:1056792883157:android:d3c9a29a97b56ca906d75c",
+            "ios": "1:1056792883157:ios:953429c9bd40442a06d75c",
+            "macos": "1:1056792883157:ios:953429c9bd40442a06d75c",
+            "web": "1:1056792883157:web:65ebcc1774658de906d75c",
+            "windows": "1:1056792883157:web:c87288eb27be542f06d75c"
+          }
+        }
+      }
+    }
+  }
+}
