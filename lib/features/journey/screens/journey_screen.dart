@@ -336,7 +336,7 @@ class _HeroSection extends StatelessWidget {
                     Row(
                       crossAxisAlignment: CrossAxisAlignment.end,
                       children: [
-                        const Text('🔥', style: TextStyle(fontSize: 26)),
+                        TriumphIcon(TIcon.flame3d, size: 26),
                         const SizedBox(width: 6),
                         Text(
                           '$streak',
@@ -451,6 +451,46 @@ class _JudokaAvatar extends StatelessWidget {
     required this.shimmerCtrl,
   });
 
+  static List<BoxShadow> _shadowsFor(_GlowLevel level) {
+    switch (level) {
+      case _GlowLevel.none:
+        return [];
+      case _GlowLevel.orange:
+        return [
+          BoxShadow(color: Color(0xFFFF6B00).withValues(alpha: 0.35), blurRadius: 20, spreadRadius: 2),
+        ];
+      case _GlowLevel.faintGold:
+        return [
+          BoxShadow(color: Color(0xFFFFD21A).withValues(alpha: 0.28), blurRadius: 24, spreadRadius: 2),
+        ];
+      case _GlowLevel.gold:
+        return [
+          BoxShadow(color: Color(0xFFFFD21A).withValues(alpha: 0.42), blurRadius: 28, spreadRadius: 4),
+        ];
+      case _GlowLevel.strongGold:
+        return [
+          BoxShadow(color: Color(0xFFFFD21A).withValues(alpha: 0.55), blurRadius: 32, spreadRadius: 6),
+          BoxShadow(color: Color(0xFFFF6B00).withValues(alpha: 0.22), blurRadius: 16, spreadRadius: 2),
+        ];
+      case _GlowLevel.redGold:
+        return [
+          BoxShadow(color: Color(0xFFFFD21A).withValues(alpha: 0.55), blurRadius: 32, spreadRadius: 6),
+          BoxShadow(color: Color(0xFFFF2020).withValues(alpha: 0.32), blurRadius: 20, spreadRadius: 4),
+        ];
+      case _GlowLevel.master:
+        return [
+          BoxShadow(color: Color(0xFFAA00FF).withValues(alpha: 0.42), blurRadius: 36, spreadRadius: 8),
+          BoxShadow(color: Color(0xFFFFD21A).withValues(alpha: 0.26), blurRadius: 20, spreadRadius: 2),
+        ];
+      case _GlowLevel.legendary:
+        return [
+          BoxShadow(color: Color(0xFFAA00FF).withValues(alpha: 0.62), blurRadius: 48, spreadRadius: 12),
+          BoxShadow(color: Color(0xFFFFD21A).withValues(alpha: 0.46), blurRadius: 28, spreadRadius: 6),
+          BoxShadow(color: Color(0xFFFF6B00).withValues(alpha: 0.26), blurRadius: 16, spreadRadius: 2),
+        ];
+    }
+  }
+
   static String _assetFor(_GlowLevel level) {
     switch (level) {
       case _GlowLevel.none:       return 'assets/progress/pr1.png';
@@ -499,10 +539,24 @@ class _JudokaAvatar extends StatelessWidget {
       );
     }
 
-    return Transform.scale(
-      scale: scale,
-      alignment: Alignment.bottomCenter,
-      child: img,
+    final shadows = _shadowsFor(glowLevel);
+    if (shadows.isEmpty) {
+      return Transform.scale(
+        scale: scale,
+        alignment: Alignment.bottomCenter,
+        child: img,
+      );
+    }
+    return Container(
+      decoration: BoxDecoration(
+        boxShadow: shadows,
+        shape: BoxShape.circle,
+      ),
+      child: Transform.scale(
+        scale: scale,
+        alignment: Alignment.bottomCenter,
+        child: img,
+      ),
     );
   }
 

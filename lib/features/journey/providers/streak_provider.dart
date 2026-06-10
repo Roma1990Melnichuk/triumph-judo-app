@@ -57,6 +57,8 @@ final streakDataProvider = Provider<StreakData>((ref) {
 
   // sessions are already sorted date DESC (most recent first)
   int current = 0;
+  int best = 0;
+  int running = 0;
   int total = 0;
   bool streakBroken = false;
 
@@ -65,13 +67,15 @@ final streakDataProvider = Provider<StreakData>((ref) {
     if (present) {
       total++;
       if (!streakBroken) current++;
+      running++;
+      if (running > best) best = running;
     } else {
       streakBroken = true;
+      running = 0;
     }
   }
 
-  // best = current streak (no stored history available yet)
-  return (current: current, best: current, total: total);
+  return (current: current, best: best, total: total);
 });
 
 // ── dailyMessageProvider ──────────────────────────────────────────────────────

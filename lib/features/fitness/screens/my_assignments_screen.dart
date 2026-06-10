@@ -1,4 +1,5 @@
 
+import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -238,13 +239,19 @@ class _MyAssignmentsScreenState extends ConsumerState<MyAssignmentsScreen> {
     FitnessAssignment a,
     String childId,
   ) {
-    return logs
+    final relevant = logs
         .where((l) =>
             l.exerciseId == a.exerciseId &&
             l.childId == childId &&
             !l.date.isBefore(a.startDate) &&
             !l.date.isAfter(a.deadline))
-        .fold(0.0, (acc, l) => acc + l.value);
+        .toList();
+    if (relevant.isEmpty) return 0.0;
+    if (a.isCumulative) {
+      return relevant.fold(0.0, (acc, l) => acc + l.value);
+    } else {
+      return relevant.map((l) => l.value).reduce(max);
+    }
   }
 }
 
@@ -304,10 +311,35 @@ class _ActiveAssignmentCard extends StatelessWidget {
                             fontWeight: FontWeight.w700, fontSize: 15),
                       ),
                       const SizedBox(height: 2),
-                      Text(
-                        '${_fmtShort(assignment.startDate)} – ${_fmtShort(assignment.deadline)}',
-                        style: const TextStyle(
-                            color: AppColors.textSecondary, fontSize: 12),
+                      Row(
+                        children: [
+                          Text(
+                            '${_fmtShort(assignment.startDate)} – ${_fmtShort(assignment.deadline)}',
+                            style: const TextStyle(
+                                color: AppColors.textSecondary, fontSize: 12),
+                          ),
+                          const SizedBox(width: 6),
+                          Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 1),
+                            decoration: BoxDecoration(
+                              color: assignment.isCumulative
+                                  ? AppColors.primary.withValues(alpha: 0.15)
+                                  : AppColors.goldMedal.withValues(alpha: 0.15),
+                              borderRadius: BorderRadius.circular(4),
+                            ),
+                            child: Text(
+                              assignment.isCumulative ? 'СУМА' : 'РЕКОРД',
+                              style: TextStyle(
+                                fontSize: 9,
+                                fontWeight: FontWeight.w700,
+                                letterSpacing: 0.5,
+                                color: assignment.isCumulative
+                                    ? AppColors.primary
+                                    : AppColors.goldMedal,
+                              ),
+                            ),
+                          ),
+                        ],
                       ),
                     ],
                   ),

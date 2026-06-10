@@ -199,6 +199,7 @@ class FitnessExerciseDetailScreen extends ConsumerWidget {
                     logs: logs,
                     goal: goal,
                     unit: exerciseUnit,
+                    peakValue: best,
                   ),
                 ],
 
@@ -460,11 +461,13 @@ class _ProgressChart extends StatelessWidget {
     required this.logs,
     required this.goal,
     required this.unit,
+    required this.peakValue,
   });
 
   final List<FitnessLog> logs;
   final FitnessGoal? goal;
   final String unit;
+  final double? peakValue;
 
   @override
   Widget build(BuildContext context) {
@@ -599,12 +602,15 @@ class _ProgressChart extends StatelessWidget {
                 barWidth: 2.5,
                 dotData: FlDotData(
                   show: true,
-                  getDotPainter: (spot, _, __, ___) => FlDotCirclePainter(
-                    radius: 3,
-                    color: AppColors.primary,
-                    strokeWidth: 1.5,
-                    strokeColor: AppColors.background,
-                  ),
+                  getDotPainter: (spot, _, __, ___) {
+                    final isPeak = peakValue != null && spot.y == peakValue;
+                    return FlDotCirclePainter(
+                      radius: isPeak ? 5.5 : 3,
+                      color: isPeak ? AppColors.goldMedal : AppColors.primary,
+                      strokeWidth: isPeak ? 2 : 1.5,
+                      strokeColor: AppColors.background,
+                    );
+                  },
                 ),
                 belowBarData: BarAreaData(
                   show: true,

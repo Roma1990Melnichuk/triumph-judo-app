@@ -84,8 +84,11 @@ class AssignmentDetailScreen extends ConsumerWidget {
         .toList()
       ..sort((a, b) => a.date.compareTo(b.date));
 
-    final totalProgress =
-        assignmentLogs.fold<double>(0.0, (acc, l) => acc + l.value);
+    final totalProgress = assignmentLogs.isEmpty
+        ? 0.0
+        : assignment.isCumulative
+            ? assignmentLogs.fold<double>(0.0, (acc, l) => acc + l.value)
+            : assignmentLogs.map((l) => l.value).reduce(max);
     final target = assignment.targetValue;
     final pct = target > 0 ? (totalProgress / target).clamp(0.0, 1.0) : 0.0;
     final pctInt = (pct * 100).round();
@@ -183,11 +186,34 @@ class AssignmentDetailScreen extends ConsumerWidget {
                                 fontWeight: FontWeight.bold),
                           ),
                           const SizedBox(height: 4),
-                          Text(
-                            '${fmtVal(target)} ${assignment.exerciseUnit} · '
-                            '${_dateFmt.format(assignment.startDate)} – ${_dateFmt.format(assignment.deadline)}',
-                            style: const TextStyle(
-                                color: Colors.white70, fontSize: 12),
+                          Row(
+                            children: [
+                              Flexible(
+                                child: Text(
+                                  '${fmtVal(target)} ${assignment.exerciseUnit} · '
+                                  '${_dateFmt.format(assignment.startDate)} – ${_dateFmt.format(assignment.deadline)}',
+                                  style: const TextStyle(
+                                      color: Colors.white70, fontSize: 12),
+                                ),
+                              ),
+                              const SizedBox(width: 8),
+                              Container(
+                                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                                decoration: BoxDecoration(
+                                  color: Colors.white.withValues(alpha: 0.18),
+                                  borderRadius: BorderRadius.circular(5),
+                                ),
+                                child: Text(
+                                  assignment.isCumulative ? 'СУМА' : 'РЕКОРД',
+                                  style: const TextStyle(
+                                    fontSize: 9,
+                                    fontWeight: FontWeight.w700,
+                                    letterSpacing: 0.8,
+                                    color: Colors.white,
+                                  ),
+                                ),
+                              ),
+                            ],
                           ),
                         ],
                       ),
@@ -233,7 +259,7 @@ class AssignmentDetailScreen extends ConsumerWidget {
               children: [
                 Expanded(
                     child: _StatCard(
-                  label: 'Поточний прогрес',
+                  label: assignment.isCumulative ? 'Поточний прогрес' : 'Найкращий результат',
                   value: '${fmtVal(totalProgress)}',
                   unit: assignment.exerciseUnit,
                   color: AppColors.primary,
@@ -373,15 +399,20 @@ class AssignmentDetailScreen extends ConsumerWidget {
   }
 
   double assignmentLogs(WidgetRef ref, FitnessAssignment assignment) {
-    final logs =
-        ref.read(childFitnessLogsProvider(childId)).value ?? [];
-    return logs
+    final logs = ref.read(childFitnessLogsProvider(childId)).value ?? [];
+    final relevant = logs
         .where((l) =>
             l.exerciseId == assignment.exerciseId &&
             l.childId == childId &&
             !l.date.isBefore(assignment.startDate) &&
             !l.date.isAfter(assignment.deadline))
-        .fold(0.0, (acc, l) => acc + l.value);
+        .toList();
+    if (relevant.isEmpty) return 0.0;
+    if (assignment.isCumulative) {
+      return relevant.fold(0.0, (acc, l) => acc + l.value);
+    } else {
+      return relevant.map((l) => l.value).reduce(max);
+    }
   }
 }
 
@@ -436,21 +467,27 @@ class _ProgressChart extends StatelessWidget {
     final end = assignment.deadline;
     final totalDays = end.difference(start).inDays.clamp(1, 99999);
 
-    // Build cumulative progress points
-    double cumulative = 0;
+    // Build progress points — cumulative sum or individual peak values
     final progressSpots = <FlSpot>[];
-    for (final log in logs) {
-      cumulative += log.value;
-      final dayX =
-          log.date.difference(start).inDays.toDouble().clamp(0.0, totalDays.toDouble());
-      progressSpots.add(FlSpot(dayX, cumulative));
+    final peakValue = logs.map((l) => l.value).reduce(max);
+    if (assignment.isCumulative) {
+      double cumulative = 0;
+      for (final log in logs) {
+        cumulative += log.value;
+        final dayX = log.date.difference(start).inDays.toDouble().clamp(0.0, totalDays.toDouble());
+        progressSpots.add(FlSpot(dayX, cumulative));
+      }
+    } else {
+      for (final log in logs) {
+        final dayX = log.date.difference(start).inDays.toDouble().clamp(0.0, totalDays.toDouble());
+        progressSpots.add(FlSpot(dayX, log.value));
+      }
     }
 
-    // Target line: 0 → target over totalDays
-    final targetSpots = [
-      const FlSpot(0, 0),
-      FlSpot(totalDays.toDouble(), assignment.targetValue),
-    ];
+    // Target line
+    final targetSpots = assignment.isCumulative
+        ? [const FlSpot(0, 0), FlSpot(totalDays.toDouble(), assignment.targetValue)]
+        : [const FlSpot(0, assignment.targetValue), FlSpot(totalDays.toDouble(), assignment.targetValue)];
 
     final maxY = max(assignment.targetValue, totalProgress) * 1.1;
 
@@ -541,7 +578,18 @@ class _ProgressChart extends StatelessWidget {
                     isCurved: true,
                     color: AppColors.primary,
                     barWidth: 2.5,
-                    dotData: const FlDotData(show: false),
+                    dotData: FlDotData(
+                      show: !assignment.isCumulative,
+                      getDotPainter: (spot, _, __, ___) {
+                        final isPeak = spot.y == peakValue;
+                        return FlDotCirclePainter(
+                          radius: isPeak ? 5.5 : 3,
+                          color: isPeak ? AppColors.goldMedal : AppColors.primary,
+                          strokeWidth: isPeak ? 2 : 1.5,
+                          strokeColor: AppColors.background,
+                        );
+                      },
+                    ),
                     belowBarData: BarAreaData(
                       show: true,
                       color: AppColors.primary.withValues(alpha: 0.1),
