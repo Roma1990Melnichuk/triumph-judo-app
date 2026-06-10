@@ -7,6 +7,7 @@ import '../../../core/models/membership_model.dart';
 import '../providers/membership_provider.dart';
 import '../../../shared/widgets/triumph_emblem.dart';
 import '../../../shared/widgets/triumph_icon.dart';
+import '../../../shared/widgets/premium_widgets.dart';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Premium Academy Pass hero card — for parent/athlete home screen
@@ -66,17 +67,8 @@ class _AcademyPassCardState extends ConsumerState<AcademyPassCard>
 
   // ── STATE 4: NO MEMBERSHIP ────────────────────────────────────────────────
   Widget _emptyCard(BuildContext context) {
-    return Container(
+    return GlassCard(
       padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        color: AppColors.surface,
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(
-          color: AppColors.surface3,
-          width: 1.5,
-          strokeAlign: BorderSide.strokeAlignInside,
-        ),
-      ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [

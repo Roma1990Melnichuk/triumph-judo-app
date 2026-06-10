@@ -104,12 +104,7 @@ class _AddAssignmentResultScreenState
     final logs = logsAsync.value ?? [];
 
     final currentProgress = assignment != null
-        ? logs
-            .where((l) =>
-                l.exerciseId == widget.exerciseId &&
-                !l.date.isBefore(assignment.startDate) &&
-                !l.date.isAfter(assignment.deadline))
-            .fold<double>(0.0, (acc, l) => acc + l.value)
+        ? assignmentProgress(logs, assignment, widget.childId)
         : 0.0;
 
     final target = assignment?.targetValue ?? 0.0;

@@ -105,12 +105,10 @@ class AssignmentGroupProgressScreen extends ConsumerWidget {
         .where((c) => assignment.assignedChildIds.contains(c.id))
         .toList();
 
-    // Per-athlete progress
+    // Per-athlete progress — FIT-01 Fix: Use centralized helper for Peak/Cumulative logic
     final Map<String, double> athleteProgress = {};
     for (final childId in assignment.assignedChildIds) {
-      athleteProgress[childId] = logs
-          .where((l) => l.childId == childId)
-          .fold(0.0, (acc, l) => acc + l.value);
+      athleteProgress[childId] = assignmentProgress(logs, assignment, childId);
     }
 
     final target = assignment.targetValue;

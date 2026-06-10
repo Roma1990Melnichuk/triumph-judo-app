@@ -5,6 +5,7 @@ import '../../core/constants/app_colors.dart';
 import '../../features/auth/providers/auth_provider.dart';
 import '../animations/app_animations.dart';
 import 'offline_banner.dart';
+import 'premium_widgets.dart';
 
 class MainScaffold extends ConsumerStatefulWidget {
   const MainScaffold({super.key, required this.child});
@@ -185,23 +186,10 @@ class _NavItem extends StatelessWidget {
       mainAxisAlignment: MainAxisAlignment.center,
       mainAxisSize: MainAxisSize.min,
       children: [
-        // Glow container when active
-        AnimatedContainer(
-          duration: const Duration(milliseconds: 200),
-          padding: const EdgeInsets.all(4),
-          decoration: active
-              ? BoxDecoration(
-                  borderRadius: BorderRadius.circular(10),
-                  boxShadow: [
-                    BoxShadow(
-                      color: AppColors.orange.withValues(alpha: 0.35),
-                      blurRadius: 12,
-                      spreadRadius: 0,
-                    ),
-                  ],
-                )
-              : null,
-          child: ColorFiltered(
+        GlowIcon(
+          isActive: active,
+          color: AppColors.orange,
+          icon: ColorFiltered(
             colorFilter: active
                 ? const ColorFilter.mode(AppColors.orange, BlendMode.srcATop)
                 : const ColorFilter.mode(Colors.transparent, BlendMode.dst),
