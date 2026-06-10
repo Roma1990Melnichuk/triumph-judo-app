@@ -470,8 +470,10 @@ class _HeroCardState extends State<_HeroCard>
                         ]),
                         const SizedBox(height: 5),
                         Row(children: [
-                          const Icon(Icons.location_on_outlined,
-                              size: 13, color: Colors.white70),
+                          ColorFiltered(
+                            colorFilter: const ColorFilter.mode(Colors.white70, BlendMode.srcIn),
+                            child: TriumphIcon(TIcon.location3d, size: 13),
+                          ),
                           const SizedBox(width: 4),
                           Text(
                             s.daysLabel,
@@ -494,7 +496,12 @@ class _HeroCardState extends State<_HeroCard>
                       border: Border.all(
                           color: Colors.white.withValues(alpha: 0.25)),
                     ),
-                    child: Center(child: TriumphIcon(TIcon.training, size: 34)),
+                    child: Center(
+                      child: ColorFiltered(
+                        colorFilter: const ColorFilter.mode(Colors.white, BlendMode.srcIn),
+                        child: TriumphIcon(TIcon.training, size: 34),
+                      ),
+                    ),
                   ),
                 ],
               ),
@@ -514,17 +521,17 @@ class _ParentFeatureIcons extends StatelessWidget {
   const _ParentFeatureIcons();
 
   static const _items = [
-    (TIcon.profile,     'Мої дані',    '/my-data'),
-    (TIcon.training,    'Тренування',  '/events'),
-    (TIcon.statistics,  'Прогрес',     '/journey'),
-    (TIcon.trophy,      'Досягнення',  '/achievement-catalog'),
+    (TIcon.profile,    'Мої дані',    '/my-data',             [Color(0xFF7A0000), Color(0xFFD50000)]),
+    (TIcon.training,   'Тренування',  '/events',              [Color(0xFFD50000), Color(0xFFFF8A00)]),
+    (TIcon.statistics, 'Прогрес',     '/journey',             [Color(0xFF1565C0), Color(0xFF42A5F5)]),
+    (TIcon.trophy,     'Досягнення',  '/achievement-catalog', [Color(0xFF6A1B9A), Color(0xFFAB47BC)]),
   ];
 
   @override
   Widget build(BuildContext context) {
     return Row(
       children: _items.map((item) {
-        final (icon, label, route) = item;
+        final (icon, label, route, colors) = item;
         return Expanded(
           child: GestureDetector(
             onTap: () => context.push(route),
@@ -533,18 +540,26 @@ class _ParentFeatureIcons extends StatelessWidget {
                 Container(
                   width: 54, height: 54,
                   decoration: BoxDecoration(
-                    color: AppColors.surface,
+                    gradient: LinearGradient(
+                      colors: colors,
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                    ),
                     borderRadius: BorderRadius.circular(16),
-                    border: Border.all(color: AppColors.surface3),
                     boxShadow: [
                       BoxShadow(
-                        color: AppColors.primary.withValues(alpha: 0.12),
+                        color: colors.last.withValues(alpha: 0.35),
                         blurRadius: 10,
-                        offset: const Offset(0, 3),
+                        offset: const Offset(0, 4),
                       ),
                     ],
                   ),
-                  child: Center(child: TriumphIcon(icon, size: 28)),
+                  child: Center(
+                    child: ColorFiltered(
+                      colorFilter: const ColorFilter.mode(Colors.white, BlendMode.srcIn),
+                      child: TriumphIcon(icon, size: 28),
+                    ),
+                  ),
                 ),
                 const SizedBox(height: 6),
                 Text(
@@ -608,7 +623,10 @@ class _StatCard extends StatelessWidget {
               ),
               child: Center(
                 child: tIcon != null
-                    ? TriumphIcon(tIcon!, size: 24)
+                    ? ColorFiltered(
+                        colorFilter: const ColorFilter.mode(Colors.white, BlendMode.srcIn),
+                        child: TriumphIcon(tIcon!, size: 24),
+                      )
                     : const SizedBox.shrink(),
               ),
             ),
@@ -727,8 +745,10 @@ class _BeltReadySection extends StatelessWidget {
                     child: Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        const Icon(Icons.check_circle,
-                            size: 10, color: AppColors.success),
+                        ColorFiltered(
+                          colorFilter: const ColorFilter.mode(AppColors.success, BlendMode.srcIn),
+                          child: TriumphIcon(TIcon.success, size: 10),
+                        ),
                         const SizedBox(width: 3),
                         Text(
                           c.gender == Gender.female ? 'Готова' : 'Готовий',
