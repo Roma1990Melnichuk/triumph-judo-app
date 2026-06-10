@@ -487,7 +487,7 @@ class _ProgressChart extends StatelessWidget {
     // Target line
     final targetSpots = assignment.isCumulative
         ? [const FlSpot(0, 0), FlSpot(totalDays.toDouble(), assignment.targetValue)]
-        : [const FlSpot(0, assignment.targetValue), FlSpot(totalDays.toDouble(), assignment.targetValue)];
+        : [FlSpot(0, assignment.targetValue), FlSpot(totalDays.toDouble(), assignment.targetValue)];
 
     final maxY = max(assignment.targetValue, totalProgress) * 1.1;
 
