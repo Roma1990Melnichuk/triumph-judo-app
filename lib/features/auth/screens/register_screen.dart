@@ -279,8 +279,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
 
                     // CTA
                     GradientButton(
-                      onPressed:
-                          loading || !_agreed ? null : _submit,
+                      onPressed: loading ? null : _submit,
                       isLoading: loading,
                       child: const Text(
                         'Зареєструватись',

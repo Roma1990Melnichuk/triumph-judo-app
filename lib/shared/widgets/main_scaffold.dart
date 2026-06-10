@@ -40,8 +40,8 @@ class _MainScaffoldState extends ConsumerState<MainScaffold>
     TriumphIconType.settings,    // Налашт.
   ];
 
-  static const _coachLabels  = ['Головна', 'Команда', 'Рейтинг', 'Графік', 'Пояси', 'Налашт.'];
-  static const _parentLabels = ['Головна', 'Команда', 'Рейтинг', 'Графік', 'Налашт.'];
+  static const _coachLabels  = ['Головна', 'Команда', 'Рейтинг', 'Графік', 'Пояси', 'Налаштування'];
+  static const _parentLabels = ['Головна', 'Команда', 'Рейтинг', 'Графік', 'Налаштування'];
 
   @override
   void initState() {

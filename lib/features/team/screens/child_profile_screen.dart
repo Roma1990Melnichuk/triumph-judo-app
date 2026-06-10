@@ -1584,8 +1584,19 @@ class _DosyagnennyaTab extends StatelessWidget {
   final bool isCoach;
   final void Function(CompetitionResultModel) onDelete;
 
-  static String _medal(int p) =>
-      p == 1 ? '🥇' : p == 2 ? '🥈' : p == 3 ? '🥉' : '🏅';
+  static Widget _medal(int p) {
+    final color = p == 1
+        ? AppColors.goldMedal
+        : p == 2
+            ? AppColors.silverMedal
+            : p == 3
+                ? AppColors.bronzeMedal
+                : AppColors.textSecondary;
+    return ColorFiltered(
+      colorFilter: ColorFilter.mode(color, BlendMode.srcIn),
+      child: TriumphIcon(p <= 3 ? TIcon.medal3d : TIcon.medal, size: 26),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -1613,10 +1624,7 @@ class _DosyagnennyaTab extends StatelessWidget {
                       color: AppColors.surface2,
                       borderRadius: BorderRadius.circular(12),
                     ),
-                    child: Center(
-                      child: Text(_medal(r.place),
-                          style: const TextStyle(fontSize: 20)),
-                    ),
+                    child: Center(child: _medal(r.place)),
                   ),
                   title: Text(r.competitionName,
                       style: const TextStyle(

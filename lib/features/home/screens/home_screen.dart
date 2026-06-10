@@ -118,12 +118,19 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
                     padding: const EdgeInsets.fromLTRB(20, 22, 20, 0),
                     child: _enter(0, Row(
                       children: [
+                        DefaultAvatar(
+                          gender: null,
+                          size: 44,
+                          seed: user?.uid,
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        const SizedBox(width: 12),
                         Expanded(
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               Text(
-                                '${_greeting()}, ${user?.name.split(' ').first ?? (isCoach ? 'Тренер' : 'Батьку')}! 🔥',
+                                '${_greeting()}, ${user?.name.split(' ').first ?? (isCoach ? 'Тренер' : 'Батьку')}!',
                                 style: const TextStyle(
                                   fontSize: 22,
                                   fontWeight: FontWeight.bold,
@@ -764,8 +771,19 @@ class _RecentSection extends StatelessWidget {
     return '${(diff.inDays / 30).round()} міс тому';
   }
 
-  static String _medal(int p) =>
-      p == 1 ? '🥇' : p == 2 ? '🥈' : p == 3 ? '🥉' : '🏅';
+  static Widget _medal(int p) {
+    final color = p == 1
+        ? AppColors.goldMedal
+        : p == 2
+            ? AppColors.silverMedal
+            : p == 3
+                ? AppColors.bronzeMedal
+                : AppColors.textSecondary;
+    return ColorFiltered(
+      colorFilter: ColorFilter.mode(color, BlendMode.srcIn),
+      child: TriumphIcon(p <= 3 ? TIcon.medal3d : TIcon.medal, size: 26),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -816,10 +834,7 @@ class _RecentSection extends StatelessWidget {
                       color: AppColors.surface2,
                       borderRadius: BorderRadius.circular(12),
                     ),
-                    child: Center(
-                      child: Text(_medal(r.place),
-                          style: const TextStyle(fontSize: 20)),
-                    ),
+                    child: Center(child: _medal(r.place)),
                   ),
                   title: Text(
                     r.childName.isNotEmpty ? r.childName : '—',

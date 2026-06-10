@@ -178,6 +178,11 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: '/bulk-belt',
         parentNavigatorKey: _rootNavKey,
+        redirect: (context, state) {
+          final user = ProviderScope.containerOf(context).read(currentUserModelProvider).value;
+          if (user == null || !user.isCoach) return '/home';
+          return null;
+        },
         pageBuilder: (_, s) => _fadeSlide(s, const BulkBeltScreen()),
       ),
       GoRoute(
@@ -350,6 +355,11 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: '/membership-management',
         parentNavigatorKey: _rootNavKey,
+        redirect: (context, state) {
+          final user = ProviderScope.containerOf(context).read(currentUserModelProvider).value;
+          if (user == null || !user.isCoach) return '/home';
+          return null;
+        },
         pageBuilder: (_, s) => _fadeSlide(s, const CoachMembershipsScreen()),
       ),
       // ── Assignments (coach management) ──────────────────────────────────────

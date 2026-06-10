@@ -507,6 +507,7 @@ class _CategoryBreakdown extends StatelessWidget {
                 data: Theme.of(context)
                     .copyWith(dividerColor: Colors.transparent),
                 child: ExpansionTile(
+                  initiallyExpanded: true,
                   tilePadding:
                       const EdgeInsets.symmetric(horizontal: 16),
                   iconColor: AppColors.textSecondary,

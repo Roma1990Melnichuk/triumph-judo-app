@@ -757,7 +757,6 @@ class _TeamRatingView extends StatelessWidget {
       itemCount: rankings.length,
       itemBuilder: (ctx, i) {
         final r = rankings[i];
-        final medal = i == 0 ? '🥇' : i == 1 ? '🥈' : i == 2 ? '🥉' : null;
         final rankColor = i == 0
             ? AppColors.goldMedal
             : i == 1
@@ -780,14 +779,19 @@ class _TeamRatingView extends StatelessWidget {
               children: [
                 SizedBox(
                   width: 30,
-                  child: Text(
-                    medal ?? '#${i + 1}',
-                    style: TextStyle(
-                      fontSize: medal != null ? 20 : 13,
-                      fontWeight: FontWeight.bold,
-                      color: rankColor,
-                    ),
-                  ),
+                  child: i < 3
+                      ? ColorFiltered(
+                          colorFilter: ColorFilter.mode(rankColor, BlendMode.srcIn),
+                          child: TriumphIcon(TIcon.medal3d, size: 24),
+                        )
+                      : Text(
+                          '#${i + 1}',
+                          style: TextStyle(
+                            fontSize: 13,
+                            fontWeight: FontWeight.bold,
+                            color: rankColor,
+                          ),
+                        ),
                 ),
                 CircleAvatar(
                   radius: 20,

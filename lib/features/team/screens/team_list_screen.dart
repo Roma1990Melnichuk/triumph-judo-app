@@ -20,7 +20,7 @@ class TeamListScreen extends ConsumerStatefulWidget {
   ConsumerState<TeamListScreen> createState() => _TeamListScreenState();
 }
 
-enum _TeamFilter { all, boys, girls }
+enum _TeamFilter { all, children, boys, girls }
 
 class _TeamListScreenState extends ConsumerState<TeamListScreen> {
   final _searchCtrl = TextEditingController();
@@ -161,6 +161,11 @@ class _TeamListScreenState extends ConsumerState<TeamListScreen> {
                     label: 'Всі',
                     active: _quickFilter == _TeamFilter.all,
                     onTap: () => setState(() => _quickFilter = _TeamFilter.all)),
+                const SizedBox(width: 8),
+                _QuickFilterChip(
+                    label: 'Діти',
+                    active: _quickFilter == _TeamFilter.children,
+                    onTap: () => setState(() => _quickFilter = _TeamFilter.children)),
                 const SizedBox(width: 8),
                 _QuickFilterChip(
                     label: 'Юнаки',
@@ -338,11 +343,14 @@ class _TeamListScreenState extends ConsumerState<TeamListScreen> {
                       )
                     : Builder(builder: (_) {
                         // Apply quick filter
+                        final _kChildrenMaxYear = DateTime.now().year - 7;
+                        final _kChildrenMinYear = DateTime.now().year - 11;
                         final quickFiltered = children.where((c) {
                           switch (_quickFilter) {
-                            case _TeamFilter.all:   return true;
-                            case _TeamFilter.boys:  return c.gender == Gender.male;
-                            case _TeamFilter.girls: return c.gender == Gender.female;
+                            case _TeamFilter.all:      return true;
+                            case _TeamFilter.children: return c.birthYear >= _kChildrenMinYear && c.birthYear <= _kChildrenMaxYear;
+                            case _TeamFilter.boys:     return c.gender == Gender.male;
+                            case _TeamFilter.girls:    return c.gender == Gender.female;
                           }
                         }).toList();
 
