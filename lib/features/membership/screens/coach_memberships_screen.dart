@@ -7,6 +7,8 @@ import '../../../shared/widgets/triumph_icon.dart';
 import '../../../core/models/child_model.dart';
 import '../../../core/models/membership_model.dart';
 import '../providers/membership_provider.dart';
+import '../models/tariff_plan.dart';
+import '../providers/tariff_provider.dart';
 import '../../team/providers/children_provider.dart';
 
 class CoachMembershipsScreen extends ConsumerWidget {
@@ -352,24 +354,17 @@ class _CoachSetMembershipSheet extends ConsumerStatefulWidget {
 
 class _CoachSetMembershipSheetState
     extends ConsumerState<_CoachSetMembershipSheet> {
-  static const _plans = [
-    ('Разове тренування', 1, 150.0),
-    ('1 тиждень', 7, 550.0),
-    ('1 місяць', 30, 1450.0),
-    ('3 місяці', 90, 3600.0),
-    ('6 місяців', 180, 6000.0),
-    ('12 місяців', 365, 9600.0),
-  ];
-
   int _planIdx = 2;
   bool _saving = false;
 
   DateTime get _start => DateTime.now();
-  DateTime get _end => _start.add(Duration(days: _plans[_planIdx].$2));
 
   @override
   Widget build(BuildContext context) {
-    final plan = _plans[_planIdx];
+    final plans = ref.watch(tariffPlansProvider).value ?? TariffPlan.defaults;
+    final planIdx = _planIdx.clamp(0, plans.length - 1);
+    final plan = plans[planIdx];
+    final endDate = _start.add(Duration(days: plan.days));
     final fmt = DateFormat('dd.MM.yyyy');
 
     return Padding(
@@ -404,8 +399,8 @@ class _CoachSetMembershipSheetState
           Wrap(
             spacing: 8,
             runSpacing: 6,
-            children: List.generate(_plans.length, (i) {
-              final selected = i == _planIdx;
+            children: List.generate(plans.length, (i) {
+              final selected = i == planIdx;
               return GestureDetector(
                 onTap: () => setState(() => _planIdx = i),
                 child: AnimatedContainer(
@@ -421,7 +416,7 @@ class _CoachSetMembershipSheetState
                     ),
                   ),
                   child: Text(
-                    _plans[i].$1,
+                    plans[i].name,
                     style: TextStyle(
                       fontSize: 13,
                       fontWeight:
@@ -453,7 +448,7 @@ class _CoachSetMembershipSheetState
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      '${fmt.format(_start)} — ${fmt.format(_end)}',
+                      '${fmt.format(_start)} — ${fmt.format(endDate)}',
                       style: const TextStyle(
                         fontSize: 14,
                         fontWeight: FontWeight.w600,
@@ -461,7 +456,7 @@ class _CoachSetMembershipSheetState
                       ),
                     ),
                     Text(
-                      '${plan.$2} днів · ${plan.$3.toStringAsFixed(0)} грн',
+                      '${plan.days} днів · ${plan.price.toStringAsFixed(0)} грн',
                       style: const TextStyle(
                           fontSize: 12, color: AppColors.textSecondary),
                     ),
@@ -499,13 +494,16 @@ class _CoachSetMembershipSheetState
   Future<void> _save() async {
     setState(() => _saving = true);
     try {
-      final plan = _plans[_planIdx];
+      final plans = ref.read(tariffPlansProvider).value ?? TariffPlan.defaults;
+      final planIdx = _planIdx.clamp(0, plans.length - 1);
+      final plan = plans[planIdx];
+      final endDate = _start.add(Duration(days: plan.days));
       await ref.read(membershipNotifierProvider.notifier).setMembership(
             athleteId: widget.childId,
-            planName: plan.$1,
+            planName: plan.name,
             startDate: _start,
-            endDate: _end,
-            amount: plan.$3,
+            endDate: endDate,
+            amount: plan.price,
           );
       if (mounted) Navigator.pop(context);
     } catch (_) {

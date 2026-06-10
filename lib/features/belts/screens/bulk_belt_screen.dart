@@ -225,69 +225,96 @@ class _BulkBeltScreenState extends ConsumerState<BulkBeltScreen> {
                 itemBuilder: (_, i) {
                   final child = eligible[i];
                   final isSelected = _selected.contains(child.id);
+                  final isReady = child.beltReady;
                   return GestureDetector(
-                    onTap: () => setState(() {
-                      if (isSelected) {
-                        _selected.remove(child.id);
-                      } else {
-                        _selected.add(child.id);
-                      }
-                    }),
-                    child: Container(
-                      width: 72,
-                      margin: const EdgeInsets.only(right: 10),
-                      child: Column(
-                        children: [
-                          Stack(
-                            children: [
-                              AnimatedContainer(
-                                duration: const Duration(milliseconds: 180),
-                                decoration: BoxDecoration(
-                                  shape: BoxShape.circle,
-                                  border: Border.all(
-                                    color: isSelected
-                                        ? AppColors.accent
-                                        : Colors.transparent,
-                                    width: 2.5,
-                                  ),
-                                ),
-                                child: child.photoUrl != null
-                                    ? CircleAvatar(
-                                        radius: 26,
-                                        backgroundImage:
-                                            NetworkImage(child.photoUrl!),
-                                      )
-                                    : DefaultAvatarCircle(
-                                        gender: child.gender,
-                                        radius: 26,
-                                        seed: child.id,
-                                      ),
-                              ),
-                              if (isSelected)
-                                Positioned(
-                                  right: 0, bottom: 0,
-                                  child: Container(
-                                    width: 18, height: 18,
-                                    decoration: const BoxDecoration(
-                                      color: AppColors.accent,
-                                      shape: BoxShape.circle,
+                    onTap: isReady
+                        ? () => setState(() {
+                              if (isSelected) {
+                                _selected.remove(child.id);
+                              } else {
+                                _selected.add(child.id);
+                              }
+                            })
+                        : null,
+                    child: Opacity(
+                      opacity: isReady ? 1.0 : 0.45,
+                      child: Container(
+                        width: 72,
+                        margin: const EdgeInsets.only(right: 10),
+                        child: Column(
+                          children: [
+                            Stack(
+                              children: [
+                                AnimatedContainer(
+                                  duration: const Duration(milliseconds: 180),
+                                  decoration: BoxDecoration(
+                                    shape: BoxShape.circle,
+                                    border: Border.all(
+                                      color: isSelected
+                                          ? AppColors.accent
+                                          : Colors.transparent,
+                                      width: 2.5,
                                     ),
-                                    child: const Icon(Icons.check,
-                                        size: 12, color: Colors.black),
                                   ),
+                                  child: child.photoUrl != null
+                                      ? CircleAvatar(
+                                          radius: 26,
+                                          backgroundImage:
+                                              NetworkImage(child.photoUrl!),
+                                        )
+                                      : DefaultAvatarCircle(
+                                          gender: child.gender,
+                                          radius: 26,
+                                          seed: child.id,
+                                        ),
                                 ),
-                            ],
-                          ),
-                          const SizedBox(height: 4),
-                          Text(
-                            child.firstName,
-                            style: const TextStyle(
-                                fontSize: 11,
-                                color: AppColors.textSecondary),
-                            overflow: TextOverflow.ellipsis,
-                            textAlign: TextAlign.center,
-                          ),
-                        ],
+                                if (isSelected)
+                                  Positioned(
+                                    right: 0,
+                                    bottom: 0,
+                                    child: Container(
+                                      width: 18,
+                                      height: 18,
+                                      decoration: const BoxDecoration(
+                                        color: AppColors.accent,
+                                        shape: BoxShape.circle,
+                                      ),
+                                      child: const Icon(Icons.check,
+                                          size: 12, color: Colors.black),
+                                    ),
+                                  )
+                                else if (!isReady)
+                                  Positioned(
+                                    right: 0,
+                                    bottom: 0,
+                                    child: Container(
+                                      width: 18,
+                                      height: 18,
+                                      decoration: BoxDecoration(
+                                        color: AppColors.surface3,
+                                        shape: BoxShape.circle,
+                                        border: Border.all(
+                                            color: AppColors.background,
+                                            width: 1.5),
+                                      ),
+                                      child: const Icon(Icons.lock_outline,
+                                          size: 10,
+                                          color: AppColors.textSecondary),
+                                    ),
+                                  ),
+                              ],
+                            ),
+                            const SizedBox(height: 4),
+                            Text(
+                              child.firstName,
+                              style: const TextStyle(
+                                  fontSize: 11,
+                                  color: AppColors.textSecondary),
+                              overflow: TextOverflow.ellipsis,
+                              textAlign: TextAlign.center,
+                            ),
+                          ],
+                        ),
                       ),
                     ),
                   );
@@ -357,7 +384,7 @@ class _BulkBeltScreenState extends ConsumerState<BulkBeltScreen> {
                   BeltBadge(belt: _targetBelt!, size: BeltBadgeSize.small),
                   const SizedBox(width: 8),
                   Text(
-                    '${eligible.length} спортсменів доступно',
+                    '${eligible.where((c) => c.beltReady).length} / ${eligible.length} готові до здачі',
                     style: const TextStyle(
                         color: AppColors.textSecondary, fontSize: 12),
                   ),

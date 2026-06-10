@@ -64,6 +64,7 @@ class _AddAssignmentResultScreenState
             value: v,
             difficulty: _difficulty,
             comment: _commentCtrl.text.trim(),
+            assignmentId: widget.assignmentId,
           );
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(

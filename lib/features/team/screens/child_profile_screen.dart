@@ -28,6 +28,8 @@ import '../../../core/models/achievement_model.dart';
 import '../../../shared/widgets/achievement_badge.dart';
 import '../../../shared/widgets/triumph_icon.dart';
 import '../../../features/individual_training/providers/individual_training_provider.dart';
+import '../../../features/membership/models/tariff_plan.dart';
+import '../../../features/membership/providers/tariff_provider.dart';
 
 class ChildProfileScreen extends ConsumerStatefulWidget {
   const ChildProfileScreen({super.key, required this.childId});
@@ -1161,27 +1163,17 @@ class _CoachSetMembershipSheet extends ConsumerStatefulWidget {
 
 class _CoachSetMembershipSheetState
     extends ConsumerState<_CoachSetMembershipSheet> {
-  static const _plans = [
-    ('Разове тренування', 1, 150.0),
-    ('1 тиждень', 7, 550.0),
-    ('1 місяць', 30, 1450.0),
-    ('3 місяці', 90, 3600.0),
-    ('6 місяців', 180, 6000.0),
-    ('12 місяців', 365, 9600.0),
-  ];
-
-  int _planIdx = 2; // default: 1 month
+  int _planIdx = 2;
   bool _saving = false;
 
   DateTime get _start => DateTime.now();
-  DateTime get _end {
-    final days = _plans[_planIdx].$2;
-    return _start.add(Duration(days: days));
-  }
 
   @override
   Widget build(BuildContext context) {
-    final plan = _plans[_planIdx];
+    final plans = ref.watch(tariffPlansProvider).value ?? TariffPlan.defaults;
+    final planIdx = _planIdx.clamp(0, plans.length - 1);
+    final plan = plans[planIdx];
+    final endDate = _start.add(Duration(days: plan.days));
     final fmt = DateFormat('dd.MM.yyyy');
 
     return Padding(
@@ -1213,8 +1205,8 @@ class _CoachSetMembershipSheetState
           Wrap(
             spacing: 8,
             runSpacing: 6,
-            children: List.generate(_plans.length, (i) {
-              final selected = i == _planIdx;
+            children: List.generate(plans.length, (i) {
+              final selected = i == planIdx;
               return GestureDetector(
                 onTap: () => setState(() => _planIdx = i),
                 child: AnimatedContainer(
@@ -1232,7 +1224,7 @@ class _CoachSetMembershipSheetState
                     ),
                   ),
                   child: Text(
-                    _plans[i].$1,
+                    plans[i].name,
                     style: TextStyle(
                       fontSize: 13,
                       fontWeight: selected
@@ -1269,14 +1261,14 @@ class _CoachSetMembershipSheetState
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text('${fmt.format(_start)} — ${fmt.format(_end)}',
+                    Text('${fmt.format(_start)} — ${fmt.format(endDate)}',
                         style: const TextStyle(
                           fontSize: 14,
                           fontWeight: FontWeight.w600,
                           color: AppColors.textPrimary,
                         )),
                     Text(
-                      '${plan.$2} днів · ${plan.$3.toStringAsFixed(0)} грн',
+                      '${plan.days} днів · ${plan.price.toStringAsFixed(0)} грн',
                       style: const TextStyle(
                           fontSize: 12,
                           color: AppColors.textSecondary),
@@ -1316,13 +1308,16 @@ class _CoachSetMembershipSheetState
   Future<void> _save() async {
     setState(() => _saving = true);
     try {
-      final plan = _plans[_planIdx];
+      final plans = ref.read(tariffPlansProvider).value ?? TariffPlan.defaults;
+      final planIdx = _planIdx.clamp(0, plans.length - 1);
+      final plan = plans[planIdx];
+      final endDate = _start.add(Duration(days: plan.days));
       await ref.read(membershipNotifierProvider.notifier).setMembership(
             athleteId: widget.childId,
-            planName: plan.$1,
+            planName: plan.name,
             startDate: _start,
-            endDate: _end,
-            amount: plan.$3,
+            endDate: endDate,
+            amount: plan.price,
           );
       if (mounted) Navigator.pop(context);
     } catch (_) {

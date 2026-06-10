@@ -17,6 +17,8 @@ import '../../../features/team/services/csv_import_service.dart';
 import '../../../services/export_service.dart';
 import '../../../shared/widgets/gradient_button.dart';
 import '../../../shared/widgets/triumph_icon.dart';
+import '../../membership/models/tariff_plan.dart';
+import '../../membership/providers/tariff_provider.dart';
 
 class SettingsScreen extends ConsumerWidget {
   const SettingsScreen({super.key});
@@ -121,6 +123,12 @@ class SettingsScreen extends ConsumerWidget {
                   tIcon: TIcon.memberCard3d,
                   label: 'Абонементи спортсменів',
                   onTap: () => context.push('/membership-management'),
+                ),
+                _MenuItem(
+                  icon: Icons.price_change_outlined,
+                  color: const Color(0xFF34C759),
+                  label: 'Тарифи абонементів',
+                  onTap: () => _showTariffEditor(context, ref),
                 ),
                 _MenuItem(
                   tIcon: TIcon.team,
@@ -1574,6 +1582,184 @@ class _DevSectionState extends ConsumerState<_DevSection> {
           ],
         ],
       ),
+    );
+  }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+
+void _showTariffEditor(BuildContext context, WidgetRef ref) {
+  final plans = ref.read(tariffPlansProvider).value ?? TariffPlan.defaults;
+  showModalBottomSheet<void>(
+    context: context,
+    isScrollControlled: true,
+    backgroundColor: AppColors.surface,
+    shape: const RoundedRectangleBorder(
+      borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+    ),
+    builder: (_) => _TariffEditorSheet(
+      initialPlans: List<TariffPlan>.from(plans),
+    ),
+  );
+}
+
+class _TariffEditorSheet extends StatefulWidget {
+  const _TariffEditorSheet({required this.initialPlans});
+  final List<TariffPlan> initialPlans;
+
+  @override
+  State<_TariffEditorSheet> createState() => _TariffEditorSheetState();
+}
+
+class _TariffEditorSheetState extends State<_TariffEditorSheet> {
+  late final List<TextEditingController> _priceCtrl;
+  bool _saving = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _priceCtrl = widget.initialPlans
+        .map((p) => TextEditingController(text: p.price.toStringAsFixed(0)))
+        .toList();
+  }
+
+  @override
+  void dispose() {
+    for (final c in _priceCtrl) {
+      c.dispose();
+    }
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Consumer(
+      builder: (context, ref, _) {
+        return Padding(
+          padding: EdgeInsets.only(
+            left: 20,
+            right: 20,
+            top: 20,
+            bottom: MediaQuery.of(context).viewInsets.bottom + 24,
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(children: [
+                const Text(
+                  'Тарифи абонементів',
+                  style: TextStyle(fontSize: 17, fontWeight: FontWeight.w700),
+                ),
+                const Spacer(),
+                IconButton(
+                  icon: const Icon(Icons.close, size: 20),
+                  onPressed: () => Navigator.pop(context),
+                ),
+              ]),
+              const SizedBox(height: 4),
+              const Text(
+                'Вкажіть вартість кожного тарифного плану',
+                style: TextStyle(
+                    fontSize: 12, color: AppColors.textSecondary),
+              ),
+              const SizedBox(height: 16),
+              ...List.generate(widget.initialPlans.length, (i) {
+                final plan = widget.initialPlans[i];
+                return Padding(
+                  padding: const EdgeInsets.only(bottom: 10),
+                  child: Row(
+                    children: [
+                      Expanded(
+                        child: Text(
+                          plan.name,
+                          style: const TextStyle(
+                              fontSize: 14, fontWeight: FontWeight.w500),
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      SizedBox(
+                        width: 110,
+                        child: TextField(
+                          controller: _priceCtrl[i],
+                          keyboardType: const TextInputType.numberWithOptions(
+                              decimal: false),
+                          decoration: const InputDecoration(
+                            suffixText: 'грн',
+                            isDense: true,
+                            contentPadding: EdgeInsets.symmetric(
+                                horizontal: 12, vertical: 10),
+                          ),
+                          textAlign: TextAlign.end,
+                        ),
+                      ),
+                    ],
+                  ),
+                );
+              }),
+              const SizedBox(height: 8),
+              ElevatedButton(
+                onPressed: _saving
+                    ? null
+                    : () async {
+                        setState(() => _saving = true);
+                        try {
+                          final updated = List.generate(
+                            widget.initialPlans.length,
+                            (i) {
+                              final price = double.tryParse(
+                                    _priceCtrl[i]
+                                        .text
+                                        .trim()
+                                        .replaceAll(',', '.'),
+                                  ) ??
+                                  widget.initialPlans[i].price;
+                              return TariffPlan(
+                                name: widget.initialPlans[i].name,
+                                days: widget.initialPlans[i].days,
+                                price: price,
+                              );
+                            },
+                          );
+                          await ref
+                              .read(tariffNotifierProvider.notifier)
+                              .savePlans(updated);
+                          if (context.mounted) Navigator.pop(context);
+                        } catch (_) {
+                          setState(() => _saving = false);
+                          if (context.mounted) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(
+                                content: Text('Помилка збереження'),
+                                backgroundColor: AppColors.error,
+                              ),
+                            );
+                          }
+                        }
+                      },
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: AppColors.primary,
+                  minimumSize: const Size(double.infinity, 50),
+                  shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(14)),
+                ),
+                child: _saving
+                    ? const SizedBox(
+                        width: 22,
+                        height: 22,
+                        child: CircularProgressIndicator(
+                            color: Colors.white, strokeWidth: 2),
+                      )
+                    : const Text(
+                        'Зберегти',
+                        style: TextStyle(
+                            fontSize: 16, fontWeight: FontWeight.w700),
+                      ),
+              ),
+            ],
+          ),
+        );
+      },
     );
   }
 }

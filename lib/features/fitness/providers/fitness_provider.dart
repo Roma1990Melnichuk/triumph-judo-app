@@ -105,6 +105,7 @@ class FitnessNotifier extends StateNotifier<AsyncValue<void>> {
     required double value,
     required int difficulty,
     required String comment,
+    String? assignmentId,
   }) async {
     final id = _uuid.v4();
     await _db.collection('fitness_logs').doc(id).set(
@@ -118,6 +119,7 @@ class FitnessNotifier extends StateNotifier<AsyncValue<void>> {
             value: value,
             difficulty: difficulty,
             comment: comment,
+            assignmentId: assignmentId,
           ).toFirestore(),
         );
     // Auto-mark goal achieved if target reached

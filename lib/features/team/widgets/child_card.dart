@@ -3,13 +3,17 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import '../../../core/constants/app_colors.dart';
+import '../../../core/constants/belt_levels.dart';
 import '../../../core/models/child_model.dart';
 import '../../../core/models/membership_model.dart';
+import '../../../features/auth/providers/auth_provider.dart';
+import '../../../features/belts/providers/belt_provider.dart';
 import '../../../features/individual_training/providers/individual_training_provider.dart';
 import '../../../features/schedule/providers/group_provider.dart';
 import '../../../shared/widgets/belt_badge.dart';
 import '../../../shared/widgets/default_avatar.dart';
 import '../../../shared/widgets/triumph_icon.dart';
+import '../../../shared/widgets/premium_widgets.dart';
 
 class ChildCard extends ConsumerWidget {
   const ChildCard({
@@ -48,6 +52,20 @@ class ChildCard extends ConsumerWidget {
         ? ref.watch(childConfirmedTrainingCountProvider(child.id))
         : 0;
 
+    // ── BELT PROGRESS FOR CIRCLE ─────────────────────────────────────────────
+    final nextBelt = child.currentBelt.next;
+    double progressPct = 0.0;
+    if (nextBelt != null) {
+      final progress = ref.watch(beltProgressProvider((childId: child.id, belt: nextBelt))).value;
+      final requirements = ref.watch(beltRequirementProvider(nextBelt));
+      if (requirements != null && requirements.exercises.isNotEmpty) {
+        final passedCount = progress?.passedCount ?? 0;
+        progressPct = (passedCount / requirements.exercises.length).clamp(0.0, 1.0);
+      }
+    } else {
+      progressPct = 1.0; // Black belt / Max
+    }
+
     return Card(
       child: InkWell(
         borderRadius: BorderRadius.circular(16),
@@ -59,7 +77,7 @@ class ChildCard extends ConsumerWidget {
             children: [
               // ── Rank ─────────────────────────────────────────────────────
               SizedBox(
-                width: 36,
+                width: 30,
                 child: Text(
                   '#$rank',
                   style: const TextStyle(
@@ -70,19 +88,24 @@ class ChildCard extends ConsumerWidget {
                 ),
               ),
 
-              // ── Avatar ───────────────────────────────────────────────────
-              child.photoUrl != null
-                  ? CircleAvatar(
-                      radius: 24,
-                      backgroundImage:
-                          CachedNetworkImageProvider(child.photoUrl!),
-                    )
-                  : DefaultAvatarCircle(
-                      gender: child.gender,
-                      radius: 24,
-                      seed: child.id,
-                    ),
-              const SizedBox(width: 12),
+              // ── Avatar with Premium Progress Circle ────────────────────────
+              AthleteProgressCircle(
+                progress: progressPct,
+                color: child.beltReady ? AppColors.success : (nextBelt?.color ?? AppColors.accent),
+                size: 54,
+                child: child.photoUrl != null
+                    ? CircleAvatar(
+                        radius: 22,
+                        backgroundImage:
+                            CachedNetworkImageProvider(child.photoUrl!),
+                      )
+                    : DefaultAvatarCircle(
+                        gender: child.gender,
+                        radius: 22,
+                        seed: child.id,
+                      ),
+              ),
+              const SizedBox(width: 14),
 
               // ── Info ─────────────────────────────────────────────────────
               Expanded(

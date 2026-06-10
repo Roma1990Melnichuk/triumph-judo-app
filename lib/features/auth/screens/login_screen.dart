@@ -244,55 +244,6 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                       ),
                       const SizedBox(height: 20),
 
-                      // Social divider
-                      Row(
-                        children: [
-                          const Expanded(child: Divider(color: AppColors.surface3)),
-                          Padding(
-                            padding:
-                                const EdgeInsets.symmetric(horizontal: 12),
-                            child: Text(
-                              'або продовжити з',
-                              style: TextStyle(
-                                  color: AppColors.textSecondary
-                                      .withValues(alpha: 0.7),
-                                  fontSize: 12),
-                            ),
-                          ),
-                          const Expanded(child: Divider(color: AppColors.surface3)),
-                        ],
-                      ),
-                      const SizedBox(height: 16),
-
-                      // Social buttons
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          _SocialBtn(
-                            icon: 'G',
-                            color: const Color(0xFFEA4335),
-                            onTap: () => _showSocialToast(),
-                          ),
-                          const SizedBox(width: 16),
-                          _SocialBtn(
-                            icon: '',
-                            iconWidget: const Icon(Icons.apple,
-                                color: Colors.white, size: 22),
-                            color: const Color(0xFF1C1C1E),
-                            onTap: () => _showSocialToast(),
-                          ),
-                          const SizedBox(width: 16),
-                          _SocialBtn(
-                            icon: '',
-                            iconWidget: const Icon(Icons.phone_outlined,
-                                color: Colors.white, size: 20),
-                            color: const Color(0xFF25D366),
-                            onTap: () => _showSocialToast(),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 20),
-
                       // Sign up link
                       Row(
                         mainAxisAlignment: MainAxisAlignment.center,

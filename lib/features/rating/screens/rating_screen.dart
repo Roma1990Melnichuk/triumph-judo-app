@@ -251,7 +251,7 @@ class _RatingScreenState extends ConsumerState<RatingScreen> {
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
             child: TextField(
               controller: _searchCtrl,
-              keyboardType: TextInputType.name,
+              keyboardType: TextInputType.text,
               decoration: InputDecoration(
                 hintText: 'Пошук за прізвищем...',
                 prefixIcon: const Icon(Icons.search),
