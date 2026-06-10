@@ -911,13 +911,13 @@ class _CalendarCell extends StatelessWidget {
 // ── 5. Achievements row ───────────────────────────────────────────────────────
 
 final _kAchievements = [
-  (days: 7,   asset: 'assets/achievements/achievement_streak_7.webp'),
-  (days: 14,  asset: 'assets/achievements/achievement_streak_14.webp'),
-  (days: 30,  asset: 'assets/achievements/achievement_streak_30.webp'),
-  (days: 60,  asset: null as String?),
-  (days: 90,  asset: null as String?),
-  (days: 180, asset: null as String?),
-  (days: 365, asset: null as String?),
+  (days: 7,   asset: 'assets/achievements/achievement_streak_7.webp',   icon: TIcon.training,     clr: AppColors.orange),
+  (days: 14,  asset: 'assets/achievements/achievement_streak_14.webp',  icon: TIcon.training,     clr: AppColors.accent),
+  (days: 30,  asset: 'assets/achievements/achievement_streak_30.webp',  icon: TIcon.achievements, clr: AppColors.accent),
+  (days: 60,  asset: 'assets/achievements/achievement_streak_100.webp', icon: TIcon.statistics,   clr: AppColors.goldMedal),
+  (days: 90,  asset: null as String?,                                    icon: TIcon.sparring,     clr: AppColors.goldMedal),
+  (days: 180, asset: null as String?,                                    icon: TIcon.trophy,       clr: const Color(0xFFFFD700)),
+  (days: 365, asset: null as String?,                                    icon: TIcon.trophy3d,     clr: const Color(0xFFAA00FF)),
 ];
 
 class _AchievementsRow extends StatelessWidget {
@@ -938,6 +938,8 @@ class _AchievementsRow extends StatelessWidget {
           return _AchievementChip(
             days: ach.days,
             asset: ach.asset,
+            fallbackIcon: ach.icon,
+            accentColor: ach.clr,
             completed: completed,
           );
         },
@@ -949,11 +951,15 @@ class _AchievementsRow extends StatelessWidget {
 class _AchievementChip extends StatelessWidget {
   final int days;
   final String? asset;
+  final TIcon fallbackIcon;
+  final Color accentColor;
   final bool completed;
 
   const _AchievementChip({
     required this.days,
     required this.asset,
+    required this.fallbackIcon,
+    required this.accentColor,
     required this.completed,
   });
 
@@ -964,11 +970,11 @@ class _AchievementChip extends StatelessWidget {
       padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 6),
       decoration: BoxDecoration(
         color: completed
-            ? AppColors.accent.withOpacity(0.12)
+            ? accentColor.withValues(alpha: 0.12)
             : AppColors.surface2,
         borderRadius: BorderRadius.circular(14),
         border: Border.all(
-          color: completed ? AppColors.accent : AppColors.surface3,
+          color: completed ? accentColor : AppColors.surface3,
           width: 1,
         ),
       ),
@@ -981,16 +987,15 @@ class _AchievementChip extends StatelessWidget {
           else if (asset != null)
             Image.asset(asset!, width: 40, height: 40, fit: BoxFit.contain)
           else
-            const ColorFiltered(
-              colorFilter:
-                  ColorFilter.mode(AppColors.accent, BlendMode.srcIn),
-              child: TriumphIcon(TIcon.trophy, size: 22),
+            ColorFiltered(
+              colorFilter: ColorFilter.mode(accentColor, BlendMode.srcIn),
+              child: TriumphIcon(fallbackIcon, size: 22),
             ),
           const SizedBox(height: 4),
           Text(
             '$days д.',
             style: TextStyle(
-              color: completed ? AppColors.accent : AppColors.textSecondary,
+              color: completed ? accentColor : AppColors.textSecondary,
               fontSize: 10,
               fontWeight: FontWeight.w700,
             ),

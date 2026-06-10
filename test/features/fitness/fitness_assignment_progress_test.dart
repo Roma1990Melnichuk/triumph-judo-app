@@ -10,6 +10,7 @@ FitnessAssignment makeAssignment({
   double targetValue = 100.0,
   DateTime? startDate,
   DateTime? deadline,
+  bool isCumulative = true,
 }) {
   final now = DateTime.now();
   return FitnessAssignment(
@@ -23,6 +24,7 @@ FitnessAssignment makeAssignment({
     startDate: startDate ?? now.subtract(const Duration(days: 7)),
     deadline: deadline ?? now.add(const Duration(days: 7)),
     assignedChildIds: const ['c1'],
+    isCumulative: isCumulative,
   );
 }
 
@@ -147,6 +149,69 @@ void main() {
             date: DateTime(2026, 6, 1 + i), value: 10.0),
       );
       expect(assignmentProgress(logs, assignment, 'c1'), 100.0);
+    });
+  });
+
+  // ── isCumulative = false: peak/record mode ───────────────────────────────
+
+  group('assignmentProgress — режим рекорду (isCumulative=false)', () {
+    final now = DateTime.now();
+
+    test('повертає максимальне значення, не суму', () {
+      final a = makeAssignment(isCumulative: false);
+      final logs = [
+        makeLog(date: now.subtract(const Duration(days: 3)), value: 60.0),
+        makeLog(date: now.subtract(const Duration(days: 2)), value: 90.0),
+        makeLog(date: now, value: 75.0),
+      ];
+      expect(assignmentProgress(logs, a, 'c1'), 90.0);
+    });
+
+    test('один лог — повертає його значення', () {
+      final a = makeAssignment(isCumulative: false);
+      final logs = [makeLog(date: now, value: 42.0)];
+      expect(assignmentProgress(logs, a, 'c1'), 42.0);
+    });
+
+    test('0 при відсутності логів (peak mode)', () {
+      final a = makeAssignment(isCumulative: false);
+      expect(assignmentProgress([], a, 'c1'), 0.0);
+    });
+
+    test('рекорд ігнорує логи поза межами дат', () {
+      final start = DateTime(2026, 6, 1);
+      final end = DateTime(2026, 6, 7);
+      final a = makeAssignment(
+        isCumulative: false,
+        startDate: start,
+        deadline: end,
+      );
+      final logs = [
+        makeLog(date: DateTime(2026, 5, 31), value: 999.0),
+        makeLog(date: DateTime(2026, 6, 4), value: 50.0),
+        makeLog(date: DateTime(2026, 6, 8), value: 200.0),
+      ];
+      expect(assignmentProgress(logs, a, 'c1'), 50.0);
+    });
+
+    test('рекорд і сума дають різні результати для тих самих логів', () {
+      final logs = [
+        makeLog(date: now.subtract(const Duration(days: 2)), value: 30.0),
+        makeLog(date: now, value: 50.0),
+      ];
+      final cumulative = makeAssignment(isCumulative: true);
+      final peak = makeAssignment(isCumulative: false);
+      expect(assignmentProgress(logs, cumulative, 'c1'), 80.0);
+      expect(assignmentProgress(logs, peak, 'c1'), 50.0);
+    });
+
+    test('дробові значення — peak коректний', () {
+      final a = makeAssignment(isCumulative: false, exerciseId: 'plank');
+      final logs = [
+        makeLog(exerciseId: 'plank', date: now.subtract(const Duration(days: 2)), value: 120.5),
+        makeLog(exerciseId: 'plank', date: now, value: 120.4),
+      ];
+      expect(assignmentProgress(logs, a, 'c1'), closeTo(120.5, 0.001));
     });
   });
 

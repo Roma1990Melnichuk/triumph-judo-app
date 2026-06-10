@@ -124,6 +124,7 @@ class _FitnessScreenState extends ConsumerState<FitnessScreen> {
                           exercises: exercises,
                           statsMap: statsMap,
                           logs: logs,
+                          isCoach: isCoach,
                         ),
             ),
           ],
@@ -159,6 +160,7 @@ class _FitnessBody extends ConsumerWidget {
     required this.exercises,
     required this.statsMap,
     required this.logs,
+    required this.isCoach,
   });
 
   final String childId;
@@ -166,6 +168,7 @@ class _FitnessBody extends ConsumerWidget {
   final List<FitnessExercise> exercises;
   final Map<String, _ExStat> statsMap;
   final List<FitnessLog> logs;
+  final bool isCoach;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -216,6 +219,9 @@ class _FitnessBody extends ConsumerWidget {
           ),
         ],
 
+        // ── Personal logs (coach view only) ─────────────────────────────
+        if (isCoach) ..._personalLogsSection(logs),
+
         // ── Exercise grid ────────────────────────────────────────────────
         SliverPadding(
           padding: const EdgeInsets.all(12),
@@ -248,6 +254,87 @@ class _FitnessBody extends ConsumerWidget {
         ),
       ],
     );
+  }
+
+  List<Widget> _personalLogsSection(List<FitnessLog> logs) {
+    final personal = logs
+        .where((l) => l.assignmentId == null || l.assignmentId!.isEmpty)
+        .toList();
+    if (personal.isEmpty) return [];
+
+    final recent = personal.take(5).toList();
+    final fmt = (double v) =>
+        v == v.truncateToDouble() ? v.toInt().toString() : v.toStringAsFixed(1);
+
+    return [
+      SliverToBoxAdapter(
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(12, 16, 12, 6),
+          child: Row(
+            children: [
+              ColorFiltered(
+                colorFilter: const ColorFilter.mode(AppColors.textSecondary, BlendMode.srcIn),
+                child: TriumphIcon(TIcon.training, size: 16),
+              ),
+              const SizedBox(width: 6),
+              Text(
+                'Особисті тренування (${personal.length})',
+                style: const TextStyle(
+                  fontWeight: FontWeight.bold,
+                  fontSize: 13,
+                  color: AppColors.textSecondary,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+      SliverPadding(
+        padding: const EdgeInsets.fromLTRB(12, 0, 12, 4),
+        sliver: SliverList(
+          delegate: SliverChildBuilderDelegate(
+            (_, i) {
+              final log = recent[i];
+              return Container(
+                margin: const EdgeInsets.only(bottom: 6),
+                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                decoration: BoxDecoration(
+                  color: AppColors.surface,
+                  borderRadius: BorderRadius.circular(10),
+                  border: Border.all(color: AppColors.surface3),
+                ),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: Text(
+                        log.exerciseName,
+                        style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w500),
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    Text(
+                      '${fmt(log.value)} ${log.exerciseUnit}',
+                      style: const TextStyle(
+                        fontSize: 13,
+                        fontWeight: FontWeight.w700,
+                        color: AppColors.primary,
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    Text(
+                      '${log.date.day}.${log.date.month.toString().padLeft(2, '0')}',
+                      style: const TextStyle(fontSize: 11, color: AppColors.textSecondary),
+                    ),
+                  ],
+                ),
+              );
+            },
+            childCount: recent.length,
+          ),
+        ),
+      ),
+    ];
   }
 }
 

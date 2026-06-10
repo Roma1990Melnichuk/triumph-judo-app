@@ -226,6 +226,57 @@ void main() {
       final streak = c.read(streakDataProvider);
       expect(streak.best, streak.current);
     });
+
+    test('best = попередня серія, коли вона більша за поточну', () async {
+      final now = DateTime.now();
+      // Розклад: 4 дні поспіль (3–6 днів тому), потім пропуск, потім 1 (вчора)
+      final sessions = [
+        _session(DateTime(now.year, now.month, now.day).subtract(const Duration(days: 1))),
+        // пропуск 2 дні тому (present: false)
+        _session(DateTime(now.year, now.month, now.day).subtract(const Duration(days: 2)), present: false),
+        _session(DateTime(now.year, now.month, now.day).subtract(const Duration(days: 3))),
+        _session(DateTime(now.year, now.month, now.day).subtract(const Duration(days: 4))),
+        _session(DateTime(now.year, now.month, now.day).subtract(const Duration(days: 5))),
+        _session(DateTime(now.year, now.month, now.day).subtract(const Duration(days: 6))),
+      ];
+
+      final c = await _container(sessions);
+      final streak = c.read(streakDataProvider);
+      // current = 1 (лише вчора), best = 4 (3-6 днів тому)
+      expect(streak.current, 1);
+      expect(streak.best, 4);
+    });
+
+    test('best = current коли ніколи не переривалось', () async {
+      final now = DateTime.now();
+      final sessions = List.generate(
+        5,
+        (i) => _session(
+          DateTime(now.year, now.month, now.day).subtract(Duration(days: i)),
+        ),
+      );
+
+      final c = await _container(sessions);
+      final streak = c.read(streakDataProvider);
+      expect(streak.best, 5);
+      expect(streak.current, 5);
+    });
+
+    test('дві рівні серії — best відображає максимум', () async {
+      final now = DateTime.now();
+      // Серія 2, пропуск, серія 2 → best=2
+      final sessions = [
+        _session(DateTime(now.year, now.month, now.day)),
+        _session(DateTime(now.year, now.month, now.day).subtract(const Duration(days: 1))),
+        _session(DateTime(now.year, now.month, now.day).subtract(const Duration(days: 2)), present: false),
+        _session(DateTime(now.year, now.month, now.day).subtract(const Duration(days: 3))),
+        _session(DateTime(now.year, now.month, now.day).subtract(const Duration(days: 4))),
+      ];
+
+      final c = await _container(sessions);
+      final streak = c.read(streakDataProvider);
+      expect(streak.best, 2);
+    });
   });
 
   // ── weekActivityProvider ──────────────────────────────────────────────────

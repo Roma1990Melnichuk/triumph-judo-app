@@ -25,8 +25,12 @@ List<ChildModel> bulkAchievementsMatchedAthletes({
   required Set<int> selectedYears,
   required Set<BeltLevel> selectedBelts,
   required Set<String> extraChildIds,
+  String nameQuery = '',
 }) {
+  final query = nameQuery.trim().toLowerCase();
   return all.where((c) {
+    if (query.isNotEmpty &&
+        !c.fullName.toLowerCase().contains(query)) { return false; }
     if (extraChildIds.contains(c.id)) { return true; }
     if (selectedGroupIds.isEmpty &&
         selectedYears.isEmpty &&
@@ -61,6 +65,8 @@ class _BulkGrantAchievementsScreenState
   final Set<BeltLevel> _selectedBelts = {};
   final Set<String> _extraChildIds = {}; // individually added
   bool _showIndividuals = false;
+  final _nameCtrl = TextEditingController();
+  String _nameQuery = '';
 
   // ── Achievement selection ──────────────────────────────────────────────────
   final Set<String> _selectedDefIds = {};
@@ -74,6 +80,7 @@ class _BulkGrantAchievementsScreenState
   @override
   void dispose() {
     _noteCtrl.dispose();
+    _nameCtrl.dispose();
     super.dispose();
   }
 
@@ -85,6 +92,7 @@ class _BulkGrantAchievementsScreenState
         selectedYears: _selectedYears,
         selectedBelts: _selectedBelts,
         extraChildIds: _extraChildIds,
+        nameQuery: _nameQuery,
       );
 
   List<AchievementDef> get _visibleDefs => kAchievements
@@ -299,10 +307,32 @@ class _BulkGrantAchievementsScreenState
               ],
             ],
           ),
-          const SizedBox(height: 4),
-          const Text(
+          const SizedBox(height: 12),
+          // Пошук по прізвищу / імені
+          TextField(
+            controller: _nameCtrl,
+            keyboardType: TextInputType.text,
+            textCapitalization: TextCapitalization.words,
+            decoration: InputDecoration(
+              hintText: 'Пошук по прізвищу або імені...',
+              isDense: true,
+              prefixIcon: const Icon(Icons.search, size: 18),
+              suffixIcon: _nameQuery.isNotEmpty
+                  ? GestureDetector(
+                      onTap: () {
+                        _nameCtrl.clear();
+                        setState(() => _nameQuery = '');
+                      },
+                      child: const Icon(Icons.close, size: 16),
+                    )
+                  : null,
+            ),
+            onChanged: (v) => setState(() => _nameQuery = v),
+          ),
+          const SizedBox(height: 12),
+          Text(
             'Фільтри поєднуються як "І". Ручний вибір додається незалежно.',
-            style: TextStyle(color: AppColors.textSecondary, fontSize: 12),
+            style: const TextStyle(color: AppColors.textSecondary, fontSize: 12),
           ),
           const SizedBox(height: 16),
 

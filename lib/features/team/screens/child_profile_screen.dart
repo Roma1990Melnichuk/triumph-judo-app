@@ -1,6 +1,9 @@
+import 'dart:io';
 import 'package:cached_network_image/cached_network_image.dart';
+import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
@@ -65,6 +68,7 @@ class _ChildProfileScreenState extends ConsumerState<ChildProfileScreen>
     final resultsAsync = ref.watch(childResultsProvider(childId));
     final user = ref.watch(currentUserModelProvider).value;
     final isCoach = user?.isCoach ?? false;
+    final isOwnProfile = !isCoach && (user?.ownsChild(childId) ?? false);
 
     return childAsync.when(
       loading: () => const Scaffold(
@@ -297,6 +301,23 @@ class _ChildProfileScreenState extends ConsumerState<ChildProfileScreen>
                                 ),
                               ),
                             ),
+                            if (isOwnProfile) ...[
+                              const SizedBox(width: 8),
+                              GestureDetector(
+                                onTap: () => _showAthleteEditSheet(context, ref, child),
+                                child: Container(
+                                  width: 44,
+                                  height: 44,
+                                  decoration: BoxDecoration(
+                                    color: AppColors.background.withValues(alpha: 0.55),
+                                    borderRadius: BorderRadius.circular(12),
+                                  ),
+                                  child: const Center(
+                                    child: Icon(Icons.edit_outlined, size: 20, color: AppColors.textPrimary),
+                                  ),
+                                ),
+                              ),
+                            ],
                             if (isCoach) ...[
                               const SizedBox(width: 8),
                               GestureDetector(
@@ -628,6 +649,18 @@ class _ChildProfileScreenState extends ConsumerState<ChildProfileScreen>
     );
   }
 
+  void _showAthleteEditSheet(BuildContext context, WidgetRef ref, ChildModel child) {
+    showModalBottomSheet<void>(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: AppColors.surface,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (_) => _AthleteEditSheet(child: child),
+    );
+  }
+
   void _deleteResult(
       BuildContext context, WidgetRef ref, CompetitionResultModel result) {
     ref.read(competitionsNotifierProvider.notifier).deleteResult(result);
@@ -643,6 +676,222 @@ class _ChildProfileScreenState extends ConsumerState<ChildProfileScreen>
           ),
         ),
       );
+  }
+}
+
+// ── Athlete self-edit sheet ───────────────────────────────────────────────────
+
+class _AthleteEditSheet extends ConsumerStatefulWidget {
+  const _AthleteEditSheet({required this.child});
+  final ChildModel child;
+
+  @override
+  ConsumerState<_AthleteEditSheet> createState() => _AthleteEditSheetState();
+}
+
+class _AthleteEditSheetState extends ConsumerState<_AthleteEditSheet> {
+  late final TextEditingController _firstCtrl;
+  late final TextEditingController _lastCtrl;
+  late final TextEditingController _phoneCtrl;
+  File? _photoFile;
+  bool _loading = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _firstCtrl = TextEditingController(text: widget.child.firstName);
+    _lastCtrl  = TextEditingController(text: widget.child.lastName);
+    _phoneCtrl = TextEditingController(text: widget.child.phone ?? '');
+  }
+
+  @override
+  void dispose() {
+    _firstCtrl.dispose();
+    _lastCtrl.dispose();
+    _phoneCtrl.dispose();
+    super.dispose();
+  }
+
+  Future<void> _pickPhoto() async {
+    final source = await showModalBottomSheet<ImageSource>(
+      context: context,
+      backgroundColor: AppColors.surface,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (_) => SafeArea(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const SizedBox(height: 8),
+            Container(
+              width: 40, height: 4,
+              decoration: BoxDecoration(
+                color: AppColors.surface3,
+                borderRadius: BorderRadius.circular(2),
+              ),
+            ),
+            const SizedBox(height: 16),
+            ListTile(
+              leading: const Icon(Icons.camera_alt, color: AppColors.primary),
+              title: const Text('Зняти фото'),
+              onTap: () => Navigator.pop(context, ImageSource.camera),
+            ),
+            ListTile(
+              leading: const Icon(Icons.photo_library, color: AppColors.primary),
+              title: const Text('Обрати з галереї'),
+              onTap: () => Navigator.pop(context, ImageSource.gallery),
+            ),
+            const SizedBox(height: 8),
+          ],
+        ),
+      ),
+    );
+    if (source == null) return;
+    final picker = ImagePicker();
+    final file = await picker.pickImage(source: source, imageQuality: 80, maxWidth: 800);
+    if (file != null) setState(() => _photoFile = File(file.path));
+  }
+
+  Future<void> _save() async {
+    final firstName = _firstCtrl.text.trim();
+    final lastName  = _lastCtrl.text.trim();
+    if (firstName.isEmpty || lastName.isEmpty) return;
+    setState(() => _loading = true);
+    try {
+      String? photoUrl = widget.child.photoUrl;
+      if (_photoFile != null) {
+        final ref = FirebaseStorage.instance
+            .ref('children/${widget.child.id}/avatar.jpg');
+        final bytes = await _photoFile!.readAsBytes();
+        await ref.putData(bytes, SettableMetadata(contentType: 'image/jpeg'));
+        photoUrl = await ref.getDownloadURL();
+      }
+      final updated = widget.child.copyWith(
+        firstName: firstName,
+        lastName: lastName,
+        phone: _phoneCtrl.text.trim().isEmpty ? null : _phoneCtrl.text.trim(),
+        photoUrl: photoUrl,
+      );
+      await this.ref.read(childrenNotifierProvider.notifier).updateChild(updated);
+      if (mounted) Navigator.pop(context);
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Помилка: $e')),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _loading = false);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: EdgeInsets.only(
+        bottom: MediaQuery.of(context).viewInsets.bottom,
+      ),
+      child: SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(20, 20, 20, 16),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                width: 40, height: 4,
+                decoration: BoxDecoration(
+                  color: AppColors.surface3,
+                  borderRadius: BorderRadius.circular(2),
+                ),
+              ),
+              const SizedBox(height: 16),
+              const Text(
+                'Редагувати профіль',
+                style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+              ),
+              const SizedBox(height: 20),
+              // Photo picker
+              GestureDetector(
+                onTap: _pickPhoto,
+                child: Stack(
+                  alignment: Alignment.bottomRight,
+                  children: [
+                    CircleAvatar(
+                      radius: 42,
+                      backgroundImage: _photoFile != null
+                          ? FileImage(_photoFile!) as ImageProvider
+                          : (widget.child.photoUrl != null
+                              ? CachedNetworkImageProvider(widget.child.photoUrl!)
+                              : null),
+                      backgroundColor: AppColors.avatarColor(widget.child.id),
+                      child: _photoFile == null && widget.child.photoUrl == null
+                          ? Text(
+                              '${widget.child.firstName[0]}${widget.child.lastName[0]}',
+                              style: const TextStyle(color: Colors.white, fontSize: 22, fontWeight: FontWeight.bold),
+                            )
+                          : null,
+                    ),
+                    Container(
+                      padding: const EdgeInsets.all(5),
+                      decoration: const BoxDecoration(
+                        color: AppColors.primary,
+                        shape: BoxShape.circle,
+                      ),
+                      child: const Icon(Icons.camera_alt, size: 14, color: Colors.white),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 20),
+              Row(
+                children: [
+                  Expanded(
+                    child: TextField(
+                      controller: _firstCtrl,
+                      keyboardType: TextInputType.text,
+                      textCapitalization: TextCapitalization.words,
+                      decoration: const InputDecoration(labelText: "Ім'я"),
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: TextField(
+                      controller: _lastCtrl,
+                      keyboardType: TextInputType.text,
+                      textCapitalization: TextCapitalization.words,
+                      decoration: const InputDecoration(labelText: 'Прізвище'),
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 12),
+              TextField(
+                controller: _phoneCtrl,
+                keyboardType: TextInputType.phone,
+                decoration: const InputDecoration(
+                  labelText: 'Телефон',
+                  hintText: '+380...',
+                ),
+              ),
+              const SizedBox(height: 24),
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton(
+                  onPressed: _loading ? null : _save,
+                  child: _loading
+                      ? const SizedBox(
+                          width: 18, height: 18,
+                          child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+                        )
+                      : const Text('Зберегти'),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
   }
 }
 

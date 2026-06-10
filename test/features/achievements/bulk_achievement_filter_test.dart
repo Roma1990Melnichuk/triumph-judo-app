@@ -48,6 +48,7 @@ List<ChildModel> _run({
   Set<int> years = const {},
   Set<BeltLevel> belts = const {},
   Set<String> extra = const {},
+  String nameQuery = '',
 }) =>
     bulkAchievementsMatchedAthletes(
       all: all,
@@ -56,6 +57,7 @@ List<ChildModel> _run({
       selectedYears: years,
       selectedBelts: belts,
       extraChildIds: extra,
+      nameQuery: nameQuery,
     );
 
 // ── Tests ─────────────────────────────────────────────────────────────────────
@@ -200,6 +202,57 @@ void main() {
       final result = _run(all: all, years: {2012, 2013, 2010});
       final ids = result.map((c) => c.id).toList();
       expect(ids, ['c1', 'c2', 'c3', 'c4']);
+    });
+  });
+
+  group('bulkAchievementsMatchedAthletes — пошук по імені (nameQuery)', () {
+    final named = [
+      _child(id: 'n1', firstName: 'Олексій', lastName: 'Коваль'),
+      _child(id: 'n2', firstName: 'Марія',   lastName: 'Ковальчук'),
+      _child(id: 'n3', firstName: 'Іван',    lastName: 'Петров'),
+      _child(id: 'n4', firstName: 'Олена',   lastName: 'Іваненко'),
+    ];
+
+    test('порожній nameQuery — не фільтрує по імені', () {
+      final result = _run(all: named, years: {2012}, nameQuery: '');
+      expect(result.length, named.length);
+    });
+
+    test('пошук по прізвищу — часткове співпадіння', () {
+      final result = _run(all: named, years: {2012}, nameQuery: 'Коваль');
+      expect(result.map((c) => c.id).toSet(), {'n1', 'n2'});
+    });
+
+    test('пошук по імені', () {
+      final result = _run(all: named, years: {2012}, nameQuery: 'Олен');
+      expect(result.map((c) => c.id).toSet(), {'n4'});
+    });
+
+    test('пошук регістронезалежний', () {
+      final result = _run(all: named, years: {2012}, nameQuery: 'ПЕТРОВ');
+      expect(result.map((c) => c.id).toSet(), {'n3'});
+    });
+
+    test('пошук без збігів — порожній список', () {
+      final result = _run(all: named, years: {2012}, nameQuery: 'Шевченко');
+      expect(result, isEmpty);
+    });
+
+    test('nameQuery AND фільтр по поясу — перетин', () {
+      // n1(yellow), n2(yellow), n3(yellow), n4(yellow)
+      // nameQuery='Коваль' → n1,n2; belt=orange → порожньо (всі yellow)
+      final result = _run(
+        all: named,
+        years: {2012},
+        belts: {BeltLevel.orange},
+        nameQuery: 'Коваль',
+      );
+      expect(result, isEmpty);
+    });
+
+    test('nameQuery з пробілами по краях — trim', () {
+      final result = _run(all: named, years: {2012}, nameQuery: '  Петров  ');
+      expect(result.map((c) => c.id).toSet(), {'n3'});
     });
   });
 }
