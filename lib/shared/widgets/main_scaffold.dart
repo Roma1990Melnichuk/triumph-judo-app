@@ -190,9 +190,10 @@ class _NavItem extends StatelessWidget {
           isActive: active,
           color: AppColors.orange,
           icon: ColorFiltered(
-            colorFilter: active
-                ? const ColorFilter.mode(AppColors.orange, BlendMode.srcATop)
-                : const ColorFilter.mode(Colors.transparent, BlendMode.dst),
+            colorFilter: ColorFilter.mode(
+              active ? AppColors.orange : AppColors.textSecondary,
+              BlendMode.srcIn,
+            ),
             child: TriumphNavIcon(col: col, row: row, size: 26),
           ),
         ),

@@ -16,7 +16,6 @@ import '../../rating/screens/medal_tracker_screen.dart';
 import '../../../shared/animations/app_animations.dart';
 import '../../../shared/widgets/belt_badge.dart';
 import '../../../shared/widgets/default_avatar.dart';
-import '../../../shared/widgets/triumph_icon.dart';
 
 class HomeScreen extends ConsumerStatefulWidget {
   const HomeScreen({super.key});
@@ -160,8 +159,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
                                   borderRadius: BorderRadius.circular(13),
                                   border: Border.all(color: AppColors.surface3),
                                 ),
-                                child: Center(
-                                  child: TriumphIcon(TIcon.notifications, size: 26),
+                                child: const Center(
+                                  child: Icon(Icons.notifications_outlined, size: 26),
                                 ),
                               ),
                               Positioned(
@@ -262,14 +261,14 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
                         const SizedBox(height: 12),
                         Row(children: [
                           _StatCard(
-                            tIcon: TIcon.team,
+                            icon: Icons.group_outlined,
                             numValue: total,
                             label: 'Спортсменів',
                             iconColors: const [Color(0xFFD50000), Color(0xFF7A0000)],
                           ),
                           const SizedBox(width: 10),
                           _StatCard(
-                            tIcon: TIcon.statistics,
+                            icon: Icons.bar_chart,
                             numValue: activePct,
                             numSuffix: '%',
                             label: 'Відвідуваність',
@@ -277,7 +276,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
                           ),
                           const SizedBox(width: 10),
                           _StatCard(
-                            tIcon: TIcon.medal,
+                            icon: Icons.military_tech_outlined,
                             numValue: medals,
                             label: 'Медалі',
                             iconColors: const [Color(0xFFFF8A00), Color(0xFFD50000)],
@@ -378,7 +377,7 @@ class _HeroCardState extends State<_HeroCard>
             decoration: BoxDecoration(
                 color: AppColors.surface2,
                 borderRadius: BorderRadius.circular(12)),
-            child: TriumphIcon(TIcon.calendar, size: 22),
+            child: const Icon(Icons.calendar_today_outlined, size: 22),
           ),
           const SizedBox(width: 14),
           const Text('Сьогодні тренувань немає',
@@ -454,10 +453,7 @@ class _HeroCardState extends State<_HeroCard>
                         ),
                         const SizedBox(height: 10),
                         Row(children: [
-                          ColorFiltered(
-                            colorFilter: const ColorFilter.mode(Colors.white70, BlendMode.srcIn),
-                            child: TriumphIcon(TIcon.calendar, size: 13),
-                          ),
+                          const Icon(Icons.calendar_today_outlined, size: 13, color: Colors.white70),
                           const SizedBox(width: 5),
                           Text(
                             'Сьогодні, ${s.timeStart} – ${s.timeEnd}',
@@ -470,10 +466,7 @@ class _HeroCardState extends State<_HeroCard>
                         ]),
                         const SizedBox(height: 5),
                         Row(children: [
-                          ColorFiltered(
-                            colorFilter: const ColorFilter.mode(Colors.white70, BlendMode.srcIn),
-                            child: TriumphIcon(TIcon.location3d, size: 13),
-                          ),
+                          const Icon(Icons.location_on_outlined, size: 13, color: Colors.white70),
                           const SizedBox(width: 4),
                           Text(
                             s.daysLabel,
@@ -496,11 +489,8 @@ class _HeroCardState extends State<_HeroCard>
                       border: Border.all(
                           color: Colors.white.withValues(alpha: 0.25)),
                     ),
-                    child: Center(
-                      child: ColorFiltered(
-                        colorFilter: const ColorFilter.mode(Colors.white, BlendMode.srcIn),
-                        child: TriumphIcon(TIcon.training, size: 34),
-                      ),
+                    child: const Center(
+                      child: Icon(Icons.fitness_center, size: 34, color: Colors.white),
                     ),
                   ),
                 ],
@@ -521,10 +511,10 @@ class _ParentFeatureIcons extends StatelessWidget {
   const _ParentFeatureIcons();
 
   static const _items = [
-    (TIcon.profile,    'Мої дані',    '/my-data',             [Color(0xFF7A0000), Color(0xFFD50000)]),
-    (TIcon.training,   'Тренування',  '/events',              [Color(0xFFD50000), Color(0xFFFF8A00)]),
-    (TIcon.statistics, 'Прогрес',     '/journey',             [Color(0xFF1565C0), Color(0xFF42A5F5)]),
-    (TIcon.trophy,     'Досягнення',  '/achievement-catalog', [Color(0xFF6A1B9A), Color(0xFFAB47BC)]),
+    (Icons.person_outline,        'Мої дані',    '/my-data',             [Color(0xFF7A0000), Color(0xFFD50000)]),
+    (Icons.fitness_center,        'Тренування',  '/events',              [Color(0xFFD50000), Color(0xFFFF8A00)]),
+    (Icons.show_chart,            'Прогрес',     '/journey',             [Color(0xFF1565C0), Color(0xFF42A5F5)]),
+    (Icons.emoji_events_outlined, 'Досягнення',  '/achievement-catalog', [Color(0xFF6A1B9A), Color(0xFFAB47BC)]),
   ];
 
   @override
@@ -555,10 +545,7 @@ class _ParentFeatureIcons extends StatelessWidget {
                     ],
                   ),
                   child: Center(
-                    child: ColorFiltered(
-                      colorFilter: const ColorFilter.mode(Colors.white, BlendMode.srcIn),
-                      child: TriumphIcon(icon, size: 28),
-                    ),
+                    child: Icon(icon, size: 28, color: Colors.white),
                   ),
                 ),
                 const SizedBox(height: 6),
@@ -586,14 +573,14 @@ class _ParentFeatureIcons extends StatelessWidget {
 
 class _StatCard extends StatelessWidget {
   const _StatCard({
-    this.tIcon,
+    this.icon,
     required this.numValue,
     required this.label,
     required this.iconColors,
     this.numSuffix = '',
   });
 
-  final TIcon? tIcon;
+  final IconData? icon;
   final int numValue;
   final String numSuffix;
   final String label;
@@ -622,11 +609,8 @@ class _StatCard extends StatelessWidget {
                 borderRadius: BorderRadius.circular(12),
               ),
               child: Center(
-                child: tIcon != null
-                    ? ColorFiltered(
-                        colorFilter: const ColorFilter.mode(Colors.white, BlendMode.srcIn),
-                        child: TriumphIcon(tIcon!, size: 24),
-                      )
+                child: icon != null
+                    ? Icon(icon!, size: 24, color: Colors.white)
                     : const SizedBox.shrink(),
               ),
             ),
@@ -745,10 +729,7 @@ class _BeltReadySection extends StatelessWidget {
                     child: Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        ColorFiltered(
-                          colorFilter: const ColorFilter.mode(AppColors.success, BlendMode.srcIn),
-                          child: TriumphIcon(TIcon.success, size: 10),
-                        ),
+                        const Icon(Icons.check_circle, size: 10, color: AppColors.success),
                         const SizedBox(width: 3),
                         Text(
                           c.gender == Gender.female ? 'Готова' : 'Готовий',
@@ -799,9 +780,10 @@ class _RecentSection extends StatelessWidget {
             : p == 3
                 ? AppColors.bronzeMedal
                 : AppColors.textSecondary;
-    return ColorFiltered(
-      colorFilter: ColorFilter.mode(color, BlendMode.srcIn),
-      child: TriumphIcon(p <= 3 ? TIcon.medal3d : TIcon.medal, size: 26),
+    return Icon(
+      p == 1 ? Icons.emoji_events : Icons.military_tech,
+      size: 26,
+      color: color,
     );
   }
 
