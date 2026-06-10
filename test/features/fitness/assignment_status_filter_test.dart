@@ -251,14 +251,14 @@ void main() {
   group('Progress percentage calculation', () {
     test('0% коли немає логів', () {
       final a = _make();
-      final progress = assignmentProgress([], a);
+      final progress = assignmentProgress([], a, 'c1');
       expect(progress / a.targetValue, 0.0);
     });
 
     test('100% коли progress == target', () {
       final a = _make();
       final logs = [_log(value: 100)];
-      final progress = assignmentProgress(logs, a);
+      final progress = assignmentProgress(logs, a, 'c1');
       final pct = (progress / a.targetValue).clamp(0.0, 1.0);
       expect(pct, 1.0);
     });
@@ -266,7 +266,7 @@ void main() {
     test('обрізається до 1.0 при progress > target', () {
       final a = _make();
       final logs = [_log(value: 150)]; // перевиконання
-      final progress = assignmentProgress(logs, a);
+      final progress = assignmentProgress(logs, a, 'c1');
       final pct = (progress / a.targetValue).clamp(0.0, 1.0);
       expect(pct, 1.0);
     });
@@ -274,7 +274,7 @@ void main() {
     test('50% при половині прогресу', () {
       final a = _make();
       final logs = [_log(value: 50)];
-      final progress = assignmentProgress(logs, a);
+      final progress = assignmentProgress(logs, a, 'c1');
       expect((progress / a.targetValue).clamp(0.0, 1.0), 0.5);
     });
 
@@ -292,7 +292,7 @@ void main() {
         deadline: now.add(const Duration(days: 1)),
         assignedChildIds: const ['c1'],
       );
-      final progress = assignmentProgress([_log(value: 50)], a);
+      final progress = assignmentProgress([_log(value: 50)], a, 'c1');
       // Захист: target > 0 ? progress/target : 0.0
       final pct = a.targetValue > 0 ? (progress / a.targetValue).clamp(0.0, 1.0) : 0.0;
       expect(pct, 0.0);

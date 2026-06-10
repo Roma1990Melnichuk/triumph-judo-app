@@ -832,60 +832,6 @@ class _TeamRatingView extends StatelessWidget {
   }
 }
 
-// ── One-shot entry animation for list items ───────────────────────────────────
-// TweenAnimationBuilder re-runs on every rebuild — this widget animates once.
-
-class _AnimatedListItem extends StatefulWidget {
-  const _AnimatedListItem({required this.index, required this.child});
-
-  final int index;
-  final Widget child;
-
-  @override
-  State<_AnimatedListItem> createState() => _AnimatedListItemState();
-}
-
-class _AnimatedListItemState extends State<_AnimatedListItem>
-    with SingleTickerProviderStateMixin {
-  late final AnimationController _ctrl;
-  late final Animation<double> _anim;
-
-  @override
-  void initState() {
-    super.initState();
-    final delay = Duration(milliseconds: 40 * widget.index.clamp(0, 10));
-    _ctrl = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 280),
-    );
-    _anim = CurvedAnimation(parent: _ctrl, curve: Curves.easeOut);
-    Future.delayed(delay, () {
-      if (mounted) _ctrl.forward();
-    });
-  }
-
-  @override
-  void dispose() {
-    _ctrl.dispose();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return AnimatedBuilder(
-      animation: _anim,
-      builder: (_, child) => Opacity(
-        opacity: _anim.value,
-        child: Transform.translate(
-          offset: Offset(0, 14 * (1 - _anim.value)),
-          child: child,
-        ),
-      ),
-      child: widget.child,
-    );
-  }
-}
-
 // ── Animated 3D podium item ───────────────────────────────────────────────────
 
 class _PodiumItem extends StatefulWidget {

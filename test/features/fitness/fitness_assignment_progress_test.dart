@@ -51,7 +51,7 @@ void main() {
     final today = DateTime.now();
 
     test('0 коли немає логів', () {
-      expect(assignmentProgress([], makeAssignment()), 0.0);
+      expect(assignmentProgress([], makeAssignment(), 'c1'), 0.0);
     });
 
     test('сумує логи в межах [startDate, deadline]', () {
@@ -64,7 +64,7 @@ void main() {
         makeLog(date: today.subtract(const Duration(days: 3)), value: 25),
         makeLog(date: today, value: 20),
       ];
-      expect(assignmentProgress(logs, assignment), 75.0);
+      expect(assignmentProgress(logs, assignment, 'c1'), 75.0);
     });
 
     test('ігнорує логи до startDate', () {
@@ -77,7 +77,7 @@ void main() {
         makeLog(date: today.subtract(const Duration(days: 5)), value: 50), // до старту
         makeLog(date: today, value: 30), // в межах
       ];
-      expect(assignmentProgress(logs, assignment), 30.0);
+      expect(assignmentProgress(logs, assignment, 'c1'), 30.0);
     });
 
     test('ігнорує логи після deadline', () {
@@ -90,7 +90,7 @@ void main() {
         makeLog(date: today.subtract(const Duration(days: 5)), value: 40), // в межах
         makeLog(date: today, value: 60), // після дедлайну
       ];
-      expect(assignmentProgress(logs, assignment), 40.0);
+      expect(assignmentProgress(logs, assignment, 'c1'), 40.0);
     });
 
     test('ігнорує логи з іншої вправи', () {
@@ -99,7 +99,7 @@ void main() {
         makeLog(exerciseId: 'pushups', date: today, value: 50),
         makeLog(exerciseId: 'pullups', date: today, value: 30), // інша вправа
       ];
-      expect(assignmentProgress(logs, assignment), 50.0);
+      expect(assignmentProgress(logs, assignment, 'c1'), 50.0);
     });
 
     test('включає логи рівно на startDate та deadline (межі включно)', () {
@@ -111,7 +111,7 @@ void main() {
         makeLog(date: end, value: 15),     // рівно deadline
         makeLog(date: DateTime(2026, 6, 4), value: 20),
       ];
-      expect(assignmentProgress(logs, assignment), 45.0);
+      expect(assignmentProgress(logs, assignment, 'c1'), 45.0);
     });
 
     test('повертає 0 коли всі логи поза межами', () {
@@ -123,7 +123,7 @@ void main() {
         makeLog(date: DateTime(2026, 5, 31), value: 50),   // до
         makeLog(date: DateTime(2026, 6, 8), value: 50),    // після
       ];
-      expect(assignmentProgress(logs, assignment), 0.0);
+      expect(assignmentProgress(logs, assignment, 'c1'), 0.0);
     });
 
     test('коректно сумує дробові значення', () {
@@ -133,7 +133,7 @@ void main() {
         makeLog(exerciseId: 'plank', date: today.subtract(const Duration(days: 2)), value: 60.5),
         makeLog(exerciseId: 'plank', date: today, value: 75.5),
       ];
-      expect(assignmentProgress(logs, assignment), closeTo(136.0, 0.001));
+      expect(assignmentProgress(logs, assignment, 'c1'), closeTo(136.0, 0.001));
     });
 
     test('багато логів — сума всіх у межах', () {
@@ -146,7 +146,7 @@ void main() {
         (i) => makeLog(
             date: DateTime(2026, 6, 1 + i), value: 10.0),
       );
-      expect(assignmentProgress(logs, assignment), 100.0);
+      expect(assignmentProgress(logs, assignment, 'c1'), 100.0);
     });
   });
 

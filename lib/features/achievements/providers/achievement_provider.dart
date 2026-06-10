@@ -13,7 +13,8 @@ final childAchievementsProvider =
       .map((s) => s.docs.map(AchievementModel.fromFirestore).toList());
 });
 
-// All granted achievements across all athletes — for coach stats screen
+// All granted achievements across all athletes — for coach stats screen.
+// Safety limit: at 10K athletes × 61 defs = 610K docs; cap at 20K to prevent OOM.
 final allGrantedAchievementsProvider =
     StreamProvider<List<AchievementModel>>((ref) {
   final auth = ref.watch(authStateProvider);
@@ -21,6 +22,7 @@ final allGrantedAchievementsProvider =
   return ref
       .watch(firestoreProvider)
       .collection('achievements')
+      .limit(20000)
       .snapshots()
       .map((s) => s.docs.map(AchievementModel.fromFirestore).toList());
 });
@@ -59,31 +61,32 @@ class AchievementNotifier extends StateNotifier<AsyncValue<void>> {
     required List<String> defIds,
     required String coachId,
     String? note,
+    void Function(int done, int total)? onProgress,
   }) async {
     state = const AsyncValue.loading();
     state = await AsyncValue.guard(() async {
-      // Chunking logic to avoid Firestore 500-op limit per batch
       const maxBatchSize = 400;
       var currentBatchSize = 0;
       var batch = _db.batch();
+      final total = childIds.length * defIds.length;
+      var done = 0;
 
       for (final childId in childIds) {
         for (final defId in defIds) {
           final docRef = _db.collection('achievements').doc('${childId}_$defId');
-          batch.set(
-            docRef,
-            {
-              'childId': childId,
-              'achievementId': defId,
-              'earnedAt': FieldValue.serverTimestamp(),
-              'grantedByCoachId': coachId,
-              if (note != null && note.isNotEmpty) 'note': note,
-            },
-          );
+          batch.set(docRef, {
+            'childId': childId,
+            'achievementId': defId,
+            'earnedAt': FieldValue.serverTimestamp(),
+            'grantedByCoachId': coachId,
+            if (note != null && note.isNotEmpty) 'note': note,
+          });
           currentBatchSize++;
+          done++;
 
           if (currentBatchSize >= maxBatchSize) {
             await batch.commit();
+            onProgress?.call(done, total);
             batch = _db.batch();
             currentBatchSize = 0;
           }
@@ -91,6 +94,7 @@ class AchievementNotifier extends StateNotifier<AsyncValue<void>> {
       }
       if (currentBatchSize > 0) {
         await batch.commit();
+        onProgress?.call(done, total);
       }
     });
   }

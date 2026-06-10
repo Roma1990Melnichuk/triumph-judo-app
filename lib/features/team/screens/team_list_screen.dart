@@ -346,9 +346,8 @@ class _TeamListScreenState extends ConsumerState<TeamListScreen> {
                           }
                         }).toList();
 
-                        // Peer rank from ALL unfiltered children (not just visible ones)
-                        final allC = allChildren.value ?? [];
-                        final allSorted = [...allC]..sort((a, b) {
+                        // Peer ranks computed from the same set that drives rank: i+1
+                        final quickSorted = [...quickFiltered]..sort((a, b) {
                           final cmp = b.totalPoints.compareTo(a.totalPoints);
                           if (cmp != 0) return cmp;
                           return a.lastName.compareTo(b.lastName);
@@ -359,7 +358,7 @@ class _TeamListScreenState extends ConsumerState<TeamListScreen> {
                         final weightTotals = <String, int>{};
                         final weightCounters = <String, int>{};
                         final sameWeightRanks = <String, int>{};
-                        for (final c in allSorted) {
+                        for (final c in quickSorted) {
                           yearTotals[c.birthYear] =
                               (yearTotals[c.birthYear] ?? 0) + 1;
                           yearCounters[c.birthYear] =
@@ -498,7 +497,7 @@ class _TeamListScreenState extends ConsumerState<TeamListScreen> {
                               padding: const EdgeInsets.symmetric(
                                   horizontal: 10, vertical: 3),
                               decoration: BoxDecoration(
-                                color: AppColors.primary.withOpacity(0.1),
+                                color: AppColors.primary.withValues(alpha: 0.1),
                                 borderRadius: BorderRadius.circular(12),
                               ),
                               child: Text(

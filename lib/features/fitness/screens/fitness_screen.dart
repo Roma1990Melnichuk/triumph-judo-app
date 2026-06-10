@@ -207,6 +207,7 @@ class _FitnessBody extends ConsumerWidget {
                   child: _AssignmentCard(
                     assignment: activeAssignments[i],
                     logs: logs,
+                    childId: childId,
                   ),
                 ),
                 childCount: activeAssignments.length,
@@ -253,14 +254,19 @@ class _FitnessBody extends ConsumerWidget {
 // ── Single assignment progress card ──────────────────────────────────────────
 
 class _AssignmentCard extends StatelessWidget {
-  const _AssignmentCard({required this.assignment, required this.logs});
+  const _AssignmentCard({
+    required this.assignment,
+    required this.logs,
+    required this.childId,
+  });
 
   final dynamic assignment; // FitnessAssignment
   final List<FitnessLog> logs;
+  final String childId;
 
   @override
   Widget build(BuildContext context) {
-    final progress = assignmentProgress(logs, assignment);
+    final progress = assignmentProgress(logs, assignment, childId);
     final target = assignment.targetValue as double;
     final pct = (target > 0 ? (progress / target).clamp(0.0, 1.0) : 0.0);
     final done = pct >= 1.0;

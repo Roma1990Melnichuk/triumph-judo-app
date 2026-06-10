@@ -4,6 +4,7 @@ import '../../../core/constants/app_colors.dart';
 import '../../../core/constants/achievement_defs.dart';
 import '../../../core/models/achievement_model.dart';
 import '../../../shared/widgets/achievement_badge.dart';
+import '../../../shared/widgets/triumph_icon.dart';
 import '../../auth/providers/auth_provider.dart';
 import '../providers/achievement_provider.dart';
 
@@ -18,6 +19,47 @@ class AchievementCatalogScreen extends ConsumerWidget {
     final user = ref.watch(currentUserModelProvider).value;
     final effectiveChildId =
         childId ?? user?.childIds.firstOrNull ?? user?.childId ?? '';
+
+    // Guard: no child resolved
+    if (effectiveChildId.isEmpty && user != null) {
+      return Scaffold(
+        backgroundColor: AppColors.background,
+        body: SafeArea(
+          child: Column(
+            children: [
+              Align(
+                alignment: Alignment.centerLeft,
+                child: GestureDetector(
+                  onTap: () => Navigator.canPop(context) ? Navigator.pop(context) : null,
+                  child: Container(
+                    margin: const EdgeInsets.fromLTRB(12, 12, 0, 0),
+                    width: 44, height: 44,
+                    decoration: BoxDecoration(
+                      color: AppColors.surface2,
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: const Center(
+                      child: ColorFiltered(
+                        colorFilter: ColorFilter.mode(AppColors.textPrimary, BlendMode.srcIn),
+                        child: TriumphIcon(TIcon.back, size: 22),
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+              const Expanded(
+                child: Center(
+                  child: Text(
+                    'Профіль спортсмена не знайдено',
+                    style: TextStyle(color: AppColors.textSecondary),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      );
+    }
 
     final earnedAsync =
         ref.watch(childAchievementsProvider(effectiveChildId));
@@ -107,9 +149,33 @@ class _Header extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final progress = total > 0 ? earned / total : 0.0;
+    final topPad = MediaQuery.of(context).padding.top;
 
-    return Container(
-      margin: const EdgeInsets.fromLTRB(20, 48, 20, 20),
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        // Back button
+        Padding(
+          padding: EdgeInsets.fromLTRB(12, topPad + 8, 12, 0),
+          child: GestureDetector(
+            onTap: () => Navigator.canPop(context) ? Navigator.pop(context) : null,
+            child: Container(
+              width: 44, height: 44,
+              decoration: BoxDecoration(
+                color: AppColors.surface2,
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: const Center(
+                child: ColorFiltered(
+                  colorFilter: ColorFilter.mode(AppColors.textPrimary, BlendMode.srcIn),
+                  child: TriumphIcon(TIcon.back, size: 22),
+                ),
+              ),
+            ),
+          ),
+        ),
+        Container(
+      margin: const EdgeInsets.fromLTRB(20, 12, 20, 20),
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
         gradient: const LinearGradient(
@@ -185,6 +251,8 @@ class _Header extends StatelessWidget {
           ),
         ],
       ),
+    ),
+      ],
     );
   }
 }

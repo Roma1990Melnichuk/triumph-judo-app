@@ -87,15 +87,23 @@ class MembershipNotifier extends StateNotifier<AsyncValue<void>> {
       DateTime finalStart = startDate;
       DateTime finalEnd = endDate;
 
+      int sessionsUsed = 0;
       if (doc.exists) {
         final existing = MembershipModel.fromMap(doc.data()!, athleteId);
         if (!existing.isExpired) {
-          // If active, we push the endDate further by the duration of the new plan
+          // Active plan: extend endDate by the new plan's duration
           final newPlanDuration = endDate.difference(startDate);
-          finalStart = existing.startDate; // Keep original start of the chain
+          finalStart = existing.startDate;
           finalEnd = existing.endDate.add(newPlanDuration);
+          // D-09: preserve consumed sessions when extending a session-based plan
+          if (existing.totalSessions != null) {
+            sessionsUsed = existing.sessionsUsed;
+          }
         }
       }
+
+      // D-10: normalize endDate to end-of-day so expiry triggers at midnight, not 00:00
+      finalEnd = DateTime(finalEnd.year, finalEnd.month, finalEnd.day, 23, 59, 59, 999);
 
       final data = <String, dynamic>{
         'athleteId': athleteId,
@@ -104,7 +112,7 @@ class MembershipNotifier extends StateNotifier<AsyncValue<void>> {
         'endDate': Timestamp.fromDate(finalEnd),
         'amount': amount,
         'currency': currency,
-        'sessionsUsed': 0, // Reset or accumulate? Usually reset for new plan.
+        'sessionsUsed': sessionsUsed,
       };
       if (totalSessions != null) data['totalSessions'] = totalSessions;
 

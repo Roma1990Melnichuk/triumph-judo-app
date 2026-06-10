@@ -30,7 +30,7 @@ class AppColors {
 
   // ── Semantic ──────────────────────────────────────────────────────────────
   static const success = Color(0xFF63D728); // spec green
-  static const error   = Color(0xFFD50000);
+  static const error   = Color(0xFFFF3B30); // distinct from primary brand red
   static const info    = Color(0xFF4FC3F7);
   static const warning = Color(0xFFFF8A00);
 

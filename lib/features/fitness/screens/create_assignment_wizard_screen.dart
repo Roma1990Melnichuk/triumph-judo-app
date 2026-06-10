@@ -381,12 +381,14 @@ class _Step1Params extends StatelessWidget {
     required this.startDate,
     required this.deadline,
     required this.period,
+    required this.isCumulative,
     required this.onExerciseChanged,
     required this.onPeriodChanged,
     required this.onStartChanged,
     required this.onDeadlineChanged,
     required this.onTitleChanged,
     required this.onValueChanged,
+    required this.onModeChanged,
   });
 
   final List<FitnessExercise> exercises;

@@ -689,6 +689,11 @@ class TriumphNavIcon extends StatelessWidget {
       width: size,
       height: size,
       fit: BoxFit.contain,
+      errorBuilder: (_, __, ___) => Icon(
+        Icons.sports_kabaddi,
+        size: size,
+        color: IconTheme.of(context).color ?? Colors.white,
+      ),
     );
   }
 }

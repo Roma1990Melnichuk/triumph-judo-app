@@ -68,6 +68,8 @@ class _BulkGrantAchievementsScreenState
 
   final _noteCtrl = TextEditingController();
   bool _saving = false;
+  int _grantDone = 0;
+  int _grantTotal = 0;
 
   @override
   void dispose() {
@@ -115,7 +117,7 @@ class _BulkGrantAchievementsScreenState
     );
     if (ok != true || !mounted) return;
 
-    setState(() => _saving = true);
+    setState(() { _saving = true; _grantDone = 0; _grantTotal = total; });
     try {
       final coachId = ref.read(currentUserModelProvider).value?.uid ?? '';
       final note = _noteCtrl.text.trim();
@@ -124,6 +126,9 @@ class _BulkGrantAchievementsScreenState
         defIds: _selectedDefIds.toList(),
         coachId: coachId,
         note: note.isEmpty ? null : note,
+        onProgress: (done, t) {
+          if (mounted) setState(() { _grantDone = done; _grantTotal = t; });
+        },
       );
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(SnackBar(
@@ -216,6 +221,28 @@ class _BulkGrantAchievementsScreenState
             ),
           ),
           const SizedBox(height: 24),
+          if (_saving && _grantTotal > 0) ...[
+            Padding(
+              padding: const EdgeInsets.only(bottom: 12),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  LinearProgressIndicator(
+                    value: _grantTotal > 0 ? _grantDone / _grantTotal : null,
+                    backgroundColor: AppColors.surface3,
+                    valueColor: const AlwaysStoppedAnimation(AppColors.accent),
+                    minHeight: 6,
+                  ),
+                  const SizedBox(height: 6),
+                  Text(
+                    '$_grantDone / $_grantTotal операцій',
+                    style: const TextStyle(
+                        fontSize: 12, color: AppColors.textSecondary),
+                  ),
+                ],
+              ),
+            ),
+          ],
           GradientButton(
             onPressed: (!_saving &&
                     matched.isNotEmpty &&
@@ -359,7 +386,6 @@ class _BulkGrantAchievementsScreenState
             spacing: 8,
             runSpacing: 6,
             children: BeltLevel.values
-                .where((b) => b != BeltLevel.white)
                 .map((b) => _Chip(
                       label: b.displayName,
                       selected: _selectedBelts.contains(b),
