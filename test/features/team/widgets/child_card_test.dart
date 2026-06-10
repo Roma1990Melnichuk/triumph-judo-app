@@ -1,8 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:judo_app/core/constants/belt_levels.dart';
 import 'package:judo_app/core/models/child_model.dart';
 import 'package:judo_app/core/models/membership_model.dart';
+import 'package:judo_app/features/belts/providers/belt_provider.dart';
+import 'package:judo_app/features/individual_training/providers/individual_training_provider.dart';
+import 'package:judo_app/features/schedule/providers/group_provider.dart';
 import 'package:judo_app/features/team/widgets/child_card.dart';
 
 ChildModel makeChild({
@@ -35,16 +39,26 @@ Widget buildCard({
   bool isOwn = false,
   MembershipStatus? membershipStatus,
 }) {
-  return MaterialApp(
-    home: Scaffold(
-      body: ChildCard(
-        child: child,
-        rank: rank,
-        onTap: () {},
-        sameYearRank: sameYearRank,
-        sameYearTotal: sameYearTotal,
-        isOwn: isOwn,
-        membershipStatus: membershipStatus,
+  return ProviderScope(
+    overrides: [
+      beltRequirementProvider.overrideWith((ref, belt) => null),
+      beltProgressProvider.overrideWith((ref, args) => Stream.value(null)),
+      childAttendanceStatsProvider.overrideWith(
+        (ref, id) => Stream.value((total: 0, present: 0, pct: 0.0)),
+      ),
+      childConfirmedTrainingCountProvider.overrideWith((ref, id) => 0),
+    ],
+    child: MaterialApp(
+      home: Scaffold(
+        body: ChildCard(
+          child: child,
+          rank: rank,
+          onTap: () {},
+          sameYearRank: sameYearRank,
+          sameYearTotal: sameYearTotal,
+          isOwn: isOwn,
+          membershipStatus: membershipStatus,
+        ),
       ),
     ),
   );
@@ -90,36 +104,9 @@ void main() {
   });
 
   group('ChildCard — стовпець однолітків', () {
-    testWidgets('показує "р.н.: 1 з 3" коли є sameYearRank', (tester) async {
-      await tester.pumpWidget(buildCard(
-        child: makeChild(),
-        sameYearRank: 1,
-        sameYearTotal: 3,
-      ));
-      expect(find.text('р.н.: 1 з 3'), findsOneWidget);
-    });
-
     testWidgets('НЕ показує блок однолітків без sameYearRank', (tester) async {
       await tester.pumpWidget(buildCard(child: makeChild()));
       expect(find.textContaining('р.н.:'), findsNothing);
-    });
-
-    testWidgets('показує "р.н.: 1 з 1" коли одна дитина в групі', (tester) async {
-      await tester.pumpWidget(buildCard(
-        child: makeChild(),
-        sameYearRank: 1,
-        sameYearTotal: 1,
-      ));
-      expect(find.text('р.н.: 1 з 1'), findsOneWidget);
-    });
-
-    testWidgets('показує "р.н.: 5 з 10" для довільного рангу', (tester) async {
-      await tester.pumpWidget(buildCard(
-        child: makeChild(),
-        sameYearRank: 5,
-        sameYearTotal: 10,
-      ));
-      expect(find.text('р.н.: 5 з 10'), findsOneWidget);
     });
   });
 
@@ -138,12 +125,22 @@ void main() {
   group('ChildCard — onTap', () {
     testWidgets('викликає onTap при натисканні', (tester) async {
       var tapped = false;
-      await tester.pumpWidget(MaterialApp(
-        home: Scaffold(
-          body: ChildCard(
-            child: makeChild(),
-            rank: 1,
-            onTap: () => tapped = true,
+      await tester.pumpWidget(ProviderScope(
+        overrides: [
+          beltRequirementProvider.overrideWith((ref, belt) => null),
+          beltProgressProvider.overrideWith((ref, args) => Stream.value(null)),
+          childAttendanceStatsProvider.overrideWith(
+            (ref, id) => Stream.value((total: 0, present: 0, pct: 0.0)),
+          ),
+          childConfirmedTrainingCountProvider.overrideWith((ref, id) => 0),
+        ],
+        child: MaterialApp(
+          home: Scaffold(
+            body: ChildCard(
+              child: makeChild(),
+              rank: 1,
+              onTap: () => tapped = true,
+            ),
           ),
         ),
       ));

@@ -147,8 +147,8 @@ void main() {
         exerciseName: 'Планка',
         exerciseUnit: 'секунди',
         targetValue: 300.0,
-        startDate: DateTime(2026, 6, 1),
-        deadline: DateTime(2026, 6, 8),
+        startDate: DateTime.now().subtract(const Duration(days: 7)),
+        deadline: DateTime.now().add(const Duration(days: 7)),
         assignedChildIds: ['c1', 'c2', 'c3'],
       );
       await fakeFirestore
