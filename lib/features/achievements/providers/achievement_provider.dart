@@ -62,12 +62,16 @@ class AchievementNotifier extends StateNotifier<AsyncValue<void>> {
   }) async {
     state = const AsyncValue.loading();
     state = await AsyncValue.guard(() async {
+      // Chunking logic to avoid Firestore 500-op limit per batch
+      const maxBatchSize = 400;
+      var currentBatchSize = 0;
       var batch = _db.batch();
-      var count = 0;
+
       for (final childId in childIds) {
         for (final defId in defIds) {
+          final docRef = _db.collection('achievements').doc('${childId}_$defId');
           batch.set(
-            _db.collection('achievements').doc('${childId}_$defId'),
+            docRef,
             {
               'childId': childId,
               'achievementId': defId,
@@ -76,15 +80,18 @@ class AchievementNotifier extends StateNotifier<AsyncValue<void>> {
               if (note != null && note.isNotEmpty) 'note': note,
             },
           );
-          count++;
-          if (count == 400) {
+          currentBatchSize++;
+
+          if (currentBatchSize >= maxBatchSize) {
             await batch.commit();
             batch = _db.batch();
-            count = 0;
+            currentBatchSize = 0;
           }
         }
       }
-      if (count > 0) await batch.commit();
+      if (currentBatchSize > 0) {
+        await batch.commit();
+      }
     });
   }
 

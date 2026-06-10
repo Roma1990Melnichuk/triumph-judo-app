@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 import '../../../core/constants/app_colors.dart';
 import '../../../core/models/individual_slot_model.dart';
@@ -78,20 +79,56 @@ class _CoachView extends ConsumerWidget {
 
     return Scaffold(
       backgroundColor: AppColors.background,
-      appBar: AppBar(
-        title: const Text('Індивідуальні тренування'),
-        actions: [
-          if (slots.isNotEmpty)
-            IconButton(
-              icon: const Icon(Icons.download_outlined),
-              tooltip: 'Експорт',
-              onPressed: () => ExportService.exportIndividualTrainings(
-                  context, slots),
+      body: SafeArea(
+        child: Column(
+          children: [
+            Padding(
+              padding: const EdgeInsets.fromLTRB(12, 8, 12, 0),
+              child: Row(
+                children: [
+                  GestureDetector(
+                    onTap: () => context.pop(),
+                    child: Container(
+                      width: 44,
+                      height: 44,
+                      decoration: BoxDecoration(
+                        color: AppColors.surface2,
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: const Center(
+                        child: ColorFiltered(
+                          colorFilter: ColorFilter.mode(AppColors.textPrimary, BlendMode.srcIn),
+                          child: TriumphIcon(TIcon.back, size: 22),
+                        ),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  const Expanded(
+                    child: Text(
+                      'Індивідуальні тренування',
+                      style: TextStyle(fontSize: 20, fontWeight: FontWeight.w800),
+                    ),
+                  ),
+                  if (slots.isNotEmpty)
+                    GestureDetector(
+                      onTap: () => ExportService.exportIndividualTrainings(context, slots),
+                      child: Container(
+                        width: 44,
+                        height: 44,
+                        decoration: BoxDecoration(
+                          color: AppColors.surface2,
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: const Center(
+                          child: Icon(Icons.download_outlined, color: AppColors.textPrimary, size: 22),
+                        ),
+                      ),
+                    ),
+                ],
+              ),
             ),
-        ],
-      ),
-      body: Column(
-        children: [
+
           // Pending requests banner
           if (pending.isNotEmpty)
             Container(
@@ -199,7 +236,8 @@ class _CoachView extends ConsumerWidget {
                         ],
                       ),
           ),
-        ],
+          ],
+        ),
       ),
       floatingActionButton: FloatingActionButton(
         onPressed: () => _showAddSlotDialog(context, ref, userId, coachName),
@@ -233,17 +271,49 @@ class _ParentView extends ConsumerWidget {
       length: 2,
       child: Scaffold(
         backgroundColor: AppColors.background,
-        appBar: AppBar(
-          title: const Text('Індивідуальні тренування'),
-          bottom: const TabBar(
-            tabs: [
-              Tab(text: 'Доступні'),
-              Tab(text: 'Мої записи'),
-            ],
-          ),
-        ),
-        body: TabBarView(
-          children: [
+        body: SafeArea(
+          child: Column(
+            children: [
+              Padding(
+                padding: const EdgeInsets.fromLTRB(12, 8, 12, 0),
+                child: Row(
+                  children: [
+                    GestureDetector(
+                      onTap: () => context.pop(),
+                      child: Container(
+                        width: 44,
+                        height: 44,
+                        decoration: BoxDecoration(
+                          color: AppColors.surface2,
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: const Center(
+                          child: ColorFiltered(
+                            colorFilter: ColorFilter.mode(AppColors.textPrimary, BlendMode.srcIn),
+                            child: TriumphIcon(TIcon.back, size: 22),
+                          ),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    const Expanded(
+                      child: Text(
+                        'Індивідуальні тренування',
+                        style: TextStyle(fontSize: 20, fontWeight: FontWeight.w800),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const TabBar(
+                tabs: [
+                  Tab(text: 'Доступні'),
+                  Tab(text: 'Мої записи'),
+                ],
+              ),
+              Expanded(
+                child: TabBarView(
+                  children: [
             // Available slots
             availableAsync.isLoading
                 ? const Center(child: CircularProgressIndicator())
@@ -277,7 +347,11 @@ class _ParentView extends ConsumerWidget {
                       isCoach: false,
                     ),
                   ),
-          ],
+                  ],
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );

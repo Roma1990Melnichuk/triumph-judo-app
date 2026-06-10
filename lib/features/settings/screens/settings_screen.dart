@@ -1,6 +1,7 @@
 import 'dart:io';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:file_picker/file_picker.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -28,9 +29,24 @@ class SettingsScreen extends ConsumerWidget {
 
     return Scaffold(
       backgroundColor: AppColors.background,
-      appBar: AppBar(title: const Text('Налаштування')),
-      body: ListView(
-        padding: const EdgeInsets.all(16),
+      body: SafeArea(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Padding(
+              padding: EdgeInsets.fromLTRB(20, 16, 20, 8),
+              child: Text(
+                'Налаштування',
+                style: TextStyle(
+                  fontSize: 24,
+                  fontWeight: FontWeight.w800,
+                  color: AppColors.textPrimary,
+                ),
+              ),
+            ),
+            Expanded(
+              child: ListView(
+                padding: const EdgeInsets.fromLTRB(16, 0, 16, 32),
         children: [
 
           // ── Profile card ──────────────────────────────────────────────────
@@ -43,21 +59,7 @@ class SettingsScreen extends ConsumerWidget {
             ),
             child: Row(
               children: [
-                Container(
-                  width: 56, height: 56,
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    gradient: AppColors.ctaGradient,
-                    boxShadow: [
-                      BoxShadow(
-                        color: AppColors.primary.withValues(alpha: 0.4),
-                        blurRadius: 14,
-                        offset: const Offset(0, 4),
-                      ),
-                    ],
-                  ),
-                  child: Center(child: TriumphIcon(TIcon.profile, size: 28)),
-                ),
+                _ProfileAvatar(name: user?.name ?? ''),
                 const SizedBox(width: 14),
                 Expanded(
                   child: Column(
@@ -110,37 +112,39 @@ class SettingsScreen extends ConsumerWidget {
             items: [
               _MenuItem(
                 tIcon: TIcon.profile,
+                color: AppColors.primary,
                 label: 'Редагувати профіль',
                 onTap: () => _showEditProfile(context, ref, user!),
               ),
               if (isCoach) ...[
                 _MenuItem(
-                  tIcon: TIcon.tasks,
+                  tIcon: TIcon.memberCard3d,
                   label: 'Абонементи спортсменів',
                   onTap: () => context.push('/membership-management'),
                 ),
                 _MenuItem(
                   tIcon: TIcon.team,
+                  color: const Color(0xFF34C759),
                   label: 'Імпорт спортсменів',
                   onTap: () => _showCsvImport(context, ref, user!),
                 ),
                 _MenuItem(
-                  tIcon: TIcon.training,
+                  tIcon: TIcon.training3d,
                   label: 'Індивідуальні тренування',
                   onTap: () => context.push('/individual-training'),
                 ),
                 _MenuItem(
-                  tIcon: TIcon.tasks,
+                  tIcon: TIcon.motivation3d,
                   label: 'Завдання спортсменам',
                   onTap: () => context.push('/assignments'),
                 ),
                 _MenuItem(
-                  tIcon: TIcon.calendar,
+                  tIcon: TIcon.calendar3d,
                   label: 'Розклад тренувань',
                   onTap: () => context.push('/schedule'),
                 ),
                 _MenuItem(
-                  tIcon: TIcon.tournament,
+                  tIcon: TIcon.trophy3d,
                   label: 'Типи змагань',
                   onTap: () => _showCompetitionTypes(context, ref, user!),
                 ),
@@ -150,17 +154,18 @@ class SettingsScreen extends ConsumerWidget {
                   onTap: () => _showCoachManagement(context, ref, user!),
                 ),
                 _MenuItem(
-                  tIcon: TIcon.achievements,
+                  tIcon: TIcon.medal3d,
                   label: 'Видача досягнень',
                   onTap: () => context.push('/achievements'),
                 ),
                 _MenuItem(
                   tIcon: TIcon.belts,
+                  color: const Color(0xFFFF9500),
                   label: 'Масова здача поясів',
                   onTap: () => context.push('/bulk-belt'),
                 ),
                 _MenuItem(
-                  tIcon: TIcon.training,
+                  tIcon: TIcon.training3d,
                   label: 'Каталог вправ',
                   onTap: () => context.push(
                     '/fitness/${user!.uid}',
@@ -169,11 +174,13 @@ class SettingsScreen extends ConsumerWidget {
                 ),
                 _MenuItem(
                   tIcon: TIcon.statistics,
+                  color: const Color(0xFF30D158),
                   label: 'Масові фітнес-цілі',
                   onTap: () => context.push('/bulk-fitness-goals'),
                 ),
                 _MenuItem(
                   tIcon: TIcon.records,
+                  color: const Color(0xFF5AC8FA),
                   label: 'Експорт даних',
                   onTap: () => _showExportMenu(context, ref),
                 ),
@@ -186,24 +193,27 @@ class SettingsScreen extends ConsumerWidget {
               ],
               if (!isCoach) ...[
                 _MenuItem(
-                  tIcon: TIcon.training,
+                  tIcon: TIcon.training3d,
                   label: 'Індивідуальні тренування',
                   onTap: () => context.push('/individual-training'),
                 ),
                 _MenuItem(
                   tIcon: TIcon.athlete,
+                  color: AppColors.primary,
                   label: 'Моя дитина',
                   onTap: () => _showLinkChild(context, ref, user!),
                 ),
               ],
               _MenuItem(
                 tIcon: TIcon.notifications,
+                color: const Color(0xFFFF3B30),
                 label: 'Сповіщення',
                 badge: unreadCount > 0 ? unreadCount : null,
                 onTap: () => context.push('/notifications'),
               ),
               _MenuItem(
                 tIcon: TIcon.info,
+                color: AppColors.textSecondary,
                 label: 'Про додаток',
                 onTap: () => _showAbout(context),
               ),
@@ -211,6 +221,10 @@ class SettingsScreen extends ConsumerWidget {
           ),
           const SizedBox(height: 20),
 
+          if (isCoach) ...[
+            const _DevSection(),
+            const SizedBox(height: 20),
+          ],
 
           // ── Sign out ───────────────────────────────────────────────────────
           GradientButton(
@@ -229,6 +243,10 @@ class SettingsScreen extends ConsumerWidget {
           ),
           const SizedBox(height: 32),
         ],
+      ),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -485,21 +503,39 @@ class _MenuItem extends StatelessWidget {
   final Color? color;
   final int? badge;
 
+  static bool _is3dIcon(TIcon icon) =>
+      icon.name.endsWith('3d') || icon == TIcon.coach;
+
   @override
   Widget build(BuildContext context) {
-    final c = color ?? AppColors.textSecondary;
-    final Widget iconWidget = tIcon != null
-        ? TriumphIcon(tIcon!, size: 22)
-        : Icon(icon!, color: c, size: 20);
-    return ListTile(
-      leading: Container(
-        width: 36, height: 36,
-        decoration: BoxDecoration(
-          color: (tIcon != null ? const Color(0xFFFFD21A) : c).withValues(alpha: 0.10),
-          borderRadius: BorderRadius.circular(10),
+    final c = color ?? AppColors.primary;
+    final Widget leading;
+    if (tIcon != null && _is3dIcon(tIcon!)) {
+      // 3D photorealistic icon — clip to rounded square, fill space
+      leading = ClipRRect(
+        borderRadius: BorderRadius.circular(12),
+        child: SizedBox(
+          width: 40, height: 40,
+          child: TriumphIcon(tIcon!, size: 40),
         ),
-        child: Center(child: iconWidget),
-      ),
+      );
+    } else {
+      // Simple monochrome or Material icon — tinted inside a subtle container
+      final Widget iconWidget = tIcon != null
+          ? TriumphIcon(tIcon!, size: 22, color: c)
+          : Icon(icon!, color: c, size: 20);
+      leading = Container(
+        width: 40, height: 40,
+        decoration: BoxDecoration(
+          color: c.withValues(alpha: 0.12),
+          borderRadius: BorderRadius.circular(12),
+        ),
+        alignment: Alignment.center,
+        child: iconWidget,
+      );
+    }
+    return ListTile(
+      leading: leading,
       title: Text(
         label,
         style: TextStyle(
@@ -719,6 +755,69 @@ class _CompetitionTypesSheetState
 // Add competition type — AlertDialog (not BottomSheet) for proper IME on Android
 // ─────────────────────────────────────────────────────────────────────────────
 
+// ── Profile avatar: photo from Firebase Auth or initials fallback ─────────────
+
+class _ProfileAvatar extends StatelessWidget {
+  const _ProfileAvatar({required this.name});
+  final String name;
+
+  String _initials() {
+    final parts = name.trim().split(' ');
+    if (parts.length >= 2 && parts[0].isNotEmpty && parts[1].isNotEmpty) {
+      return '${parts[0][0]}${parts[1][0]}'.toUpperCase();
+    }
+    return name.isNotEmpty ? name[0].toUpperCase() : '?';
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final photoUrl = FirebaseAuth.instance.currentUser?.photoURL;
+    return Container(
+      width: 64,
+      height: 64,
+      decoration: BoxDecoration(
+        shape: BoxShape.circle,
+        gradient: photoUrl != null ? null : AppColors.ctaGradient,
+        boxShadow: [
+          BoxShadow(
+            color: AppColors.primary.withValues(alpha: 0.4),
+            blurRadius: 14,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: photoUrl != null && photoUrl.isNotEmpty
+          ? ClipOval(
+              child: Image.network(
+                photoUrl,
+                width: 64,
+                height: 64,
+                fit: BoxFit.cover,
+                errorBuilder: (_, __, ___) => _InitialsCircle(text: _initials()),
+              ),
+            )
+          : _InitialsCircle(text: _initials()),
+    );
+  }
+}
+
+class _InitialsCircle extends StatelessWidget {
+  const _InitialsCircle({required this.text});
+  final String text;
+
+  @override
+  Widget build(BuildContext context) => Center(
+        child: Text(
+          text,
+          style: const TextStyle(
+            color: Colors.white,
+            fontWeight: FontWeight.bold,
+            fontSize: 22,
+          ),
+        ),
+      );
+}
+
 class _AddCompetitionTypeDialog extends StatefulWidget {
   const _AddCompetitionTypeDialog({required this.onAdd});
   final void Function(String name) onAdd;
@@ -834,7 +933,18 @@ class _CoachManagementSheetState
     setState(() { _foundUser = null; _emailCtrl.clear(); });
     if (mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Права тренера надано ✅')),
+        SnackBar(
+          content: Row(
+            children: [
+              const ColorFiltered(
+                colorFilter: ColorFilter.mode(Colors.white, BlendMode.srcIn),
+                child: TriumphIcon(TIcon.success, size: 18),
+              ),
+              const SizedBox(width: 8),
+              const Text('Права тренера надано'),
+            ],
+          ),
+        ),
       );
     }
   }

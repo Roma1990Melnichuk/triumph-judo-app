@@ -10,6 +10,7 @@ import '../../../core/models/fitness_assignment_model.dart';
 import '../../../core/models/fitness_log_model.dart';
 import '../../team/providers/children_provider.dart';
 import '../providers/fitness_assignment_provider.dart';
+import '../../../shared/widgets/triumph_icon.dart';
 
 final _shortFmt = DateFormat('dd.MM');
 final _fullFmt = DateFormat('dd.MM.yyyy');
@@ -57,10 +58,43 @@ class AssignmentGroupProgressScreen extends ConsumerWidget {
     if (assignment == null) {
       return Scaffold(
         backgroundColor: AppColors.background,
-        appBar: AppBar(title: const Text('Прогрес групи')),
-        body: const Center(
-          child: Text('Завдання не знайдено',
-              style: TextStyle(color: AppColors.textSecondary)),
+        body: SafeArea(
+          child: Column(
+            children: [
+              Padding(
+                padding: const EdgeInsets.fromLTRB(12, 8, 12, 0),
+                child: Row(
+                  children: [
+                    GestureDetector(
+                      onTap: () => context.pop(),
+                      child: Container(
+                        width: 44,
+                        height: 44,
+                        decoration: BoxDecoration(
+                          color: AppColors.surface2,
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: const Center(
+                          child: ColorFiltered(
+                            colorFilter: ColorFilter.mode(AppColors.textPrimary, BlendMode.srcIn),
+                            child: TriumphIcon(TIcon.back, size: 22),
+                          ),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    const Text('Прогрес групи', style: TextStyle(fontSize: 20, fontWeight: FontWeight.w800)),
+                  ],
+                ),
+              ),
+              const Expanded(
+                child: Center(
+                  child: Text('Завдання не знайдено',
+                      style: TextStyle(color: AppColors.textSecondary)),
+                ),
+              ),
+            ],
+          ),
         ),
       );
     }
@@ -132,12 +166,41 @@ class AssignmentGroupProgressScreen extends ConsumerWidget {
 
     return Scaffold(
       backgroundColor: AppColors.background,
-      appBar: AppBar(
-        backgroundColor: AppColors.background,
-        title: const Text('Прогрес групи'),
-      ),
-      body: ListView(
-        padding: const EdgeInsets.only(bottom: 32),
+      body: SafeArea(
+        child: Column(
+          children: [
+            Padding(
+              padding: const EdgeInsets.fromLTRB(12, 8, 12, 0),
+              child: Row(
+                children: [
+                  GestureDetector(
+                    onTap: () => context.pop(),
+                    child: Container(
+                      width: 44,
+                      height: 44,
+                      decoration: BoxDecoration(
+                        color: AppColors.surface2,
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: const Center(
+                        child: ColorFiltered(
+                          colorFilter: ColorFilter.mode(AppColors.textPrimary, BlendMode.srcIn),
+                          child: TriumphIcon(TIcon.back, size: 22),
+                        ),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  const Text(
+                    'Прогрес групи',
+                    style: TextStyle(fontSize: 20, fontWeight: FontWeight.w800),
+                  ),
+                ],
+              ),
+            ),
+            Expanded(
+              child: ListView(
+                padding: const EdgeInsets.only(bottom: 32),
         children: [
           // ── Assignment card ─────────────────────────────────────────────
           _AssignmentSummaryCard(
@@ -219,6 +282,10 @@ class AssignmentGroupProgressScreen extends ConsumerWidget {
             ),
           ),
         ],
+      ),
+    ),
+  ],
+),
       ),
     );
   }

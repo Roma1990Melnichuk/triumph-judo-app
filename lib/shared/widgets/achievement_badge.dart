@@ -7,14 +7,14 @@ import '../../core/models/achievement_model.dart';
 import '../animations/app_animations.dart';
 
 /// Shows achievement icon: PNG asset if exists, otherwise emoji fallback.
-/// Asset path: assets/achievements/achievement_{id}.png
+/// Asset path: assets/achievements/achievement_{id}.webp
 class AchievementIcon extends StatelessWidget {
   const AchievementIcon({super.key, required this.def, this.size = 40});
 
   final AchievementDef def;
   final double size;
 
-  String get _assetPath => 'assets/achievements/achievement_${def.id}.png';
+  String get _assetPath => 'assets/achievements/achievement_${def.id}.webp';
 
   @override
   Widget build(BuildContext context) {

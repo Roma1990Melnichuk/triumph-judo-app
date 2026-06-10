@@ -132,8 +132,8 @@ class _TriumphNavBar extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       decoration: const BoxDecoration(
-        color: AppColors.surface,
-        border: Border(top: BorderSide(color: AppColors.surface3, width: 1)),
+        color: Color(0xEB0B0B0B), // rgba(11,11,11,.92)
+        border: Border(top: BorderSide(color: Color(0x14FFFFFF), width: 1)), // rgba(255,255,255,.08)
       ),
       child: SafeArea(
         top: false,
@@ -194,7 +194,7 @@ class _NavItem extends StatelessWidget {
                   borderRadius: BorderRadius.circular(10),
                   boxShadow: [
                     BoxShadow(
-                      color: AppColors.primary.withValues(alpha: 0.35),
+                      color: AppColors.orange.withValues(alpha: 0.35),
                       blurRadius: 12,
                       spreadRadius: 0,
                     ),
@@ -203,7 +203,7 @@ class _NavItem extends StatelessWidget {
               : null,
           child: ColorFiltered(
             colorFilter: active
-                ? const ColorFilter.mode(AppColors.primary, BlendMode.srcATop)
+                ? const ColorFilter.mode(AppColors.orange, BlendMode.srcATop)
                 : const ColorFilter.mode(Colors.transparent, BlendMode.dst),
             child: TriumphNavIcon(col: col, row: row, size: 26),
           ),
@@ -214,7 +214,7 @@ class _NavItem extends StatelessWidget {
           style: TextStyle(
             fontSize: 10,
             fontWeight: active ? FontWeight.w700 : FontWeight.w400,
-            color: active ? AppColors.primary : AppColors.textSecondary,
+            color: active ? AppColors.orange : AppColors.textSecondary,
           ),
           child: Text(label),
         ),

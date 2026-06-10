@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../core/constants/app_colors.dart';
 import '../../../core/models/fitness_assignment_model.dart';
+import '../../../shared/widgets/triumph_icon.dart';
 import '../../../core/models/fitness_exercise_model.dart';
 import '../../../core/models/fitness_log_model.dart';
 import '../providers/fitness_provider.dart';
@@ -52,30 +53,73 @@ class _MyAssignmentsScreenState extends ConsumerState<MyAssignmentsScreen> {
 
     return Scaffold(
       backgroundColor: AppColors.background,
-      appBar: AppBar(
-        backgroundColor: AppColors.background,
-        title: Column(
+      body: SafeArea(
+        child: Column(
           children: [
-            const Text('Мої завдання'),
-            if (active.isNotEmpty)
-              Text(
-                'Активні ${active.length}',
-                style: const TextStyle(
-                    fontSize: 11,
-                    color: AppColors.primary,
-                    fontWeight: FontWeight.normal),
+            Padding(
+              padding: const EdgeInsets.fromLTRB(12, 16, 12, 8),
+              child: Row(
+                children: [
+                  GestureDetector(
+                    onTap: () => context.pop(),
+                    child: Container(
+                      width: 44,
+                      height: 44,
+                      decoration: BoxDecoration(
+                        color: AppColors.surface2,
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: const Center(
+                        child: ColorFiltered(
+                          colorFilter: ColorFilter.mode(AppColors.textPrimary, BlendMode.srcIn),
+                          child: TriumphIcon(TIcon.back, size: 22),
+                        ),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Text(
+                          'Мої завдання',
+                          style: TextStyle(
+                            fontSize: 24,
+                            fontWeight: FontWeight.w800,
+                            color: AppColors.textPrimary,
+                          ),
+                        ),
+                        if (active.isNotEmpty)
+                          Text(
+                            'Активні ${active.length}',
+                            style: const TextStyle(
+                              fontSize: 12,
+                              color: AppColors.primary,
+                            ),
+                          ),
+                      ],
+                    ),
+                  ),
+                  GestureDetector(
+                    onTap: () {},
+                    child: Container(
+                      width: 44,
+                      height: 44,
+                      decoration: BoxDecoration(
+                        color: AppColors.surface2,
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: const Center(
+                        child: Icon(Icons.tune_outlined, size: 22, color: AppColors.textSecondary),
+                      ),
+                    ),
+                  ),
+                ],
               ),
-          ],
-        ),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.tune_outlined),
-            onPressed: () {},
-            tooltip: 'Фільтр',
-          ),
-        ],
-      ),
-      body: loading
+            ),
+            Expanded(
+              child: loading
           ? const Center(child: CircularProgressIndicator())
           : CustomScrollView(
               slivers: [
@@ -182,6 +226,10 @@ class _MyAssignmentsScreenState extends ConsumerState<MyAssignmentsScreen> {
                   ),
               ],
             ),
+            ),
+          ],
+        ),
+      ),
     );
   }
 

@@ -67,41 +67,89 @@ class _TeamListScreenState extends ConsumerState<TeamListScreen> {
 
     return Scaffold(
       backgroundColor: AppColors.background,
-      appBar: AppBar(
-        title: Column(
+      body: SafeArea(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text('Команда'),
-            Text(
-              '$total спортсменів',
-              style: const TextStyle(
-                  fontSize: 11, color: AppColors.textSecondary),
+            // ── Header ──────────────────────────────────────────────────────
+            Padding(
+              padding: const EdgeInsets.fromLTRB(20, 16, 16, 12),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Text(
+                          'Команда',
+                          style: TextStyle(
+                            fontSize: 24,
+                            fontWeight: FontWeight.w800,
+                            color: AppColors.textPrimary,
+                          ),
+                        ),
+                        Text(
+                          '$total спортсменів',
+                          style: const TextStyle(
+                            fontSize: 12,
+                            color: AppColors.textSecondary,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  if (isCoach)
+                    GestureDetector(
+                      onTap: () {
+                        final filtered = ref.read(filteredChildrenProvider);
+                        ExportService.exportAthletes(context, filtered);
+                      },
+                      child: Container(
+                        width: 44,
+                        height: 44,
+                        decoration: BoxDecoration(
+                          color: AppColors.surface2,
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(color: AppColors.surface3),
+                        ),
+                        alignment: Alignment.center,
+                        child: const Icon(Icons.download_outlined,
+                            color: AppColors.textSecondary, size: 20),
+                      ),
+                    ),
+                  const SizedBox(width: 8),
+                  GestureDetector(
+                    onTap: () =>
+                        setState(() => _filtersExpanded = !_filtersExpanded),
+                    child: Container(
+                      width: 44,
+                      height: 44,
+                      decoration: BoxDecoration(
+                        color: _filtersExpanded
+                            ? AppColors.primary.withValues(alpha: 0.15)
+                            : AppColors.surface2,
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(
+                          color: _filtersExpanded
+                              ? AppColors.primary.withValues(alpha: 0.5)
+                              : AppColors.surface3,
+                        ),
+                      ),
+                      alignment: Alignment.center,
+                      child: Icon(
+                        _filtersExpanded
+                            ? Icons.filter_list_off
+                            : Icons.filter_list,
+                        color: _filtersExpanded
+                            ? AppColors.primary
+                            : AppColors.textSecondary,
+                        size: 20,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
             ),
-          ],
-        ),
-        actions: [
-          if (isCoach)
-            IconButton(
-              icon: const Icon(Icons.download_outlined),
-              tooltip: 'Експорт',
-              onPressed: () {
-                final filtered = ref.read(filteredChildrenProvider);
-                ExportService.exportAthletes(context, filtered);
-              },
-            ),
-          IconButton(
-            icon: Icon(
-              _filtersExpanded
-                  ? Icons.filter_list_off
-                  : Icons.filter_list,
-            ),
-            tooltip: 'Фільтри',
-            onPressed: () =>
-                setState(() => _filtersExpanded = !_filtersExpanded),
-          ),
-        ],
-      ),
-      body: Column(
-        children: [
           // ── Quick filter tabs — coaches only ─────────────────────────
           if (isCoach)
           Container(
@@ -351,6 +399,7 @@ class _TeamListScreenState extends ConsumerState<TeamListScreen> {
                       }),
           ),
         ],
+        ),
       ),
       floatingActionButton: isCoach
           ? FloatingActionButton(

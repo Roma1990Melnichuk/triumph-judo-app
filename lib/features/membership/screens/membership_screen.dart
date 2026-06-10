@@ -79,24 +79,44 @@ class MembershipScreen extends ConsumerWidget {
 
     return Scaffold(
       backgroundColor: AppColors.background,
-      appBar: AppBar(
-        backgroundColor: AppColors.background,
-        elevation: 0,
-        leading: const BackButton(color: AppColors.textPrimary),
-        title: const Text(
-          'Абонементи',
-          style: TextStyle(
-            color: AppColors.textPrimary,
-            fontSize: 18,
-            fontWeight: FontWeight.w700,
-          ),
-        ),
-      ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.fromLTRB(16, 4, 16, 48),
+      body: SafeArea(
         child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            Padding(
+              padding: const EdgeInsets.fromLTRB(12, 8, 12, 0),
+              child: Row(
+                children: [
+                  GestureDetector(
+                    onTap: () => context.pop(),
+                    child: Container(
+                      width: 44,
+                      height: 44,
+                      decoration: BoxDecoration(
+                        color: AppColors.surface2,
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: const Center(
+                        child: ColorFiltered(
+                          colorFilter: ColorFilter.mode(AppColors.textPrimary, BlendMode.srcIn),
+                          child: TriumphIcon(TIcon.back, size: 22),
+                        ),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  const Text(
+                    'Абонементи',
+                    style: TextStyle(fontSize: 20, fontWeight: FontWeight.w800),
+                  ),
+                ],
+              ),
+            ),
+            Expanded(
+              child: SingleChildScrollView(
+                padding: const EdgeInsets.fromLTRB(16, 4, 16, 48),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
             // ── Top banner ──────────────────────────────────────────────────
             _TopBanner(),
 
@@ -134,6 +154,10 @@ class MembershipScreen extends ConsumerWidget {
           ],
         ),
       ),
+      ),
+    ],
+  ),
+  ),
     );
   }
 
@@ -248,8 +272,10 @@ class _CompactMembershipCard extends StatelessWidget {
 
   Widget _activeTile(BuildContext context, MembershipModel m) {
     final endDateStr = DateFormat('dd.MM.yyyy', 'uk').format(m.endDate);
+    final totalDays = m.endDate.difference(m.startDate).inDays;
+    final usedDays = totalDays - m.daysRemaining;
     return Container(
-      padding: const EdgeInsets.fromLTRB(14, 12, 14, 12),
+      padding: const EdgeInsets.fromLTRB(14, 12, 14, 14),
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(14),
         gradient: AppColors.heroCardGradient,
@@ -261,59 +287,148 @@ class _CompactMembershipCard extends StatelessWidget {
           ),
         ],
       ),
-      child: Row(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Container(
-            padding: const EdgeInsets.all(8),
-            decoration: BoxDecoration(
-              color: Colors.white.withValues(alpha: 0.15),
-              borderRadius: BorderRadius.circular(10),
-            ),
-            child: const ColorFiltered(
-              colorFilter: ColorFilter.mode(Colors.white, BlendMode.srcIn),
-              child: TriumphIcon(TIcon.trophy, size: 20),
-            ),
-          ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  m.planName.toUpperCase(),
-                  style: const TextStyle(
-                    color: AppColors.accent,
-                    fontSize: 13,
-                    fontWeight: FontWeight.w800,
-                  ),
+          Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: Colors.white.withValues(alpha: 0.15),
+                  borderRadius: BorderRadius.circular(10),
                 ),
-                const SizedBox(height: 2),
-                Text(
-                  'До $endDateStr · ${m.daysRemaining} ${_dayWord(m.daysRemaining)}',
-                  style: TextStyle(
-                    color: Colors.white.withValues(alpha: 0.75),
-                    fontSize: 11,
-                  ),
+                child: const ColorFiltered(
+                  colorFilter: ColorFilter.mode(Colors.white, BlendMode.srcIn),
+                  child: TriumphIcon(TIcon.trophy, size: 20),
                 ),
-              ],
-            ),
-          ),
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-            decoration: BoxDecoration(
-              color: AppColors.success.withValues(alpha: 0.20),
-              borderRadius: BorderRadius.circular(8),
-              border: Border.all(
-                  color: AppColors.success.withValues(alpha: 0.55)),
-            ),
-            child: const Text(
-              'Активний',
-              style: TextStyle(
-                color: AppColors.success,
-                fontSize: 10,
-                fontWeight: FontWeight.w700,
               ),
-            ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      m.planName.toUpperCase(),
+                      style: const TextStyle(
+                        color: AppColors.accent,
+                        fontSize: 13,
+                        fontWeight: FontWeight.w800,
+                      ),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      'До $endDateStr · ${m.daysRemaining} ${_dayWord(m.daysRemaining)}',
+                      style: TextStyle(
+                        color: Colors.white.withValues(alpha: 0.75),
+                        fontSize: 11,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                decoration: BoxDecoration(
+                  color: AppColors.success.withValues(alpha: 0.20),
+                  borderRadius: BorderRadius.circular(8),
+                  border: Border.all(color: AppColors.success.withValues(alpha: 0.55)),
+                ),
+                child: const Text(
+                  'Активний',
+                  style: TextStyle(
+                    color: AppColors.success,
+                    fontSize: 10,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          // Progress bar
+          Row(
+            children: [
+              Expanded(
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(4),
+                  child: LinearProgressIndicator(
+                    value: m.progressPercent,
+                    minHeight: 5,
+                    backgroundColor: Colors.white.withValues(alpha: 0.15),
+                    valueColor: const AlwaysStoppedAnimation(AppColors.accent),
+                  ),
+                ),
+              ),
+              const SizedBox(width: 10),
+              Text(
+                '$usedDays / $totalDays дн.',
+                style: TextStyle(
+                  fontSize: 10,
+                  color: Colors.white.withValues(alpha: 0.65),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          // CTA buttons
+          Row(
+            children: [
+              Expanded(
+                child: OutlinedButton(
+                  onPressed: () => context.push(
+                    '/abonements/detail',
+                    extra: {
+                      'tariff': TariffData(
+                        name: m.planName,
+                        description: 'Продовження поточного абонемента',
+                        iconEmoji: '🏆',
+                        badge: '',
+                        price: m.amount,
+                      ),
+                      'childId': childId,
+                    },
+                  ),
+                  style: OutlinedButton.styleFrom(
+                    foregroundColor: Colors.white,
+                    side: BorderSide(color: Colors.white.withValues(alpha: 0.4)),
+                    padding: const EdgeInsets.symmetric(vertical: 8),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                  ),
+                  child: const Text('Продовжити', style: TextStyle(fontSize: 12)),
+                ),
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: ElevatedButton(
+                  onPressed: () => context.push(
+                    '/abonements/detail',
+                    extra: {
+                      'tariff': TariffData(
+                        name: m.planName,
+                        description: 'Продовження поточного абонемента',
+                        iconEmoji: '🏆',
+                        badge: '',
+                        price: m.amount,
+                      ),
+                      'childId': childId,
+                    },
+                  ),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppColors.primary,
+                    foregroundColor: Colors.white,
+                    padding: const EdgeInsets.symmetric(vertical: 8),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    elevation: 0,
+                  ),
+                  child: const Text('Оплатити', style: TextStyle(fontSize: 12)),
+                ),
+              ),
+            ],
           ),
         ],
       ),

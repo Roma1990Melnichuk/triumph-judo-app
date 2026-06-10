@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 
 class AppColors {
   // ── Backgrounds ───────────────────────────────────────────────────────────
-  static const background = Color(0xFF050000); // near-black warm
+  static const background = Color(0xFF030303); // spec bg-0
   static const surface    = Color(0xFF120605); // card primary
   static const surface2   = Color(0xFF1B0A08); // card elevated
   static const surface3   = Color(0xFF2A1410); // borders / dividers
@@ -19,11 +19,17 @@ class AppColors {
   static const fabIcon = Color(0xFF0A0000); // near-black
 
   // ── Text ──────────────────────────────────────────────────────────────────
-  static const textPrimary   = Color(0xFFFFFFFF);
-  static const textSecondary = Color(0xFFB8A9A6); // warm gray per spec
+  static const textPrimary   = Color(0xFFF7F5F2); // warm white per spec text-1
+  static const textSecondary = Color(0xFFB7B0A8); // warm gray per spec text-2
+  static const text3         = Color(0xFF746E68); // spec text-3
+
+  // ── Borders ───────────────────────────────────────────────────────────────
+  static const borderSoft = Color(0x24FFB428); // rgba(255,180,40,.14) — card border
+  static const borderGold = Color(0x73FFAE00); // rgba(255,174,0,.45) — premium
+  static const borderRed  = Color(0x73FF2312); // rgba(255,35,18,.45)
 
   // ── Semantic ──────────────────────────────────────────────────────────────
-  static const success = Color(0xFF27AE60);
+  static const success = Color(0xFF63D728); // spec green
   static const error   = Color(0xFFD50000);
   static const info    = Color(0xFF4FC3F7);
   static const warning = Color(0xFFFF8A00);
@@ -50,10 +56,10 @@ class AppColors {
 
   // ── Gradients ─────────────────────────────────────────────────────────────
 
-  /// Main CTA: linear-gradient(90deg, #D50000 0%, #FF6A00 55%, #FFD21A 100%)
+  /// Main CTA: spec gradient-primary — #e40000 → #ff260f → #ff8a00 → #ffd21a
   static const ctaGradient = LinearGradient(
-    stops: [0.0, 0.55, 1.0],
-    colors: [Color(0xFFD50000), Color(0xFFFF6A00), Color(0xFFFFD21A)],
+    stops: [0.0, 0.42, 0.74, 1.0],
+    colors: [Color(0xFFE40000), Color(0xFFFF260F), Color(0xFFFF8A00), Color(0xFFFFD21A)],
     begin: Alignment.centerLeft,
     end: Alignment.centerRight,
   );

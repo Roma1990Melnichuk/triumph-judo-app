@@ -82,16 +82,32 @@ class MembershipNotifier extends StateNotifier<AsyncValue<void>> {
   }) async {
     state = const AsyncValue.loading();
     try {
+      // FIN-01 Fix: Check for existing active membership to extend it
+      final doc = await _db.collection('memberships').doc(athleteId).get();
+      DateTime finalStart = startDate;
+      DateTime finalEnd = endDate;
+
+      if (doc.exists) {
+        final existing = MembershipModel.fromMap(doc.data()!, athleteId);
+        if (!existing.isExpired) {
+          // If active, we push the endDate further by the duration of the new plan
+          final newPlanDuration = endDate.difference(startDate);
+          finalStart = existing.startDate; // Keep original start of the chain
+          finalEnd = existing.endDate.add(newPlanDuration);
+        }
+      }
+
       final data = <String, dynamic>{
         'athleteId': athleteId,
         'planName': planName,
-        'startDate': Timestamp.fromDate(startDate),
-        'endDate': Timestamp.fromDate(endDate),
+        'startDate': Timestamp.fromDate(finalStart),
+        'endDate': Timestamp.fromDate(finalEnd),
         'amount': amount,
         'currency': currency,
-        'sessionsUsed': 0,
+        'sessionsUsed': 0, // Reset or accumulate? Usually reset for new plan.
       };
       if (totalSessions != null) data['totalSessions'] = totalSessions;
+
       await _db.collection('memberships').doc(athleteId).set(data);
       state = const AsyncValue.data(null);
     } catch (e, st) {

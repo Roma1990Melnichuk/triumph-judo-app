@@ -39,59 +39,96 @@ class _CoachAssignmentsScreenState extends ConsumerState<CoachAssignmentsScreen>
 
     return Scaffold(
       backgroundColor: AppColors.background,
-      appBar: AppBar(
-        backgroundColor: AppColors.background,
-        title: const Text('Завдання тренера'),
-        bottom: TabBar(
-          controller: _tab,
-          indicatorColor: AppColors.primary,
-          labelColor: AppColors.textPrimary,
-          unselectedLabelColor: AppColors.textSecondary,
-          tabs: [
-            Tab(
+      body: SafeArea(
+        child: Column(
+          children: [
+            Padding(
+              padding: const EdgeInsets.fromLTRB(12, 16, 20, 8),
               child: Row(
-                mainAxisSize: MainAxisSize.min,
                 children: [
-                  const Text('Активні'),
-                  if (active.isNotEmpty) ...[
-                    const SizedBox(width: 6),
-                    _Badge(active.length),
-                  ],
+                  GestureDetector(
+                    onTap: () => context.pop(),
+                    child: Container(
+                      width: 44,
+                      height: 44,
+                      decoration: BoxDecoration(
+                        color: AppColors.surface2,
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: const Center(
+                        child: ColorFiltered(
+                          colorFilter: ColorFilter.mode(AppColors.textPrimary, BlendMode.srcIn),
+                          child: TriumphIcon(TIcon.back, size: 22),
+                        ),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 16),
+                  const Text(
+                    'Завдання тренера',
+                    style: TextStyle(
+                      fontSize: 24,
+                      fontWeight: FontWeight.w800,
+                      color: AppColors.textPrimary,
+                    ),
+                  ),
                 ],
               ),
             ),
-            Tab(
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
+            TabBar(
+              controller: _tab,
+              indicatorColor: AppColors.primary,
+              labelColor: AppColors.textPrimary,
+              unselectedLabelColor: AppColors.textSecondary,
+              tabs: [
+                Tab(
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      const Text('Активні'),
+                      if (active.isNotEmpty) ...[
+                        const SizedBox(width: 6),
+                        _Badge(active.length),
+                      ],
+                    ],
+                  ),
+                ),
+                Tab(
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      const Text('Чернетки'),
+                      if (drafts.isNotEmpty) ...[
+                        const SizedBox(width: 6),
+                        _Badge(drafts.length),
+                      ],
+                    ],
+                  ),
+                ),
+                const Tab(text: 'Завершені'),
+              ],
+            ),
+            Expanded(
+              child: TabBarView(
+                controller: _tab,
                 children: [
-                  const Text('Чернетки'),
-                  if (drafts.isNotEmpty) ...[
-                    const SizedBox(width: 6),
-                    _Badge(drafts.length),
-                  ],
+                  _AssignmentsList(
+                    assignments: active,
+                    emptyText: 'Немає активних завдань',
+                  ),
+                  _AssignmentsList(
+                    assignments: drafts,
+                    emptyText: 'Немає чернеток',
+                  ),
+                  _AssignmentsList(
+                    assignments: completed,
+                    emptyText: 'Немає завершених завдань',
+                  ),
                 ],
               ),
             ),
-            const Tab(text: 'Завершені'),
           ],
         ),
-      ),
-      body: TabBarView(
-        controller: _tab,
-        children: [
-          _AssignmentsList(
-            assignments: active,
-            emptyText: 'Немає активних завдань',
-          ),
-          _AssignmentsList(
-            assignments: drafts,
-            emptyText: 'Немає чернеток',
-          ),
-          _AssignmentsList(
-            assignments: completed,
-            emptyText: 'Немає завершених завдань',
-          ),
-        ],
       ),
       floatingActionButton: FloatingActionButton(
         onPressed: () => context.push('/assignments/create'),

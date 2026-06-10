@@ -31,30 +31,83 @@ class _GrantAchievementScreenState
 
     return Scaffold(
       backgroundColor: AppColors.background,
-      appBar: AppBar(
-        title: const Text('Видача досягнень'),
-        actions: [
-          IconButton(
-            icon: ColorFiltered(
-              colorFilter: const ColorFilter.mode(AppColors.textPrimary, BlendMode.srcIn),
-              child: TriumphIcon(TIcon.statistics, size: 22),
+      body: SafeArea(
+        child: Column(
+          children: [
+            Padding(
+              padding: const EdgeInsets.fromLTRB(12, 8, 12, 0),
+              child: Row(
+                children: [
+                  GestureDetector(
+                    onTap: () => context.pop(),
+                    child: Container(
+                      width: 44,
+                      height: 44,
+                      decoration: BoxDecoration(
+                        color: AppColors.surface2,
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: const Center(
+                        child: ColorFiltered(
+                          colorFilter: ColorFilter.mode(AppColors.textPrimary, BlendMode.srcIn),
+                          child: TriumphIcon(TIcon.back, size: 22),
+                        ),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  const Expanded(
+                    child: Text(
+                      'Видача досягнень',
+                      style: TextStyle(fontSize: 20, fontWeight: FontWeight.w800),
+                    ),
+                  ),
+                  GestureDetector(
+                    onTap: () => context.push('/achievement-stats'),
+                    child: Container(
+                      width: 44,
+                      height: 44,
+                      decoration: BoxDecoration(
+                        color: AppColors.surface2,
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: const Center(
+                        child: ColorFiltered(
+                          colorFilter: ColorFilter.mode(AppColors.textPrimary, BlendMode.srcIn),
+                          child: TriumphIcon(TIcon.statistics, size: 22),
+                        ),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  GestureDetector(
+                    onTap: () => context.push('/bulk-achievements'),
+                    child: Container(
+                      width: 44,
+                      height: 44,
+                      decoration: BoxDecoration(
+                        color: AppColors.surface2,
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: const Center(
+                        child: ColorFiltered(
+                          colorFilter: ColorFilter.mode(AppColors.textPrimary, BlendMode.srcIn),
+                          child: TriumphIcon(TIcon.team, size: 22),
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
             ),
-            tooltip: 'Статистика нагород',
-            onPressed: () => context.push('/achievement-stats'),
-          ),
-          IconButton(
-            icon: ColorFiltered(
-              colorFilter: const ColorFilter.mode(AppColors.textPrimary, BlendMode.srcIn),
-              child: TriumphIcon(TIcon.team, size: 22),
+            Expanded(
+              child: _selected == null
+                  ? _athleteList(children)
+                  : _achievementList(_selected!),
             ),
-            tooltip: 'Масова видача',
-            onPressed: () => context.push('/bulk-achievements'),
-          ),
-        ],
+          ],
+        ),
       ),
-      body: _selected == null
-          ? _athleteList(children)
-          : _achievementList(_selected!),
     );
   }
 
@@ -70,29 +123,24 @@ class _GrantAchievementScreenState
         GestureDetector(
           onTap: () => _showCatalog(context),
           child: Container(
-            color: AppColors.surface2,
             width: double.infinity,
             height: 70,
-            child: Stack(
+            decoration: const BoxDecoration(
+              gradient: LinearGradient(
+                colors: [AppColors.primaryDark, AppColors.surface2],
+              ),
+            ),
+            alignment: Alignment.center,
+            child: const Row(
+              mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Image.asset('assets/achievements/achievements_sheet.png',
-                    width: double.infinity, height: 70, fit: BoxFit.cover),
-                Container(
-                  color: Colors.black.withValues(alpha: 0.5),
-                  alignment: Alignment.center,
-                  child: const Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Icon(Icons.grid_view, color: Colors.white70, size: 14),
-                      SizedBox(width: 6),
-                      Text('Переглянути каталог значків',
-                          style: TextStyle(
-                              color: Colors.white,
-                              fontSize: 12,
-                              fontWeight: FontWeight.w600)),
-                    ],
-                  ),
-                ),
+                Icon(Icons.grid_view, color: Colors.white70, size: 14),
+                SizedBox(width: 6),
+                Text('Переглянути каталог значків',
+                    style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 12,
+                        fontWeight: FontWeight.w600)),
               ],
             ),
           ),
@@ -141,31 +189,22 @@ class _GrantAchievementScreenState
         GestureDetector(
           onTap: () => _showCatalog(context),
           child: Container(
-            color: AppColors.surface2,
             width: double.infinity,
             height: 80,
-            child: Stack(
+            decoration: const BoxDecoration(
+              gradient: LinearGradient(
+                colors: [AppColors.primaryDark, AppColors.surface2],
+              ),
+            ),
+            alignment: Alignment.center,
+            child: const Row(
+              mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Image.asset(
-                  'assets/achievements/achievements_sheet.png',
-                  width: double.infinity,
-                  height: 80,
-                  fit: BoxFit.cover,
-                ),
-                Container(
-                  color: Colors.black.withValues(alpha: 0.45),
-                  alignment: Alignment.center,
-                  child: const Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Icon(Icons.grid_view, color: Colors.white70, size: 16),
-                      SizedBox(width: 6),
-                      Text('Переглянути всі значки',
-                          style: TextStyle(color: Colors.white, fontSize: 13,
-                              fontWeight: FontWeight.w600)),
-                    ],
-                  ),
-                ),
+                Icon(Icons.grid_view, color: Colors.white70, size: 16),
+                SizedBox(width: 6),
+                Text('Переглянути всі значки',
+                    style: TextStyle(color: Colors.white, fontSize: 13,
+                        fontWeight: FontWeight.w600)),
               ],
             ),
           ),
@@ -263,8 +302,42 @@ class _GrantAchievementScreenState
                 ),
               ],
             ),
-            InteractiveViewer(
-              child: Image.asset('assets/achievements/achievements_sheet.png'),
+            Flexible(
+              child: GridView.builder(
+                padding: const EdgeInsets.all(12),
+                shrinkWrap: true,
+                gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                  crossAxisCount: 5,
+                  mainAxisSpacing: 8,
+                  crossAxisSpacing: 8,
+                  childAspectRatio: 0.75,
+                ),
+                itemCount: kAchievements.length,
+                itemBuilder: (_, i) {
+                  final def = kAchievements[i];
+                  return Column(
+                    children: [
+                      Expanded(
+                        child: Image.asset(
+                          'assets/achievements/achievement_${def.id}.webp',
+                          fit: BoxFit.contain,
+                        ),
+                      ),
+                      const SizedBox(height: 2),
+                      Text(
+                        def.name,
+                        style: const TextStyle(
+                          color: Colors.white60,
+                          fontSize: 7,
+                        ),
+                        maxLines: 2,
+                        textAlign: TextAlign.center,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ],
+                  );
+                },
+              ),
             ),
           ],
         ),

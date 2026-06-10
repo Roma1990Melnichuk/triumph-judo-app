@@ -6,6 +6,7 @@ import '../../../core/constants/app_colors.dart';
 import '../../../core/utils/form_validators.dart';
 import '../../../shared/widgets/gradient_button.dart';
 import '../../../shared/widgets/triumph_emblem.dart';
+import '../../../shared/widgets/triumph_icon.dart';
 import '../providers/auth_provider.dart';
 
 class LoginScreen extends ConsumerStatefulWidget {
@@ -54,7 +55,18 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     await ref.read(authNotifierProvider.notifier).sendPasswordReset(email);
     if (mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Лист відправлено на вашу пошту ✅')),
+        SnackBar(
+          content: Row(
+            children: [
+              const ColorFiltered(
+                colorFilter: ColorFilter.mode(Colors.white, BlendMode.srcIn),
+                child: TriumphIcon(TIcon.success, size: 18),
+              ),
+              const SizedBox(width: 8),
+              const Text('Лист відправлено на вашу пошту'),
+            ],
+          ),
+        ),
       );
     }
   }

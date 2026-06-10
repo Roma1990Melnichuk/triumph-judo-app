@@ -42,7 +42,6 @@ class _AddResultScreenState extends ConsumerState<AddResultScreen> {
   // Medal/place button
   Widget _medalButton(int p) {
     final selected = _place == p;
-    final emoji = p == 1 ? '🥇' : p == 2 ? '🥈' : '🥉';
     final medalColor = p == 1
         ? AppColors.goldMedal
         : p == 2
@@ -76,7 +75,10 @@ class _AddResultScreenState extends ConsumerState<AddResultScreen> {
             ),
             child: Column(
               children: [
-                Text(emoji, style: const TextStyle(fontSize: 24)),
+                ColorFiltered(
+                  colorFilter: ColorFilter.mode(medalColor, BlendMode.srcIn),
+                  child: const TriumphIcon(TIcon.medal, size: 32),
+                ),
                 const SizedBox(height: 4),
                 Text(
                   '$p місце',
@@ -178,9 +180,41 @@ class _AddResultScreenState extends ConsumerState<AddResultScreen> {
 
     return Scaffold(
       backgroundColor: AppColors.background,
-      appBar: AppBar(title: const Text('Додати результат')),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.fromLTRB(16, 16, 16, 32),
+      body: SafeArea(
+        child: Column(
+          children: [
+            Padding(
+              padding: const EdgeInsets.fromLTRB(12, 8, 12, 0),
+              child: Row(
+                children: [
+                  GestureDetector(
+                    onTap: () => context.pop(),
+                    child: Container(
+                      width: 44,
+                      height: 44,
+                      decoration: BoxDecoration(
+                        color: AppColors.surface2,
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: const Center(
+                        child: ColorFiltered(
+                          colorFilter: ColorFilter.mode(AppColors.textPrimary, BlendMode.srcIn),
+                          child: TriumphIcon(TIcon.back, size: 22),
+                        ),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  const Text(
+                    'Додати результат',
+                    style: TextStyle(fontSize: 20, fontWeight: FontWeight.w800),
+                  ),
+                ],
+              ),
+            ),
+            Expanded(
+              child: SingleChildScrollView(
+                padding: const EdgeInsets.fromLTRB(16, 16, 16, 32),
         child: Form(
           key: _formKey,
           child: Column(
@@ -371,6 +405,10 @@ class _AddResultScreenState extends ConsumerState<AddResultScreen> {
           ),
         ),
       ),
+      ),
+    ],
+  ),
+  ),
     );
   }
 

@@ -229,7 +229,7 @@ class MedalTrackerDashboardCard extends ConsumerWidget {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           const Text(
-                            'Medal Tracker',
+                            'Трекер медалей',
                             style: TextStyle(
                               fontSize: 15,
                               fontWeight: FontWeight.w700,
@@ -237,7 +237,7 @@ class MedalTrackerDashboardCard extends ConsumerWidget {
                             ),
                           ),
                           Text(
-                            '$season Season Results',
+                            'Результати сезону $season',
                             style: const TextStyle(
                               fontSize: 11,
                               color: AppColors.textSecondary,
@@ -255,7 +255,7 @@ class MedalTrackerDashboardCard extends ConsumerWidget {
                           borderRadius: BorderRadius.circular(20),
                         ),
                         child: Text(
-                          '${stats.total} Medals',
+                          '${stats.total} медалей',
                           style: const TextStyle(
                             color: Colors.white,
                             fontWeight: FontWeight.bold,
@@ -274,15 +274,15 @@ class MedalTrackerDashboardCard extends ConsumerWidget {
                 child: Row(
                   children: [
                     Expanded(child: _MedalCounter(
-                        emoji: '🥇', label: 'Gold',
+                        emoji: '🥇', label: 'Золото',
                         count: stats.gold, color: AppColors.goldMedal)),
                     const SizedBox(width: 8),
                     Expanded(child: _MedalCounter(
-                        emoji: '🥈', label: 'Silver',
+                        emoji: '🥈', label: 'Срібло',
                         count: stats.silver, color: AppColors.silverMedal)),
                     const SizedBox(width: 8),
                     Expanded(child: _MedalCounter(
-                        emoji: '🥉', label: 'Bronze',
+                        emoji: '🥉', label: 'Бронза',
                         count: stats.bronze, color: AppColors.bronzeMedal)),
                   ],
                 ),
@@ -323,7 +323,7 @@ class MedalTrackerDashboardCard extends ConsumerWidget {
                     padding: EdgeInsets.zero,
                   ),
                   child: const Text(
-                    'View Details  →',
+                    'Детальніше →',
                     style: TextStyle(
                       color: AppColors.accent,
                       fontWeight: FontWeight.w600,
@@ -424,7 +424,10 @@ class AthleteMedalBlock extends ConsumerWidget {
 
                   // Best result
                   _ResultInfoRow(
-                    icon: '🏆',
+                    icon: const ColorFiltered(
+                      colorFilter: ColorFilter.mode(AppColors.accent, BlendMode.srcIn),
+                      child: TriumphIcon(TIcon.trophy, size: 16),
+                    ),
                     label: 'Найкращий результат',
                     value: '${best.competitionName} — ${_placeLabel(best.place)}',
                   ),
@@ -432,7 +435,10 @@ class AthleteMedalBlock extends ConsumerWidget {
 
                   // Recent tournament
                   _ResultInfoRow(
-                    icon: '📅',
+                    icon: const ColorFiltered(
+                      colorFilter: ColorFilter.mode(AppColors.textSecondary, BlendMode.srcIn),
+                      child: TriumphIcon(TIcon.calendar, size: 16),
+                    ),
                     label: 'Останній турнір',
                     value: '${recent.competitionName} — ${_placeLabel(recent.place)}',
                   ),
@@ -455,7 +461,7 @@ class _ResultInfoRow extends StatelessWidget {
     required this.label,
     required this.value,
   });
-  final String icon;
+  final Widget icon;
   final String label;
   final String value;
 
@@ -463,7 +469,7 @@ class _ResultInfoRow extends StatelessWidget {
   Widget build(BuildContext context) => Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(icon, style: const TextStyle(fontSize: 14)),
+          icon,
           const SizedBox(width: 8),
           Expanded(
             child: Column(
@@ -584,15 +590,15 @@ class _TopSummaryCard extends StatelessWidget {
             Row(
               children: [
                 Expanded(child: _MedalCounter(
-                    emoji: '🥇', label: 'Gold',
+                    emoji: '🥇', label: 'Золото',
                     count: stats.gold, color: AppColors.goldMedal)),
                 const SizedBox(width: 10),
                 Expanded(child: _MedalCounter(
-                    emoji: '🥈', label: 'Silver',
+                    emoji: '🥈', label: 'Срібло',
                     count: stats.silver, color: AppColors.silverMedal)),
                 const SizedBox(width: 10),
                 Expanded(child: _MedalCounter(
-                    emoji: '🥉', label: 'Bronze',
+                    emoji: '🥉', label: 'Бронза',
                     count: stats.bronze, color: AppColors.bronzeMedal)),
               ],
             ),

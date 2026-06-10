@@ -42,6 +42,7 @@ import 'features/competitions/screens/add_result_screen.dart';
 import 'features/rating/screens/rating_screen.dart';
 import 'features/settings/screens/settings_screen.dart';
 import 'features/team/screens/add_edit_child_screen.dart';
+import 'features/achievements/screens/achievement_catalog_screen.dart';
 import 'features/achievements/screens/achievement_stats_screen.dart';
 import 'features/achievements/screens/bulk_grant_achievements_screen.dart';
 import 'features/achievements/screens/grant_achievement_screen.dart';
@@ -205,17 +206,35 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: '/achievements',
         parentNavigatorKey: _rootNavKey,
+        redirect: (context, state) {
+          final user = ProviderScope.containerOf(context).read(currentUserModelProvider).value;
+          if (user == null || !user.isCoach) return '/home';
+          return null;
+        },
         pageBuilder: (_, s) => _fadeScale(s, const GrantAchievementScreen()),
       ),
       GoRoute(
         path: '/bulk-achievements',
         parentNavigatorKey: _rootNavKey,
+        redirect: (context, state) {
+          final user = ProviderScope.containerOf(context).read(currentUserModelProvider).value;
+          if (user == null || !user.isCoach) return '/home';
+          return null;
+        },
         pageBuilder: (_, s) => _fadeScale(s, const BulkGrantAchievementsScreen()),
       ),
       GoRoute(
         path: '/achievement-stats',
         parentNavigatorKey: _rootNavKey,
         pageBuilder: (_, s) => _fadeScale(s, const AchievementStatsScreen()),
+      ),
+      GoRoute(
+        path: '/achievement-catalog',
+        parentNavigatorKey: _rootNavKey,
+        pageBuilder: (_, s) => _fadeSlide(
+            s,
+            AchievementCatalogScreen(
+                childId: s.uri.queryParameters['childId'])),
       ),
       GoRoute(
         path: '/events/add',
@@ -561,11 +580,11 @@ class JudoApp extends ConsumerWidget {
       ),
       enabledBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(12),
-        borderSide: const BorderSide(color: AppColors.surface3),
+        borderSide: const BorderSide(color: Color(0x38FF9100)), // rgba(255,145,0,.22)
       ),
       focusedBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(12),
-        borderSide: const BorderSide(color: AppColors.primary, width: 1.5),
+        borderSide: const BorderSide(color: AppColors.orange, width: 1.5),
       ),
       errorBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(12),
@@ -589,8 +608,8 @@ class JudoApp extends ConsumerWidget {
       surfaceTintColor: Colors.transparent,
       shadowColor: Colors.transparent,
       shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.all(Radius.circular(16)),
-        side: BorderSide(color: AppColors.surface3, width: 1),
+        borderRadius: BorderRadius.all(Radius.circular(24)),
+        side: BorderSide(color: AppColors.borderSoft, width: 1),
       ),
       margin: EdgeInsets.symmetric(horizontal: 16, vertical: 5),
     ),
@@ -607,10 +626,10 @@ class JudoApp extends ConsumerWidget {
       backgroundColor: AppColors.surface2,
       selectedColor: AppColors.primary,
       disabledColor: AppColors.surface2,
-      labelStyle: _inter(size: 13, color: AppColors.textPrimary),
-      side: const BorderSide(color: AppColors.surface3),
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+      labelStyle: _inter(size: 12, color: AppColors.textSecondary),
+      side: const BorderSide(color: Color(0x2BFF9100)), // rgba(255,145,0,.17)
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 3),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(999)),
     ),
 
     // ── Snack bar ─────────────────────────────────────────────────────────────

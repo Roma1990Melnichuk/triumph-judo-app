@@ -38,6 +38,7 @@ class FitnessLog {
   final double value;
   final String comment;
   final int difficulty;
+  final String? assignmentId; // FIT-02 Fix: Link log to specific task
 
   const FitnessLog({
     required this.id,
@@ -49,6 +50,7 @@ class FitnessLog {
     required this.value,
     required this.comment,
     required this.difficulty,
+    this.assignmentId,
   });
 
   factory FitnessLog.fromFirestore(DocumentSnapshot doc) {
@@ -63,6 +65,7 @@ class FitnessLog {
       value: (d['value'] as num?)?.toDouble() ?? 0,
       comment: d['comment'] as String? ?? '',
       difficulty: d['difficulty'] as int? ?? 1,
+      assignmentId: d['assignmentId'] as String?,
     );
   }
 
@@ -75,5 +78,6 @@ class FitnessLog {
     'value': value,
     'comment': comment,
     'difficulty': difficulty,
+    if (assignmentId != null) 'assignmentId': assignmentId,
   };
 }

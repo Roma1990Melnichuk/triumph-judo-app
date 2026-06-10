@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_slidable/flutter_slidable.dart';
+import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 import '../../../core/constants/app_colors.dart';
 import '../../../core/constants/belt_levels.dart';
@@ -22,8 +23,49 @@ class NotificationsScreen extends ConsumerWidget {
 
     return Scaffold(
       backgroundColor: AppColors.background,
-      appBar: AppBar(title: const Text('Сповіщення')),
-      body: isCoach ? const _CoachBody() : const _ParentBody(),
+      body: SafeArea(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Padding(
+              padding: const EdgeInsets.fromLTRB(12, 16, 20, 12),
+              child: Row(
+                children: [
+                  GestureDetector(
+                    onTap: () => context.pop(),
+                    child: Container(
+                      width: 44,
+                      height: 44,
+                      decoration: BoxDecoration(
+                        color: AppColors.surface2,
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: const Center(
+                        child: ColorFiltered(
+                          colorFilter: ColorFilter.mode(AppColors.textPrimary, BlendMode.srcIn),
+                          child: TriumphIcon(TIcon.back, size: 22),
+                        ),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 16),
+                  const Text(
+                    'Сповіщення',
+                    style: TextStyle(
+                      fontSize: 24,
+                      fontWeight: FontWeight.w800,
+                      color: AppColors.textPrimary,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            Expanded(
+              child: isCoach ? const _CoachBody() : const _ParentBody(),
+            ),
+          ],
+        ),
+      ),
       floatingActionButton: isCoach
           ? FloatingActionButton(
               onPressed: () {
@@ -245,21 +287,12 @@ class _NotifCard extends StatelessWidget {
   final bool isRead;
   final VoidCallback? onTap;
 
-  IconData get _targetIcon {
-    switch (notif.target) {
-      case NotificationTarget.all:
-        return Icons.group_outlined;
-      case NotificationTarget.ageGroup:
-        return Icons.cake_outlined;
-      case NotificationTarget.belt:
-        return Icons.military_tech_outlined;
-      case NotificationTarget.top20age:
-        return Icons.emoji_events_outlined;
-      case NotificationTarget.exceptTop20age:
-        return Icons.people_outline;
-      case NotificationTarget.personal:
-        return Icons.person_outline;
+  String _initials(String name) {
+    final parts = name.trim().split(' ');
+    if (parts.length >= 2 && parts[0].isNotEmpty && parts[1].isNotEmpty) {
+      return '${parts[0][0]}${parts[1][0]}'.toUpperCase();
     }
+    return name.isNotEmpty ? name[0].toUpperCase() : '?';
   }
 
   String get _targetLabel {
@@ -297,13 +330,21 @@ class _NotifCard extends StatelessWidget {
         contentPadding:
             const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
         leading: Container(
-          width: 40,
-          height: 40,
-          decoration: BoxDecoration(
-            color: AppColors.primary.withValues(alpha: 0.12),
+          width: 44,
+          height: 44,
+          decoration: const BoxDecoration(
+            gradient: AppColors.ctaGradient,
             shape: BoxShape.circle,
           ),
-          child: Icon(_targetIcon, color: AppColors.primary, size: 20),
+          alignment: Alignment.center,
+          child: Text(
+            _initials(notif.coachName),
+            style: const TextStyle(
+              color: Colors.white,
+              fontWeight: FontWeight.bold,
+              fontSize: 16,
+            ),
+          ),
         ),
         title: Text(
           notif.title,
@@ -317,6 +358,15 @@ class _NotifCard extends StatelessWidget {
         subtitle: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            const SizedBox(height: 2),
+            if (notif.coachName.isNotEmpty)
+              Text(
+                notif.coachName,
+                style: const TextStyle(
+                    fontSize: 11,
+                    color: AppColors.accent,
+                    fontWeight: FontWeight.w600),
+              ),
             const SizedBox(height: 2),
             Text(
               notif.body,

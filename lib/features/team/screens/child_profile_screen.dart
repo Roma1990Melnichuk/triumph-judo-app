@@ -109,164 +109,233 @@ class _ChildProfileScreenState extends ConsumerState<ChildProfileScreen>
           backgroundColor: AppColors.background,
           body: NestedScrollView(
             headerSliverBuilder: (ctx, _) => [
-              // App bar with photo — dark gradient header
-              SliverAppBar(
-                expandedHeight: 270,
-                pinned: true,
-                backgroundColor: AppColors.background,
-                flexibleSpace: FlexibleSpaceBar(
-                  collapseMode: CollapseMode.pin,
-                  background: Stack(
-                    fit: StackFit.expand,
-                    children: [
-                      // Dark gradient background
-                      Container(
-                        decoration: const BoxDecoration(
-                          gradient: LinearGradient(
-                            begin: Alignment.topCenter,
-                            end: Alignment.bottomCenter,
-                            colors: [
-                              Color(0xFF1A0808),
-                              AppColors.background,
-                            ],
-                          ),
-                        ),
-                      ),
-                      // Radial red glow around avatar
-                      Container(
-                        decoration: BoxDecoration(
-                          gradient: RadialGradient(
-                            center: Alignment.center,
-                            radius: 0.55,
-                            colors: [
-                              AppColors.primary.withValues(alpha: 0.28),
-                              Colors.transparent,
-                            ],
-                          ),
-                        ),
-                      ),
-                      // Avatar + name + belt
-                      Padding(
-                        padding: const EdgeInsets.only(top: 48),
-                        child: Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            // Avatar with belt-colored ring + entry scale
-                            TweenAnimationBuilder<double>(
-                              tween: Tween(begin: 0.85, end: 1.0),
-                              duration: const Duration(milliseconds: 400),
-                              curve: Curves.easeOutBack,
-                              builder: (_, scale, inner) =>
-                                  Transform.scale(scale: scale, child: inner),
-                              child: Container(
-                              decoration: BoxDecoration(
-                                shape: BoxShape.circle,
-                                boxShadow: [
-                                  BoxShadow(
-                                    color: child.currentBelt.color
-                                        .withValues(alpha: 0.5),
-                                    blurRadius: 20,
-                                    spreadRadius: 2,
-                                  ),
+              SliverToBoxAdapter(
+                child: Stack(
+                  children: [
+                    SizedBox(
+                      height: 290,
+                      child: Stack(
+                        fit: StackFit.expand,
+                        children: [
+                          // Dark gradient background
+                          Container(
+                            decoration: const BoxDecoration(
+                              gradient: LinearGradient(
+                                begin: Alignment.topCenter,
+                                end: Alignment.bottomCenter,
+                                colors: [
+                                  Color(0xFF1A0808),
+                                  AppColors.background,
                                 ],
-                                border: Border.all(
-                                  color: child.currentBelt == BeltLevel.white
-                                      ? Colors.white54
-                                      : child.currentBelt.color,
-                                  width: 3,
-                                ),
-                                // No borderRadius — shape: BoxShape.circle handles it
                               ),
-                              child: child.photoUrl != null
-                                  ? CircleAvatar(
-                                      radius: 58,
-                                      backgroundImage:
-                                          CachedNetworkImageProvider(
-                                              child.photoUrl!),
-                                    )
-                                  : CircleAvatar(
-                                      radius: 58,
-                                      backgroundColor:
-                                          AppColors.avatarColor(child.id),
-                                      child: Text(
-                                        '${child.firstName[0]}${child.lastName[0]}',
-                                        style: const TextStyle(
-                                          color: Colors.white,
-                                          fontSize: 26,
-                                          fontWeight: FontWeight.bold,
-                                        ),
+                            ),
+                          ),
+                          // Radial red glow around avatar
+                          Container(
+                            decoration: BoxDecoration(
+                              gradient: RadialGradient(
+                                center: Alignment.center,
+                                radius: 0.55,
+                                colors: [
+                                  AppColors.primary.withValues(alpha: 0.28),
+                                  Colors.transparent,
+                                ],
+                              ),
+                            ),
+                          ),
+                          // Avatar + name + belt
+                          Padding(
+                            padding: const EdgeInsets.only(top: 56),
+                            child: Column(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                // Avatar with belt-colored ring + entry scale
+                                TweenAnimationBuilder<double>(
+                                  tween: Tween(begin: 0.85, end: 1.0),
+                                  duration: const Duration(milliseconds: 400),
+                                  curve: Curves.easeOutBack,
+                                  builder: (_, scale, inner) =>
+                                      Transform.scale(scale: scale, child: inner),
+                                  child: Container(
+                                  decoration: BoxDecoration(
+                                    shape: BoxShape.circle,
+                                    boxShadow: [
+                                      BoxShadow(
+                                        color: child.currentBelt.color
+                                            .withValues(alpha: 0.5),
+                                        blurRadius: 20,
+                                        spreadRadius: 2,
                                       ),
+                                    ],
+                                    border: Border.all(
+                                      color: child.currentBelt == BeltLevel.white
+                                          ? Colors.white54
+                                          : child.currentBelt.color,
+                                      width: 3,
                                     ),
+                                  ),
+                                  child: child.photoUrl != null
+                                      ? CircleAvatar(
+                                          radius: 58,
+                                          backgroundImage:
+                                              CachedNetworkImageProvider(
+                                                  child.photoUrl!),
+                                        )
+                                      : CircleAvatar(
+                                          radius: 58,
+                                          backgroundColor:
+                                              AppColors.avatarColor(child.id),
+                                          child: Text(
+                                            '${child.firstName[0]}${child.lastName[0]}',
+                                            style: const TextStyle(
+                                              color: Colors.white,
+                                              fontSize: 26,
+                                              fontWeight: FontWeight.bold,
+                                            ),
+                                          ),
+                                        ),
+                                ),
+                                ), // TweenAnimationBuilder
+                                const SizedBox(height: 10),
+                                Text(
+                                  child.fullName,
+                                  style: const TextStyle(
+                                    color: Colors.white,
+                                    fontSize: 19,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                                const SizedBox(height: 3),
+                                Text(
+                                  child.ageCategory,
+                                  style: const TextStyle(
+                                    color: Colors.white60,
+                                    fontSize: 13,
+                                  ),
+                                ),
+                                const SizedBox(height: 6),
+                                PulsingGlow(
+                                  color: child.currentBelt.color,
+                                  blurRadius: 14,
+                                  borderRadius: 20,
+                                  periodSeconds: 3,
+                                  child: BeltBadge(
+                                    belt: child.currentBelt,
+                                    size: BeltBadgeSize.medium,
+                                  ),
+                                ),
+                              ],
                             ),
-                            ), // TweenAnimationBuilder
-                            const SizedBox(height: 10),
-                            Text(
-                              child.fullName,
-                              style: const TextStyle(
-                                color: Colors.white,
-                                fontSize: 19,
-                                fontWeight: FontWeight.bold,
+                          ),
+                        ],
+                      ),
+                    ),
+                    // Back button + action icons overlay
+                    SafeArea(
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                        child: Row(
+                          children: [
+                            GestureDetector(
+                              onTap: () => context.pop(),
+                              child: Container(
+                                width: 44,
+                                height: 44,
+                                decoration: BoxDecoration(
+                                  color: AppColors.background.withValues(alpha: 0.55),
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
+                                child: const Center(
+                                  child: ColorFiltered(
+                                    colorFilter: ColorFilter.mode(AppColors.textPrimary, BlendMode.srcIn),
+                                    child: TriumphIcon(TIcon.back, size: 22),
+                                  ),
+                                ),
                               ),
                             ),
-                            const SizedBox(height: 3),
-                            Text(
-                              child.ageCategory,
-                              style: const TextStyle(
-                                color: Colors.white60,
-                                fontSize: 13,
+                            const Spacer(),
+                            GestureDetector(
+                              onTap: () => context.push(
+                                '/fitness/$childId',
+                                extra: {'childName': child.fullName},
+                              ),
+                              child: Container(
+                                width: 44,
+                                height: 44,
+                                decoration: BoxDecoration(
+                                  color: AppColors.background.withValues(alpha: 0.55),
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
+                                child: const Center(
+                                  child: ColorFiltered(
+                                    colorFilter: ColorFilter.mode(AppColors.textPrimary, BlendMode.srcIn),
+                                    child: TriumphIcon(TIcon.statistics, size: 22),
+                                  ),
+                                ),
                               ),
                             ),
-                            const SizedBox(height: 6),
-                            PulsingGlow(
-                              color: child.currentBelt.color,
-                              blurRadius: 14,
-                              borderRadius: 20,
-                              periodSeconds: 3,
-                              child: BeltBadge(
-                                belt: child.currentBelt,
-                                size: BeltBadgeSize.medium,
+                            const SizedBox(width: 8),
+                            GestureDetector(
+                              onTap: () => context.push(
+                                '/my-assignments',
+                                extra: {'childId': childId},
+                              ),
+                              child: Container(
+                                width: 44,
+                                height: 44,
+                                decoration: BoxDecoration(
+                                  color: AppColors.background.withValues(alpha: 0.55),
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
+                                child: const Center(
+                                  child: ColorFiltered(
+                                    colorFilter: ColorFilter.mode(AppColors.textPrimary, BlendMode.srcIn),
+                                    child: TriumphIcon(TIcon.tasks, size: 22),
+                                  ),
+                                ),
                               ),
                             ),
+                            if (isCoach) ...[
+                              const SizedBox(width: 8),
+                              GestureDetector(
+                                onTap: () => context.push('/team/$childId/edit'),
+                                child: Container(
+                                  width: 44,
+                                  height: 44,
+                                  decoration: BoxDecoration(
+                                    color: AppColors.background.withValues(alpha: 0.55),
+                                    borderRadius: BorderRadius.circular(12),
+                                  ),
+                                  child: const Center(
+                                    child: Icon(Icons.edit_outlined, size: 20, color: AppColors.textPrimary),
+                                  ),
+                                ),
+                              ),
+                              const SizedBox(width: 8),
+                              GestureDetector(
+                                onTap: () => _confirmDelete(context, ref),
+                                child: Container(
+                                  width: 44,
+                                  height: 44,
+                                  decoration: BoxDecoration(
+                                    color: AppColors.background.withValues(alpha: 0.55),
+                                    borderRadius: BorderRadius.circular(12),
+                                  ),
+                                  child: const Center(
+                                    child: ColorFiltered(
+                                      colorFilter: ColorFilter.mode(AppColors.error, BlendMode.srcIn),
+                                      child: TriumphIcon(TIcon.delete, size: 22),
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ],
                           ],
                         ),
                       ),
-                    ],
-                  ),
-                ),
-                actions: [
-                  IconButton(
-                    icon: const ColorFiltered(
-                      colorFilter: ColorFilter.mode(AppColors.textPrimary, BlendMode.srcIn),
-                      child: TriumphIcon(TIcon.statistics, size: 22),
-                    ),
-                    tooltip: 'Фізична підготовка',
-                    onPressed: () => context.push(
-                      '/fitness/$childId',
-                      extra: {'childName': child.fullName},
-                    ),
-                  ),
-                  IconButton(
-                    icon: const ColorFiltered(
-                      colorFilter: ColorFilter.mode(AppColors.textPrimary, BlendMode.srcIn),
-                      child: TriumphIcon(TIcon.tasks, size: 22),
-                    ),
-                    tooltip: 'Завдання',
-                    onPressed: () => context.push(
-                      '/my-assignments',
-                      extra: {'childId': childId},
-                    ),
-                  ),
-                  if (isCoach) ...[
-                    IconButton(
-                      icon: const Icon(Icons.edit_outlined),
-                      onPressed: () => context.push('/team/$childId/edit'),
-                    ),
-                    IconButton(
-                      icon: const ColorFiltered(colorFilter: ColorFilter.mode(AppColors.error, BlendMode.srcIn), child: TriumphIcon(TIcon.delete, size: 22)),
-                      onPressed: () => _confirmDelete(context, ref),
                     ),
                   ],
-                ],
+                ),
               ),
 
               // Stats row: belt % / competitions / medals / attendance / indiv
@@ -705,9 +774,18 @@ class _BeltProgressCardState extends ConsumerState<_BeltProgressCard> {
     if (mounted) {
       setState(() => _markingAll = false);
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Всі вимоги підтверджено ✅'),
-          duration: Duration(seconds: 2),
+        SnackBar(
+          content: Row(
+            children: [
+              const ColorFiltered(
+                colorFilter: ColorFilter.mode(Colors.white, BlendMode.srcIn),
+                child: TriumphIcon(TIcon.success, size: 18),
+              ),
+              const SizedBox(width: 8),
+              const Text('Всі вимоги підтверджено'),
+            ],
+          ),
+          duration: const Duration(seconds: 2),
         ),
       );
     }

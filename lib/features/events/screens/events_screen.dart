@@ -39,7 +39,6 @@ class EventsScreen extends ConsumerStatefulWidget {
 class _EventsScreenState extends ConsumerState<EventsScreen> {
   late DateTime _focusedMonth;
   late DateTime _selectedDay;
-  bool _filtersVisible = false;
 
   @override
   void initState() {
@@ -94,77 +93,100 @@ class _EventsScreenState extends ConsumerState<EventsScreen> {
 
     return Scaffold(
       backgroundColor: AppColors.background,
-      appBar: AppBar(
-        title: const Text('Графік подій'),
-        actions: [
-          IconButton(
-            icon: const ColorFiltered(
-              colorFilter: ColorFilter.mode(AppColors.textPrimary, BlendMode.srcIn),
-              child: TriumphIcon(TIcon.calendar, size: 22),
-            ),
-            tooltip: 'Сьогодні',
-            onPressed: _jumpToToday,
-          ),
-          IconButton(
-            icon: Icon(_filtersVisible
-                ? Icons.filter_list_off
-                : Icons.filter_list),
-            tooltip: 'Фільтри',
-            onPressed: () =>
-                setState(() => _filtersVisible = !_filtersVisible),
-          ),
-          if (isCoach)
-            IconButton(
-              icon: const ColorFiltered(colorFilter: ColorFilter.mode(Colors.white, BlendMode.srcIn), child: TriumphIcon(TIcon.add, size: 24)),
-              onPressed: () => context.push('/events/add'),
-            ),
-        ],
-      ),
-      body: Column(
-        children: [
-          // ── Filters (collapsible) ─────────────────────────────────────
-          if (_filtersVisible) _buildFilters(context, filter, years),
-
-          // ── Calendar ─────────────────────────────────────────────────
-          Container(
-            color: AppColors.surface,
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                _buildMonthHeader(),
-                _buildWeekdayHeader(),
-                _buildMonthGrid(eventsByDay, todayKey),
-                const SizedBox(height: 6),
-              ],
-            ),
-          ),
-
-          const Divider(height: 1),
-
-          // ── Agenda day header ─────────────────────────────────────────
-          _buildAgendaHeader(_selectedDay, selectedEvents.length, todayKey),
-
-          const Divider(height: 1),
-
-          // ── Events list for selected day ──────────────────────────────
-          Expanded(
-            child: loading
-                ? const Center(child: CircularProgressIndicator())
-                : selectedEvents.isEmpty
-                    ? _buildEmptyDay(isCoach, context)
-                    : ListView.builder(
-                        padding:
-                            const EdgeInsets.only(top: 4, bottom: 80),
-                        itemCount: selectedEvents.length,
-                        itemBuilder: (_, i) => _EventCard(
-                          event: selectedEvents[i],
-                          isCoach: isCoach,
-                          currentUserId: user?.uid ?? '',
-                          currentChildId: user?.childIds.firstOrNull,
-                        ),
+      body: SafeArea(
+        child: Column(
+          children: [
+            // ── Header ──────────────────────────────────────────────────
+            Padding(
+              padding: const EdgeInsets.fromLTRB(20, 14, 12, 0),
+              child: Row(
+                children: [
+                  const Expanded(
+                    child: Text(
+                      'Графік подій',
+                      style: TextStyle(
+                        fontSize: 24,
+                        fontWeight: FontWeight.w800,
+                        color: AppColors.textPrimary,
                       ),
-          ),
-        ],
+                    ),
+                  ),
+                  IconButton(
+                    icon: const ColorFiltered(
+                      colorFilter: ColorFilter.mode(
+                          AppColors.textSecondary, BlendMode.srcIn),
+                      child: TriumphIcon(TIcon.calendar, size: 22),
+                    ),
+                    tooltip: 'Сьогодні',
+                    onPressed: _jumpToToday,
+                  ),
+                  if (isCoach)
+                    GestureDetector(
+                      onTap: () => context.push('/events/add'),
+                      child: Container(
+                        width: 34,
+                        height: 34,
+                        margin: const EdgeInsets.only(right: 4),
+                        decoration: const BoxDecoration(
+                          gradient: AppColors.ctaGradient,
+                          shape: BoxShape.circle,
+                        ),
+                        child: const Icon(Icons.add,
+                            color: Colors.white, size: 20),
+                      ),
+                    ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 10),
+
+            // ── Filters (always visible) ─────────────────────────────
+            _buildFilters(context, filter, years),
+
+            // ── Calendar ─────────────────────────────────────────────
+            Container(
+              margin: const EdgeInsets.fromLTRB(16, 10, 16, 0),
+              decoration: BoxDecoration(
+                color: AppColors.surface,
+                borderRadius: BorderRadius.circular(16),
+                border: Border.all(color: AppColors.surface3),
+              ),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  _buildMonthHeader(),
+                  _buildWeekdayHeader(),
+                  _buildMonthGrid(eventsByDay, todayKey),
+                  const SizedBox(height: 8),
+                ],
+              ),
+            ),
+
+            const SizedBox(height: 8),
+
+            // ── Agenda day header ─────────────────────────────────────
+            _buildAgendaHeader(_selectedDay, selectedEvents.length, todayKey),
+
+            // ── Events list for selected day ──────────────────────────
+            Expanded(
+              child: loading
+                  ? const Center(child: CircularProgressIndicator())
+                  : selectedEvents.isEmpty
+                      ? _buildEmptyDay(isCoach, context)
+                      : ListView.builder(
+                          padding:
+                              const EdgeInsets.only(top: 4, bottom: 80),
+                          itemCount: selectedEvents.length,
+                          itemBuilder: (_, i) => _EventCard(
+                            event: selectedEvents[i],
+                            isCoach: isCoach,
+                            currentUserId: user?.uid ?? '',
+                            currentChildId: user?.childIds.firstOrNull,
+                          ),
+                        ),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -347,17 +369,10 @@ class _EventsScreenState extends ConsumerState<EventsScreen> {
 
   Widget _buildFilters(
       BuildContext context, EventsFilter filter, List<int> years) {
-    return Container(
-      color: AppColors.surface,
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          const Divider(height: 1),
-          SingleChildScrollView(
-            scrollDirection: Axis.horizontal,
-            padding:
-                const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-            child: Row(
+    return SingleChildScrollView(
+      scrollDirection: Axis.horizontal,
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+      child: Row(
               children: [
                 _FilterChip(
                   label: filter.year?.toString() ?? 'Рік',
@@ -424,10 +439,7 @@ class _EventsScreenState extends ConsumerState<EventsScreen> {
                 ),
               ],
             ),
-          ),
-        ],
-      ),
-    );
+          );
   }
 
   // ── Pickers ───────────────────────────────────────────────────────────────
@@ -801,13 +813,25 @@ class _EventCard extends ConsumerWidget {
             '?')
         .toList();
 
-    return Card(
-      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 5),
-      child: InkWell(
-        borderRadius: BorderRadius.circular(16),
-        onTap: () => _showEventDetail(context, event, allChildren),
-        child: Padding(
-          padding: const EdgeInsets.all(14),
+    return GestureDetector(
+      onTap: () => _showEventDetail(context, event, allChildren),
+      child: Container(
+        margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 5),
+        decoration: BoxDecoration(
+          color: AppColors.surface,
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: AppColors.surface3),
+        ),
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(16),
+          child: IntrinsicHeight(
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Container(width: 4, color: _typeColor(event.type)),
+                Expanded(
+                  child: Padding(
+                    padding: const EdgeInsets.all(14),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -951,6 +975,11 @@ class _EventCard extends ConsumerWidget {
                 ]),
               ],
             ],
+                  ),
+                ),
+              ),
+              ],
+            ),
           ),
         ),
       ),

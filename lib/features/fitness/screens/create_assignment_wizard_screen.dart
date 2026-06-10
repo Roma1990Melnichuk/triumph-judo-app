@@ -44,6 +44,7 @@ class _CreateAssignmentWizardScreenState
   DateTime _startDate = DateTime.now();
   DateTime _deadline = DateTime.now().add(const Duration(days: 30));
   _PeriodType _period = _PeriodType.month;
+  bool _isCumulative = true; // Added state
 
   // Step 2 state
   final Set<String> _selectedChildIds = {};
@@ -134,6 +135,7 @@ class _CreateAssignmentWizardScreenState
             coachComment: _commentCtrl.text.trim(),
             status:
                 draft ? AssignmentStatus.draft : AssignmentStatus.active,
+            isCumulative: _isCumulative,
           );
       if (mounted) context.pop();
     } catch (e) {
@@ -161,18 +163,44 @@ class _CreateAssignmentWizardScreenState
 
     return Scaffold(
       backgroundColor: AppColors.background,
-      appBar: AppBar(
-        backgroundColor: AppColors.background,
-        title: Text(_stepTitle),
-        leading: _step == 0
-            ? null
-            : IconButton(
-                icon: const Icon(Icons.arrow_back),
-                onPressed: () => setState(() => _step--),
+      body: SafeArea(
+        child: Column(
+          children: [
+            Padding(
+              padding: const EdgeInsets.fromLTRB(12, 8, 20, 0),
+              child: Row(
+                children: [
+                  if (_step == 0)
+                    const SizedBox(width: 56)
+                  else
+                    GestureDetector(
+                      onTap: () => setState(() => _step--),
+                      child: Container(
+                        width: 44,
+                        height: 44,
+                        decoration: BoxDecoration(
+                          color: AppColors.surface2,
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: const Center(
+                          child: Icon(Icons.arrow_back, size: 22, color: AppColors.textPrimary),
+                        ),
+                      ),
+                    ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Text(
+                      _stepTitle,
+                      style: const TextStyle(
+                        fontSize: 20,
+                        fontWeight: FontWeight.w800,
+                        color: AppColors.textPrimary,
+                      ),
+                    ),
+                  ),
+                ],
               ),
-      ),
-      body: Column(
-        children: [
+            ),
           _StepIndicator(current: _step, total: 3),
           Expanded(
             child: IndexedStack(
@@ -188,6 +216,7 @@ class _CreateAssignmentWizardScreenState
                   startDate: _startDate,
                   deadline: _deadline,
                   period: _period,
+                  isCumulative: _isCumulative,
                   onExerciseChanged: (id, name, unit) => setState(() {
                     _exerciseId = id;
                     _exerciseName = name;
@@ -198,6 +227,7 @@ class _CreateAssignmentWizardScreenState
                   onDeadlineChanged: (d) => setState(() => _deadline = d),
                   onTitleChanged: () => setState(() {}),
                   onValueChanged: () => setState(() {}),
+                  onModeChanged: (val) => setState(() => _isCumulative = val),
                 ),
                 _Step2Athletes(
                   children: children,
@@ -269,6 +299,7 @@ class _CreateAssignmentWizardScreenState
             onDraft: _step == 2 ? () => _create(draft: true) : null,
           ),
         ],
+      ),
       ),
     );
   }
@@ -367,12 +398,14 @@ class _Step1Params extends StatelessWidget {
   final DateTime startDate;
   final DateTime deadline;
   final _PeriodType period;
+  final bool isCumulative;
   final void Function(String, String, String) onExerciseChanged;
   final void Function(_PeriodType) onPeriodChanged;
   final void Function(DateTime) onStartChanged;
   final void Function(DateTime) onDeadlineChanged;
   final VoidCallback onTitleChanged;
   final VoidCallback onValueChanged;
+  final void Function(bool) onModeChanged;
 
   @override
   Widget build(BuildContext context) {
@@ -428,6 +461,43 @@ class _Step1Params extends StatelessWidget {
             suffixText: exerciseUnit,
           ),
           onChanged: (_) => onValueChanged(),
+        ),
+        const SizedBox(height: 20),
+
+        // ── Mode selection (Cumulative vs Peak) ───────────────────────────
+        const Text('Режим прогресу',
+            style: TextStyle(
+                fontWeight: FontWeight.w600,
+                fontSize: 13,
+                color: AppColors.textSecondary)),
+        const SizedBox(height: 8),
+        Container(
+          padding: const EdgeInsets.all(4),
+          decoration: BoxDecoration(
+            color: AppColors.surface,
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(color: AppColors.surface3),
+          ),
+          child: Row(
+            children: [
+              Expanded(
+                child: _ModeTabSmall(
+                  label: 'Сума',
+                  subtitle: 'Накопичувально',
+                  selected: isCumulative,
+                  onTap: () => onModeChanged(true),
+                ),
+              ),
+              Expanded(
+                child: _ModeTabSmall(
+                  label: 'Рекорд',
+                  subtitle: 'Найкращий результат',
+                  selected: !isCumulative,
+                  onTap: () => onModeChanged(false),
+                ),
+              ),
+            ],
+          ),
         ),
         const SizedBox(height: 20),
         const Text('Період',
@@ -756,6 +826,53 @@ class _Step2Athletes extends StatelessWidget {
       ],
     );
   }
+}
+
+class _ModeTabSmall extends StatelessWidget {
+  const _ModeTabSmall({
+    required this.label,
+    required this.subtitle,
+    required this.selected,
+    required this.onTap,
+  });
+  final String label;
+  final String subtitle;
+  final bool selected;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) => GestureDetector(
+        onTap: onTap,
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 150),
+          padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 4),
+          decoration: BoxDecoration(
+            color: selected ? AppColors.primary : Colors.transparent,
+            borderRadius: BorderRadius.circular(10),
+          ),
+          child: Column(
+            children: [
+              Text(
+                label,
+                style: TextStyle(
+                  fontSize: 13,
+                  fontWeight: FontWeight.bold,
+                  color: selected ? Colors.white : AppColors.textPrimary,
+                ),
+              ),
+              Text(
+                subtitle,
+                style: TextStyle(
+                  fontSize: 9,
+                  color: selected
+                      ? Colors.white.withValues(alpha: 0.8)
+                      : AppColors.textSecondary,
+                ),
+              ),
+            ],
+          ),
+        ),
+      );
 }
 
 class _ModeTab extends StatelessWidget {

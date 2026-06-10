@@ -510,7 +510,7 @@ class _ParentFeatureIcons extends StatelessWidget {
     (TIcon.profile,     'Мої дані',    '/my-data'),
     (TIcon.training,    'Тренування',  '/events'),
     (TIcon.statistics,  'Прогрес',     '/journey'),
-    (TIcon.trophy,      'Досягнення',  '/rating'),
+    (TIcon.trophy,      'Досягнення',  '/achievement-catalog'),
   ];
 
   @override
@@ -785,6 +785,7 @@ class _RecentSection extends StatelessWidget {
               ),
             ),
             GestureDetector(
+              onTap: () => context.push('/achievement-catalog'),
               child: const Text(
                 'Всі  ›',
                 style: TextStyle(

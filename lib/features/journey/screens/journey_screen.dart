@@ -86,14 +86,9 @@ class _JourneyScreenState extends ConsumerState<JourneyScreen>
 
     // Coaches have no streak — redirect gracefully
     if (user != null && user.isCoach) {
-      return Scaffold(
+      return const Scaffold(
         backgroundColor: AppColors.background,
-        appBar: AppBar(
-          backgroundColor: AppColors.background,
-          foregroundColor: AppColors.textPrimary,
-          title: const Text('Твій шлях'),
-        ),
-        body: const Center(
+        body: Center(
           child: Text(
             'Ця сторінка доступна лише для спортсменів.',
             style: TextStyle(color: AppColors.textSecondary),
@@ -137,31 +132,31 @@ class _JourneyScreenState extends ConsumerState<JourneyScreen>
 
     return Scaffold(
       backgroundColor: AppColors.background,
-      body: CustomScrollView(
-        slivers: [
-          // ── App bar ─────────────────────────────────────────────────────────
-          SliverAppBar(
-            pinned: true,
-            backgroundColor: AppColors.background,
-            foregroundColor: AppColors.textPrimary,
-            title: const Text(
-              'Твій шлях',
-              style: TextStyle(
-                fontWeight: FontWeight.w700,
-                fontSize: 18,
-                color: AppColors.textPrimary,
+      body: SafeArea(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // ── Header ──────────────────────────────────────────────────────
+            const Padding(
+              padding: EdgeInsets.fromLTRB(20, 16, 20, 12),
+              child: Text(
+                'Твій шлях',
+                style: TextStyle(
+                  fontSize: 24,
+                  fontWeight: FontWeight.w800,
+                  color: AppColors.textPrimary,
+                ),
               ),
             ),
-          ),
 
-          SliverPadding(
-            padding: const EdgeInsets.symmetric(horizontal: 16),
-            sliver: SliverList(
-              delegate: SliverChildListDelegate([
-                const SizedBox(height: 8),
+            Expanded(
+              child: ListView(
+                padding: const EdgeInsets.symmetric(horizontal: 16),
+                children: [
+                  const SizedBox(height: 4),
 
-                // ── 1. HERO SECTION ────────────────────────────────────────────
-                _HeroSection(
+                  // ── 1. HERO SECTION ──────────────────────────────────────
+                  _HeroSection(
                   streak: currentStreak,
                   stageName: stageName,
                   glowLevel: glowLevel,
@@ -212,11 +207,12 @@ class _JourneyScreenState extends ConsumerState<JourneyScreen>
                 ),
 
                 const SizedBox(height: 32),
-              ]),
+              ],
             ),
           ),
         ],
       ),
+    ),
     );
   }
 }
@@ -848,9 +844,9 @@ class _CalendarCell extends StatelessWidget {
 // ── 5. Achievements row ───────────────────────────────────────────────────────
 
 final _kAchievements = [
-  (days: 7,   asset: 'assets/achievements/achievement_streak_7.png'),
-  (days: 14,  asset: 'assets/achievements/achievement_streak_14.png'),
-  (days: 30,  asset: 'assets/achievements/achievement_streak_30.png'),
+  (days: 7,   asset: 'assets/achievements/achievement_streak_7.webp'),
+  (days: 14,  asset: 'assets/achievements/achievement_streak_14.webp'),
+  (days: 30,  asset: 'assets/achievements/achievement_streak_30.webp'),
   (days: 60,  asset: null as String?),
   (days: 90,  asset: null as String?),
   (days: 180, asset: null as String?),

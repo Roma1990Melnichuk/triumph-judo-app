@@ -16,16 +16,13 @@ class JourneyHomeWidget extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final user = ref.watch(currentUserModelProvider).value;
-    // Only show for athletes (parents with linked children). Coaches see nothing.
     if (user == null || user.isCoach) return const SizedBox.shrink();
 
     final streakAsync = ref.watch(streakDataProvider);
     final message = ref.watch(dailyMessageProvider);
     final weekActivity = ref.watch(weekActivityProvider);
 
-    final streak = streakAsync.current;
     final isLoading = ref.watch(coachSessionsProvider(
-      // Derive coachId for loading state detection
       _coachIdFrom(ref) ?? '',
     )).isLoading;
 
@@ -33,13 +30,23 @@ class JourneyHomeWidget extends ConsumerWidget {
       onTap: () => context.push('/journey'),
       child: Container(
         margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-        padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
-          color: AppColors.surface,
           borderRadius: BorderRadius.circular(20),
-          border: Border.all(color: AppColors.surface3, width: 1),
+          gradient: const LinearGradient(
+            colors: [Color(0xFF1A0808), Color(0xFF2A0A0A), Color(0xFF0D0D0D)],
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+          ),
+          border: Border.all(color: AppColors.primary.withValues(alpha: 0.25), width: 1),
+          boxShadow: [
+            BoxShadow(
+              color: AppColors.primary.withValues(alpha: 0.18),
+              blurRadius: 20,
+              offset: const Offset(0, 6),
+            ),
+          ],
         ),
-        child: isLoading ? _buildSkeleton() : _buildContent(context, streak, message, weekActivity),
+        child: isLoading ? _buildSkeleton() : _buildContent(context, ref, streakAsync, message, weekActivity),
       ),
     );
   }
@@ -54,24 +61,25 @@ class JourneyHomeWidget extends ConsumerWidget {
   }
 
   Widget _buildSkeleton() {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Row(children: [
-          _shimmerBox(width: 160, height: 24),
-          const Spacer(),
-          _shimmerBox(width: 80, height: 16),
-        ]),
-        const SizedBox(height: 8),
-        _shimmerBox(width: 200, height: 14),
-        const SizedBox(height: 10),
-        _shimmerBox(width: double.infinity, height: 14),
-        const SizedBox(height: 14),
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceAround,
-          children: List.generate(7, (_) => _shimmerBox(width: 32, height: 40)),
-        ),
-      ],
+    return Padding(
+      padding: const EdgeInsets.all(16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(children: [
+            _shimmerBox(width: 160, height: 32),
+            const Spacer(),
+            _shimmerBox(width: 80, height: 80),
+          ]),
+          const SizedBox(height: 12),
+          _shimmerBox(width: double.infinity, height: 14),
+          const SizedBox(height: 16),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceAround,
+            children: List.generate(7, (_) => _shimmerBox(width: 32, height: 40)),
+          ),
+        ],
+      ),
     );
   }
 
@@ -88,137 +96,266 @@ class JourneyHomeWidget extends ConsumerWidget {
 
   Widget _buildContent(
     BuildContext context,
-    int streak,
+    WidgetRef ref,
+    StreakData streak,
     String message,
     List<bool> weekActivity,
   ) {
     final now = DateTime.now();
-    // weekday: 1=Mon, 7=Sun → index 0-6
     final todayIndex = now.weekday - 1;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        // ── Header row ──────────────────────────────────────────────────────
-        Row(
-          children: [
-            const ColorFiltered(
-              colorFilter: ColorFilter.mode(AppColors.orange, BlendMode.srcIn),
-              child: TriumphIcon(TIcon.motivation, size: 22),
-            ),
-            const SizedBox(width: 8),
-            RichText(
-              text: TextSpan(
-                children: [
-                  TextSpan(
-                    text: '$streak ',
-                    style: TextStyle(
-                      fontSize: 22,
-                      fontWeight: FontWeight.w800,
-                      color: streak >= 7
-                          ? AppColors.accent
-                          : AppColors.orange,
-                      letterSpacing: -0.5,
+        // ── Hero section ─────────────────────────────────────────────────────
+        Padding(
+          padding: const EdgeInsets.fromLTRB(16, 16, 12, 0),
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // Streak counter
+                    Row(
+                      children: [
+                        const ColorFiltered(
+                          colorFilter: ColorFilter.mode(AppColors.orange, BlendMode.srcIn),
+                          child: TriumphIcon(TIcon.motivation, size: 22),
+                        ),
+                        const SizedBox(width: 8),
+                        RichText(
+                          text: TextSpan(
+                            children: [
+                              TextSpan(
+                                text: '${streak.current} ',
+                                style: TextStyle(
+                                  fontSize: 32,
+                                  fontWeight: FontWeight.w900,
+                                  color: streak.current >= 7
+                                      ? AppColors.accent
+                                      : AppColors.orange,
+                                  height: 1.0,
+                                ),
+                              ),
+                              const TextSpan(
+                                text: 'днів\nпоспіль',
+                                style: TextStyle(
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.w600,
+                                  color: AppColors.textSecondary,
+                                  height: 1.3,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
                     ),
-                  ),
-                  const TextSpan(
-                    text: 'днів поспіль',
-                    style: TextStyle(
-                      fontSize: 14,
-                      fontWeight: FontWeight.w600,
-                      color: AppColors.textSecondary,
+                    const SizedBox(height: 6),
+                    Text(
+                      streak.current > 0 ? 'Твій шлях триває' : 'Почни свій шлях',
+                      style: TextStyle(
+                        color: AppColors.textSecondary.withValues(alpha: 0.8),
+                        fontSize: 11,
+                      ),
                     ),
-                  ),
-                ],
-              ),
-            ),
-            const Spacer(),
-            GestureDetector(
-              onTap: () => context.push('/journey'),
-              child: const Row(
-                children: [
-                  Text(
-                    'Твій шлях',
-                    style: TextStyle(
-                      color: AppColors.accent,
-                      fontSize: 13,
-                      fontWeight: FontWeight.w600,
+                    const SizedBox(height: 10),
+                    // Quote
+                    Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Text(
+                          '"',
+                          style: TextStyle(
+                            color: AppColors.accent,
+                            fontSize: 20,
+                            fontWeight: FontWeight.w800,
+                            height: 0.9,
+                          ),
+                        ),
+                        const SizedBox(width: 4),
+                        Expanded(
+                          child: Text(
+                            message,
+                            style: const TextStyle(
+                              color: AppColors.accent,
+                              fontSize: 11,
+                              fontStyle: FontStyle.italic,
+                              height: 1.4,
+                            ),
+                          ),
+                        ),
+                      ],
                     ),
-                  ),
-                  SizedBox(width: 2),
-                  Icon(Icons.arrow_forward_ios_rounded,
-                      size: 12, color: AppColors.accent),
-                ],
-              ),
-            ),
-          ],
-        ),
-
-        const SizedBox(height: 4),
-
-        // ── Sub-text ─────────────────────────────────────────────────────────
-        Text(
-          streak > 0 ? 'Твій шлях триває' : 'Почни свій шлях сьогодні',
-          style: const TextStyle(
-            color: AppColors.textSecondary,
-            fontSize: 12,
-          ),
-        ),
-
-        const SizedBox(height: 10),
-
-        // ── Daily message ────────────────────────────────────────────────────
-        Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const Text(
-              '"',
-              style: TextStyle(
-                color: AppColors.accent,
-                fontSize: 20,
-                fontWeight: FontWeight.w800,
-                height: 0.9,
-              ),
-            ),
-            const SizedBox(width: 4),
-            Expanded(
-              child: Text(
-                message,
-                style: const TextStyle(
-                  color: AppColors.accent,
-                  fontSize: 12,
-                  fontStyle: FontStyle.italic,
-                  height: 1.4,
+                  ],
                 ),
               ),
-            ),
-          ],
+              // Judoka icon with glow
+              Stack(
+                alignment: Alignment.center,
+                children: [
+                  Container(
+                    width: 80,
+                    height: 80,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      gradient: RadialGradient(
+                        colors: [
+                          AppColors.orange.withValues(alpha: 0.35),
+                          Colors.transparent,
+                        ],
+                        radius: 0.8,
+                      ),
+                    ),
+                  ),
+                  ColorFiltered(
+                    colorFilter: ColorFilter.mode(
+                      streak.current >= 30
+                          ? AppColors.accent
+                          : streak.current >= 7
+                              ? AppColors.orange
+                              : AppColors.textSecondary,
+                      BlendMode.srcIn,
+                    ),
+                    child: const TriumphIcon(TIcon.athlete, size: 72),
+                  ),
+                ],
+              ),
+            ],
+          ),
         ),
 
         const SizedBox(height: 14),
 
-        // ── Week activity circles ────────────────────────────────────────────
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceAround,
-          children: List.generate(7, (i) {
-            final isToday = i == todayIndex;
-            final trained = i < weekActivity.length ? weekActivity[i] : false;
-            final isFuture = i > todayIndex;
+        // ── Activity stats ───────────────────────────────────────────────────
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16),
+          child: Row(
+            children: [
+              _StatPill(label: 'Серія', value: '${streak.current}'),
+              const SizedBox(width: 8),
+              _StatPill(label: 'Тренувань', value: '${streak.total}'),
+              const SizedBox(width: 8),
+              _StatPill(label: 'Найкраща', value: '${streak.best}'),
+            ],
+          ),
+        ),
 
-            return _DayCircle(
-              label: _dayLabels[i],
-              trained: trained,
-              isToday: isToday,
-              isFuture: isFuture,
-            );
-          }),
+        const SizedBox(height: 14),
+
+        // ── Week calendar ────────────────────────────────────────────────────
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 12),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceAround,
+            children: List.generate(7, (i) {
+              final isToday = i == todayIndex;
+              final trained = i < weekActivity.length ? weekActivity[i] : false;
+              final isFuture = i > todayIndex;
+              return _DayCircle(
+                label: _dayLabels[i],
+                trained: trained,
+                isToday: isToday,
+                isFuture: isFuture,
+              );
+            }),
+          ),
+        ),
+
+        const SizedBox(height: 14),
+
+        // ── CTA button ───────────────────────────────────────────────────────
+        Padding(
+          padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+          child: Container(
+            width: double.infinity,
+            height: 42,
+            decoration: BoxDecoration(
+              gradient: AppColors.ctaGradient,
+              borderRadius: BorderRadius.circular(12),
+              boxShadow: [
+                BoxShadow(
+                  color: AppColors.primary.withValues(alpha: 0.35),
+                  blurRadius: 10,
+                  offset: const Offset(0, 4),
+                ),
+              ],
+            ),
+            child: Material(
+              color: Colors.transparent,
+              child: InkWell(
+                onTap: () => context.push('/journey'),
+                borderRadius: BorderRadius.circular(12),
+                child: const Center(
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(
+                        'Переглянути шлях',
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontWeight: FontWeight.w700,
+                          fontSize: 14,
+                        ),
+                      ),
+                      SizedBox(width: 6),
+                      Icon(Icons.arrow_forward_rounded, color: Colors.white, size: 16),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          ),
         ),
       ],
     );
   }
 }
 
-// ── Individual day circle ─────────────────────────────────────────────────────
+// ── Stat pill ─────────────────────────────────────────────────────────────────
+
+class _StatPill extends StatelessWidget {
+  const _StatPill({required this.label, required this.value});
+  final String label;
+  final String value;
+
+  @override
+  Widget build(BuildContext context) {
+    return Expanded(
+      child: Container(
+        padding: const EdgeInsets.symmetric(vertical: 8),
+        decoration: BoxDecoration(
+          color: AppColors.surface.withValues(alpha: 0.6),
+          borderRadius: BorderRadius.circular(10),
+          border: Border.all(color: AppColors.surface3),
+        ),
+        child: Column(
+          children: [
+            Text(
+              value,
+              style: const TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.w900,
+                color: AppColors.textPrimary,
+              ),
+            ),
+            Text(
+              label,
+              style: const TextStyle(
+                fontSize: 10,
+                color: AppColors.textSecondary,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+// ── Day circle ────────────────────────────────────────────────────────────────
 
 class _DayCircle extends StatelessWidget {
   final String label;
@@ -267,9 +404,7 @@ class _DayCircle extends StatelessWidget {
             color: fill,
             border: Border.all(color: borderColor, width: isToday ? 2 : 1),
           ),
-          child: icon != null
-              ? Center(child: icon)
-              : null,
+          child: icon != null ? Center(child: icon) : null,
         ),
         const SizedBox(height: 4),
         Text(

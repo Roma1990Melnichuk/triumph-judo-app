@@ -23,67 +23,95 @@ class _GroupsScreenState extends ConsumerState<GroupsScreen> {
 
     return Scaffold(
       backgroundColor: AppColors.background,
-      appBar: AppBar(
-        title: const Text('Групи тренувань'),
-      ),
-      body: groupsAsync.when(
-        loading: () => const Center(child: CircularProgressIndicator()),
-        error: (e, _) => Center(child: Text('Помилка: $e')),
-        data: (groups) {
-          if (groups.isEmpty) {
-            return const Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  ColorFiltered(
-                    colorFilter: const ColorFilter.mode(AppColors.textSecondary, BlendMode.srcIn),
-                    child: TriumphIcon(TIcon.team, size: 64),
-                  ),
-                  const SizedBox(height: 16),
-                  const Text(
-                    'Груп ще немає',
-                    style: TextStyle(
-                        color: AppColors.textSecondary, fontSize: 16),
-                  ),
-                  const SizedBox(height: 8),
-                  const Text(
-                    'Натисніть + щоб створити першу групу',
-                    style: TextStyle(color: AppColors.textSecondary),
-                  ),
-                ],
-              ),
-            );
-          }
-          return ListView.builder(
-            padding: const EdgeInsets.all(8),
-            itemCount: groups.length,
-            itemBuilder: (context, i) {
-              final group = groups[i];
-              return Card(
-                child: ListTile(
-                  title: Text(
-                    group.name,
-                    style: const TextStyle(fontWeight: FontWeight.bold),
-                  ),
-                  subtitle: Text(
-                    '${group.daysLabel}  •  ${group.timeStart}–${group.timeEnd}\n'
-                    '${group.childIds.length} спортсменів',
-                  ),
-                  isThreeLine: true,
-                  trailing: IconButton(
-                    icon: const ColorFiltered(colorFilter: ColorFilter.mode(AppColors.error, BlendMode.srcIn), child: TriumphIcon(TIcon.delete, size: 22)),
-                    onPressed: () => _confirmDelete(context, group),
-                  ),
-                  onTap: () => context.push('/group/${group.id}'),
+      body: SafeArea(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // ── Header ───────────────────────────────────────────────────
+            const Padding(
+              padding: EdgeInsets.fromLTRB(20, 16, 20, 16),
+              child: Text(
+                'Групи',
+                style: TextStyle(
+                  fontSize: 24,
+                  fontWeight: FontWeight.w800,
+                  color: AppColors.textPrimary,
                 ),
-              );
-            },
-          );
-        },
+              ),
+            ),
+
+            Expanded(
+              child: groupsAsync.when(
+                loading: () =>
+                    const Center(child: CircularProgressIndicator()),
+                error: (e, _) =>
+                    Center(child: Text('Помилка: $e')),
+                data: (groups) {
+                  if (groups.isEmpty) {
+                    return Center(
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          const ColorFiltered(
+                            colorFilter: ColorFilter.mode(
+                                AppColors.textSecondary, BlendMode.srcIn),
+                            child: TriumphIcon(TIcon.team, size: 64),
+                          ),
+                          const SizedBox(height: 16),
+                          const Text(
+                            'Груп ще немає',
+                            style: TextStyle(
+                                color: AppColors.textSecondary,
+                                fontSize: 16),
+                          ),
+                          const SizedBox(height: 8),
+                          const Text(
+                            'Натисніть + щоб створити першу групу',
+                            style:
+                                TextStyle(color: AppColors.textSecondary),
+                          ),
+                        ],
+                      ),
+                    );
+                  }
+
+                  return ListView.builder(
+                    padding: const EdgeInsets.fromLTRB(20, 0, 20, 100),
+                    itemCount: groups.length,
+                    itemBuilder: (context, i) {
+                      final group = groups[i];
+                      return _GroupCard(
+                        group: group,
+                        onTap: () => context.push('/group/${group.id}'),
+                        onDelete: () =>
+                            _confirmDelete(context, group),
+                      );
+                    },
+                  );
+                },
+              ),
+            ),
+          ],
+        ),
       ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () => _showCreateGroupDialog(context, coachId),
-        child: const ColorFiltered(colorFilter: ColorFilter.mode(Colors.white, BlendMode.srcIn), child: TriumphIcon(TIcon.add, size: 24)),
+      floatingActionButton: GestureDetector(
+        onTap: () => _showCreateGroupDialog(context, coachId),
+        child: Container(
+          width: 56,
+          height: 56,
+          decoration: const BoxDecoration(
+            gradient: AppColors.ctaGradient,
+            shape: BoxShape.circle,
+            boxShadow: [
+              BoxShadow(
+                color: Color(0x55D50000),
+                blurRadius: 12,
+                offset: Offset(0, 4),
+              ),
+            ],
+          ),
+          child: const Icon(Icons.add, color: Colors.white, size: 24),
+        ),
       ),
     );
   }
@@ -104,9 +132,7 @@ class _GroupsScreenState extends ConsumerState<GroupsScreen> {
             style: TextButton.styleFrom(foregroundColor: AppColors.error),
             onPressed: () {
               Navigator.pop(context);
-              ref
-                  .read(groupNotifierProvider.notifier)
-                  .deleteGroup(group.id);
+              ref.read(groupNotifierProvider.notifier).deleteGroup(group.id);
             },
             child: const Text('Видалити'),
           ),
@@ -240,7 +266,8 @@ class _GroupsScreenState extends ConsumerState<GroupsScreen> {
                   final name = nameCtrl.text.trim();
                   bool valid = true;
                   if (name.isEmpty) {
-                    setDialogState(() => nameError = 'Вкажіть назву групи');
+                    setDialogState(
+                        () => nameError = 'Вкажіть назву групи');
                     valid = false;
                   }
                   if (selectedDays.isEmpty) {
@@ -272,6 +299,148 @@ class _GroupsScreenState extends ConsumerState<GroupsScreen> {
             ],
           );
         },
+      ),
+    );
+  }
+}
+
+// ── Group card ────────────────────────────────────────────────────────────────
+
+class _GroupCard extends StatelessWidget {
+  const _GroupCard({
+    required this.group,
+    required this.onTap,
+    required this.onDelete,
+  });
+
+  final GroupModel group;
+  final VoidCallback onTap;
+  final VoidCallback onDelete;
+
+  String get _initial =>
+      group.name.isNotEmpty ? group.name[0].toUpperCase() : '?';
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: onTap,
+      onLongPress: () => _showOptions(context),
+      child: Container(
+        margin: const EdgeInsets.only(bottom: 10),
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+        decoration: BoxDecoration(
+          color: AppColors.surface,
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: AppColors.surface3),
+        ),
+        child: Row(
+          children: [
+            // Avatar
+            Container(
+              width: 48,
+              height: 48,
+              decoration: const BoxDecoration(
+                gradient: AppColors.ctaGradient,
+                shape: BoxShape.circle,
+              ),
+              alignment: Alignment.center,
+              child: Text(
+                _initial,
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontWeight: FontWeight.w800,
+                  fontSize: 20,
+                ),
+              ),
+            ),
+            const SizedBox(width: 14),
+
+            // Info
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    group.name,
+                    style: const TextStyle(
+                      fontWeight: FontWeight.w700,
+                      fontSize: 15,
+                      color: AppColors.textPrimary,
+                    ),
+                  ),
+                  const SizedBox(height: 3),
+                  Text(
+                    '${group.daysLabel}  •  ${group.timeStart}–${group.timeEnd}',
+                    style: const TextStyle(
+                      color: AppColors.textSecondary,
+                      fontSize: 12,
+                    ),
+                  ),
+                  const SizedBox(height: 3),
+                  Row(
+                    children: [
+                      const Icon(Icons.people_outline,
+                          size: 13, color: AppColors.textSecondary),
+                      const SizedBox(width: 4),
+                      Text(
+                        '${group.childIds.length} спортсменів',
+                        style: const TextStyle(
+                          color: AppColors.textSecondary,
+                          fontSize: 12,
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+
+            const Icon(Icons.chevron_right,
+                color: AppColors.textSecondary, size: 20),
+          ],
+        ),
+      ),
+    );
+  }
+
+  void _showOptions(BuildContext context) {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: AppColors.surface2,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (_) => Padding(
+        padding: const EdgeInsets.symmetric(vertical: 12),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(
+              width: 40,
+              height: 4,
+              margin: const EdgeInsets.only(bottom: 12),
+              decoration: BoxDecoration(
+                color: AppColors.surface3,
+                borderRadius: BorderRadius.circular(2),
+              ),
+            ),
+            ListTile(
+              leading: const ColorFiltered(
+                colorFilter:
+                    ColorFilter.mode(AppColors.error, BlendMode.srcIn),
+                child: TriumphIcon(TIcon.delete, size: 22),
+              ),
+              title: const Text(
+                'Видалити групу',
+                style: TextStyle(color: AppColors.error),
+              ),
+              onTap: () {
+                Navigator.pop(context);
+                onDelete();
+              },
+            ),
+          ],
+        ),
       ),
     );
   }

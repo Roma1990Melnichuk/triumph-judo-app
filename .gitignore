@@ -67,3 +67,6 @@ android/.gradle/
 # Bug reports and logs
 bugreport-*.zip
 *.bugreport
+
+# Temporary conversion utilities
+temp_webp/

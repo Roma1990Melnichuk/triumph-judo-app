@@ -25,14 +25,9 @@ class MyDataScreen extends ConsumerWidget {
     final childId = user?.childIds.firstOrNull;
 
     if (childId == null) {
-      return Scaffold(
+      return const Scaffold(
         backgroundColor: AppColors.background,
-        appBar: AppBar(
-          backgroundColor: AppColors.background,
-          foregroundColor: AppColors.textPrimary,
-          title: const Text('Мої дані'),
-        ),
-        body: const Center(
+        body: Center(
           child: Text(
             'Не знайдено пов\'язаного спортсмена',
             style: TextStyle(color: AppColors.textSecondary),
@@ -97,72 +92,92 @@ class _MyDataBody extends ConsumerWidget {
 
     return Scaffold(
       backgroundColor: AppColors.background,
-      body: CustomScrollView(
-        slivers: [
-          // ── App bar ────────────────────────────────────────────────────────
-          SliverAppBar(
-            pinned: true,
-            backgroundColor: AppColors.background,
-            foregroundColor: AppColors.textPrimary,
-            title: const Text(
-              'Мої дані',
-              style: TextStyle(
-                fontWeight: FontWeight.w700,
-                fontSize: 18,
-                color: AppColors.textPrimary,
+      body: SafeArea(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // ── Header ────────────────────────────────────────────────────
+            Padding(
+              padding: const EdgeInsets.fromLTRB(12, 16, 16, 12),
+              child: Row(
+                children: [
+                  GestureDetector(
+                    onTap: () => context.pop(),
+                    child: Container(
+                      width: 44,
+                      height: 44,
+                      decoration: BoxDecoration(
+                        color: AppColors.surface2,
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: const Center(
+                        child: ColorFiltered(
+                          colorFilter: ColorFilter.mode(AppColors.textPrimary, BlendMode.srcIn),
+                          child: TriumphIcon(TIcon.back, size: 22),
+                        ),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  const Expanded(
+                    child: Text(
+                      'Мої дані',
+                      style: TextStyle(
+                        fontSize: 24,
+                        fontWeight: FontWeight.w800,
+                        color: AppColors.textPrimary,
+                      ),
+                    ),
+                  ),
+                  GestureDetector(
+                    onTap: () => context.push('/team/$childId'),
+                    child: Container(
+                      width: 44,
+                      height: 44,
+                      decoration: BoxDecoration(
+                        color: AppColors.surface2,
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(color: AppColors.surface3),
+                      ),
+                      alignment: Alignment.center,
+                      child: const ColorFiltered(
+                        colorFilter: ColorFilter.mode(
+                            AppColors.textSecondary, BlendMode.srcIn),
+                        child: TriumphIcon(TIcon.athlete, size: 22),
+                      ),
+                    ),
+                  ),
+                ],
               ),
             ),
-            actions: [
-              IconButton(
-                icon: const ColorFiltered(
-                  colorFilter:
-                      ColorFilter.mode(AppColors.textPrimary, BlendMode.srcIn),
-                  child: TriumphIcon(TIcon.athlete, size: 22),
-                ),
-                tooltip: 'Повний профіль',
-                onPressed: () => context.push('/team/$childId'),
+
+            // ── Scrollable content ────────────────────────────────────────
+            Expanded(
+              child: ListView(
+                padding: const EdgeInsets.fromLTRB(16, 0, 16, 32),
+                children: [
+                  _HeroCard(child: child, age: age),
+                  const SizedBox(height: 16),
+                  _TechniqueGauge(
+                    percent: techniquePct,
+                    nextBelt: nextBelt,
+                  ),
+                  const SizedBox(height: 16),
+                  _StatsRow(
+                    attendance: attendanceStats?.pct.round() ?? 0,
+                    trainings: attendanceStats?.total ?? 0,
+                    medals: medalCount,
+                    results: results.length,
+                  ),
+                  const SizedBox(height: 16),
+                  _InfoGrid(child: child, age: age),
+                  const SizedBox(height: 16),
+                  _QuickActions(childId: childId),
+                ],
               ),
-            ],
-          ),
-
-          SliverPadding(
-            padding: const EdgeInsets.fromLTRB(16, 8, 16, 32),
-            sliver: SliverList(
-              delegate: SliverChildListDelegate([
-                // ── Hero card ─────────────────────────────────────────────────
-                _HeroCard(child: child, age: age),
-
-                const SizedBox(height: 16),
-
-                // ── Technique gauge ──────────────────────────────────────────
-                _TechniqueGauge(
-                  percent: techniquePct,
-                  nextBelt: nextBelt,
-                ),
-
-                const SizedBox(height: 16),
-
-                // ── Stats row ────────────────────────────────────────────────
-                _StatsRow(
-                  attendance: attendanceStats?.pct.round() ?? 0,
-                  trainings: attendanceStats?.total ?? 0,
-                  medals: medalCount,
-                  results: results.length,
-                ),
-
-                const SizedBox(height: 16),
-
-                // ── Info tiles ───────────────────────────────────────────────
-                _InfoGrid(child: child, age: age),
-
-                const SizedBox(height: 16),
-
-                // ── Quick actions ────────────────────────────────────────────
-                _QuickActions(childId: childId),
-              ]),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }

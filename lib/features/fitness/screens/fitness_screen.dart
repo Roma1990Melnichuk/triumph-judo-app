@@ -57,37 +57,78 @@ class _FitnessScreenState extends ConsumerState<FitnessScreen> {
 
     return Scaffold(
       backgroundColor: AppColors.background,
-      appBar: AppBar(
-        title: Column(
+      body: SafeArea(
+        child: Column(
           children: [
-            const Text('Фізична підготовка'),
-            if (widget.childName.isNotEmpty)
-              Text(
-                widget.childName,
-                style: const TextStyle(
-                    fontSize: 12,
-                    color: AppColors.textSecondary,
-                    fontWeight: FontWeight.normal),
+            Padding(
+              padding: const EdgeInsets.fromLTRB(12, 8, 20, 8),
+              child: Row(
+                children: [
+                  GestureDetector(
+                    onTap: () => context.pop(),
+                    child: Container(
+                      width: 44,
+                      height: 44,
+                      decoration: BoxDecoration(
+                        color: AppColors.surface2,
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: const Center(
+                        child: ColorFiltered(
+                          colorFilter: ColorFilter.mode(AppColors.textPrimary, BlendMode.srcIn),
+                          child: TriumphIcon(TIcon.back, size: 22),
+                        ),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Text(
+                          'Фізична підготовка',
+                          style: TextStyle(
+                            fontSize: 20,
+                            fontWeight: FontWeight.w800,
+                            color: AppColors.textPrimary,
+                          ),
+                        ),
+                        if (widget.childName.isNotEmpty)
+                          Text(
+                            widget.childName,
+                            style: const TextStyle(
+                              fontSize: 12,
+                              color: AppColors.textSecondary,
+                            ),
+                          ),
+                      ],
+                    ),
+                  ),
+                ],
               ),
+            ),
+            Expanded(
+              child: loading
+                  ? const Center(child: CircularProgressIndicator())
+                  : exercises.isEmpty
+                      ? const Center(
+                          child: Text(
+                            'Немає вправ',
+                            style: TextStyle(color: AppColors.textSecondary),
+                          ),
+                        )
+                      : _FitnessBody(
+                          childId: widget.childId,
+                          childName: widget.childName,
+                          exercises: exercises,
+                          statsMap: statsMap,
+                          logs: logs,
+                        ),
+            ),
           ],
         ),
       ),
-      body: loading
-          ? const Center(child: CircularProgressIndicator())
-          : exercises.isEmpty
-              ? const Center(
-                  child: Text(
-                    'Немає вправ',
-                    style: TextStyle(color: AppColors.textSecondary),
-                  ),
-                )
-              : _FitnessBody(
-                  childId: widget.childId,
-                  childName: widget.childName,
-                  exercises: exercises,
-                  statsMap: statsMap,
-                  logs: logs,
-                ),
       floatingActionButton: isCoach
           ? FloatingActionButton(
               onPressed: () => _showAddExerciseDialog(context),

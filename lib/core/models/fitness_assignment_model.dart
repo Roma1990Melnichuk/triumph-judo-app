@@ -15,6 +15,7 @@ class FitnessAssignment {
   final List<String> assignedChildIds;
   final AssignmentStatus status;
   final String coachComment;
+  final bool isCumulative; // FIT-01 Fix: true for reps (sum), false for time/max (peak)
 
   const FitnessAssignment({
     required this.id,
@@ -29,6 +30,7 @@ class FitnessAssignment {
     required this.assignedChildIds,
     this.status = AssignmentStatus.active,
     this.coachComment = '',
+    this.isCumulative = true,
   });
 
   bool get isActive =>
@@ -62,6 +64,7 @@ class FitnessAssignment {
           (d['assignedChildIds'] as List<dynamic>? ?? []).cast<String>(),
       status: status,
       coachComment: d['coachComment'] as String? ?? '',
+      isCumulative: d['isCumulative'] as bool? ?? true,
     );
   }
 
@@ -77,5 +80,6 @@ class FitnessAssignment {
         'assignedChildIds': assignedChildIds,
         'status': status.name,
         'coachComment': coachComment,
+        'isCumulative': isCumulative,
       };
 }

@@ -72,24 +72,23 @@ class _RatingScreenState extends ConsumerState<RatingScreen> {
     final seasonYears = ref.watch(competitionSeasonYearsProvider);
     final yearPoints = ref.watch(yearPointsProvider);
 
-    // ── Top-20 / windowed view logic ───────────────────────────────────
+    // ── Top-20 / windowed view logic — ERR-04 Fix ─────────────────────────
     final allRated = ref.watch(allRatedSortedProvider);
     final myChildId = isCoach ? null : user?.childIds.firstOrNull;
 
     List<ChildModel> children;
-    int rankOffset = 0;      // actual rank = rankOffset + i + 1
+    int rankOffset = 0;
     bool isWindowed = false;
-    int? myActualRank;       // 1-based rank of the parent's child
+    int? myActualRank;
 
     if (!isCoach && myChildId != null) {
       final myRank = allRated.indexWhere((c) => c.id == myChildId);
       if (myRank >= 20 && !filter.top20Only) {
-        // Child is outside top 20 and top-20 filter is OFF — center window on child
+        // Child is outside top 20: center window on child
         isWindowed = true;
         myActualRank = myRank + 1;
-        int start = (myRank - 10).clamp(0, allRated.length - 1);
-        int end   = (start + 20).clamp(0, allRated.length);
-        if (end - start < 20) start = (end - 20).clamp(0, allRated.length);
+        int start = (myRank - 5).clamp(0, allRated.length - 1);
+        int end   = (start + 11).clamp(0, allRated.length);
         rankOffset = start;
         children = allRated.sublist(start, end);
       } else {
@@ -102,108 +101,145 @@ class _RatingScreenState extends ConsumerState<RatingScreen> {
 
     return Scaffold(
       backgroundColor: AppColors.background,
-      appBar: AppBar(
-        title: const Text('Рейтинг'),
-        actions: [
-          IconButton(
-            icon: Icon(_filtersExpanded ? Icons.filter_list_off : Icons.filter_list),
-            tooltip: 'Фільтри',
-            onPressed: () => setState(() => _filtersExpanded = !_filtersExpanded),
-          ),
-        ],
-        bottom: PreferredSize(
-          preferredSize: const Size.fromHeight(84),
-          child: Column(
-            children: [
-              // Загальний / Командний tabs
-              Padding(
-                padding: const EdgeInsets.fromLTRB(16, 4, 16, 0),
-                child: Row(
-                  children: _RatingTab.values.map((t) {
-                    final active = t == _tab;
-                    return GestureDetector(
-                      onTap: () => setState(() => _tab = t),
-                      child: AnimatedContainer(
-                        duration: const Duration(milliseconds: 150),
-                        margin: const EdgeInsets.only(right: 8),
-                        padding: const EdgeInsets.symmetric(
-                            horizontal: 16, vertical: 7),
-                        decoration: BoxDecoration(
-                          gradient: active ? AppColors.ctaGradient : null,
-                          color: active ? null : AppColors.surface2,
-                          borderRadius: BorderRadius.circular(20),
-                          border: Border.all(
-                            color: active
-                                ? Colors.transparent
-                                : AppColors.surface3,
-                          ),
-                        ),
-                        child: Text(
-                          t == _RatingTab.general ? 'Загальний'
-                              : t == _RatingTab.team ? 'Командний'
-                              : '🏅 Медалі',
-                          style: TextStyle(
-                            color: active
-                                ? Colors.white
-                                : AppColors.textSecondary,
-                            fontSize: 13,
-                            fontWeight: active
-                                ? FontWeight.bold
-                                : FontWeight.normal,
-                          ),
+      body: SafeArea(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // ── Header ──────────────────────────────────────────────────────
+            Padding(
+              padding: const EdgeInsets.fromLTRB(20, 16, 16, 12),
+              child: Row(
+                children: [
+                  const Expanded(
+                    child: Text(
+                      'Рейтинг',
+                      style: TextStyle(
+                        fontSize: 24,
+                        fontWeight: FontWeight.w800,
+                        color: AppColors.textPrimary,
+                      ),
+                    ),
+                  ),
+                  GestureDetector(
+                    onTap: () =>
+                        setState(() => _filtersExpanded = !_filtersExpanded),
+                    child: Container(
+                      width: 44,
+                      height: 44,
+                      decoration: BoxDecoration(
+                        color: _filtersExpanded
+                            ? AppColors.primary.withValues(alpha: 0.15)
+                            : AppColors.surface2,
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(
+                          color: _filtersExpanded
+                              ? AppColors.primary.withValues(alpha: 0.5)
+                              : AppColors.surface3,
                         ),
                       ),
-                    );
-                  }).toList(),
-                ),
+                      alignment: Alignment.center,
+                      child: Icon(
+                        _filtersExpanded
+                            ? Icons.filter_list_off
+                            : Icons.filter_list,
+                        color: _filtersExpanded
+                            ? AppColors.primary
+                            : AppColors.textSecondary,
+                        size: 20,
+                      ),
+                    ),
+                  ),
+                ],
               ),
-              // Period filter chips
-              SingleChildScrollView(
-                scrollDirection: Axis.horizontal,
-                padding: const EdgeInsets.fromLTRB(16, 6, 16, 8),
-                child: Row(
-                  children: _RatingPeriod.values.map((p) {
-                    final active = p == _period;
-                    return GestureDetector(
-                      onTap: () => setState(() => _period = p),
-                      child: AnimatedContainer(
-                        duration: const Duration(milliseconds: 150),
-                        margin: const EdgeInsets.only(right: 8),
-                        padding: const EdgeInsets.symmetric(
-                            horizontal: 12, vertical: 5),
-                        decoration: BoxDecoration(
+            ),
+
+            // ── Tab row ──────────────────────────────────────────────────────
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 0, 16, 6),
+              child: Row(
+                children: _RatingTab.values.map((t) {
+                  final active = t == _tab;
+                  return GestureDetector(
+                    onTap: () => setState(() => _tab = t),
+                    child: AnimatedContainer(
+                      duration: const Duration(milliseconds: 150),
+                      margin: const EdgeInsets.only(right: 8),
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 16, vertical: 7),
+                      decoration: BoxDecoration(
+                        gradient: active ? AppColors.ctaGradient : null,
+                        color: active ? null : AppColors.surface2,
+                        borderRadius: BorderRadius.circular(20),
+                        border: Border.all(
+                          color:
+                              active ? Colors.transparent : AppColors.surface3,
+                        ),
+                      ),
+                      child: Text(
+                        t == _RatingTab.general
+                            ? 'Загальний'
+                            : t == _RatingTab.team
+                                ? 'Командний'
+                                : '🏅 Медалі',
+                        style: TextStyle(
+                          color:
+                              active ? Colors.white : AppColors.textSecondary,
+                          fontSize: 13,
+                          fontWeight:
+                              active ? FontWeight.bold : FontWeight.normal,
+                        ),
+                      ),
+                    ),
+                  );
+                }).toList(),
+              ),
+            ),
+
+            // ── Period chips ─────────────────────────────────────────────────
+            SingleChildScrollView(
+              scrollDirection: Axis.horizontal,
+              padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
+              child: Row(
+                children: _RatingPeriod.values.map((p) {
+                  final active = p == _period;
+                  return GestureDetector(
+                    onTap: () => setState(() => _period = p),
+                    child: AnimatedContainer(
+                      duration: const Duration(milliseconds: 150),
+                      margin: const EdgeInsets.only(right: 8),
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 12, vertical: 5),
+                      decoration: BoxDecoration(
+                        color: active
+                            ? AppColors.accent.withValues(alpha: 0.15)
+                            : AppColors.surface2,
+                        borderRadius: BorderRadius.circular(16),
+                        border: Border.all(
                           color: active
-                              ? AppColors.accent.withValues(alpha: 0.15)
-                              : AppColors.surface2,
-                          borderRadius: BorderRadius.circular(16),
-                          border: Border.all(
-                            color: active
-                                ? AppColors.accent.withValues(alpha: 0.5)
-                                : AppColors.surface3,
-                          ),
-                        ),
-                        child: Text(
-                          p.label,
-                          style: TextStyle(
-                            color: active
-                                ? AppColors.accent
-                                : AppColors.textSecondary,
-                            fontSize: 12,
-                            fontWeight: active
-                                ? FontWeight.bold
-                                : FontWeight.normal,
-                          ),
+                              ? AppColors.accent.withValues(alpha: 0.5)
+                              : AppColors.surface3,
                         ),
                       ),
-                    );
-                  }).toList(),
-                ),
+                      child: Text(
+                        p.label,
+                        style: TextStyle(
+                          color: active
+                              ? AppColors.accent
+                              : AppColors.textSecondary,
+                          fontSize: 12,
+                          fontWeight:
+                              active ? FontWeight.bold : FontWeight.normal,
+                        ),
+                      ),
+                    ),
+                  );
+                }).toList(),
               ),
-            ],
-          ),
-        ),
-      ),
-      body: AmbientBackground(
+            ),
+
+            // ── Body ─────────────────────────────────────────────────────────
+            Expanded(
+              child: AmbientBackground(
         child: _tab == _RatingTab.medals
           ? const MedalTrackerScreen()
           : _tab == _RatingTab.team
@@ -352,11 +388,11 @@ class _RatingScreenState extends ConsumerState<RatingScreen> {
               child: Row(
                 crossAxisAlignment: CrossAxisAlignment.end,
                 children: [
-                  _PodiumItem(child: children[1], place: 2, height: 72, color: AppColors.silverMedal, entryDelay: 700),
+                  _PodiumItem(child: children[1], place: 2, color: AppColors.silverMedal, entryDelay: 700),
                   const SizedBox(width: 6),
-                  _PodiumItem(child: children[0], place: 1, height: 100, color: AppColors.goldMedal, entryDelay: 1400),
+                  _PodiumItem(child: children[0], place: 1, color: AppColors.goldMedal, entryDelay: 1400),
                   const SizedBox(width: 6),
-                  _PodiumItem(child: children[2], place: 3, height: 56, color: AppColors.bronzeMedal, entryDelay: 0),
+                  _PodiumItem(child: children[2], place: 3, color: AppColors.bronzeMedal, entryDelay: 0),
                 ],
               ),
             ),
@@ -508,6 +544,10 @@ class _RatingScreenState extends ConsumerState<RatingScreen> {
           ),
         ],
       ),
+      ),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -852,14 +892,12 @@ class _PodiumItem extends StatefulWidget {
   const _PodiumItem({
     required this.child,
     required this.place,
-    required this.height,
     required this.color,
     this.entryDelay = 0,
   });
 
   final ChildModel child;
   final int place;
-  final double height;
   final Color color;
   final int entryDelay; // ms before entry animation starts
 
@@ -875,7 +913,6 @@ class _PodiumItemState extends State<_PodiumItem>
   late final Animation<double> _entryOpacity;
   late final Animation<double> _entrySlide;
 
-  static const _medals = ['🥇', '🥈', '🥉'];
 
   @override
   void initState() {
@@ -917,139 +954,124 @@ class _PodiumItemState extends State<_PodiumItem>
     final isFirst = widget.place == 1;
     final avatarRadius = isFirst ? 32.0 : 24.0;
 
-    return AnimatedBuilder(
-      animation: Listenable.merge([_glow, _entry]),
-      builder: (_, __) {
-        return Opacity(
-          opacity: _entryOpacity.value,
-          child: Transform.translate(
-            offset: Offset(0, _entrySlide.value),
-            child: _buildContent(isFirst, avatarRadius),
-          ),
-        );
-      },
+    return Expanded(
+      child: AnimatedBuilder(
+        animation: Listenable.merge([_glow, _entry]),
+        builder: (_, __) {
+          return Opacity(
+            opacity: _entryOpacity.value,
+            child: Transform.translate(
+              offset: Offset(0, _entrySlide.value),
+              child: _buildContent(isFirst, avatarRadius),
+            ),
+          );
+        },
+      ),
     );
   }
 
   Widget _buildContent(bool isFirst, double avatarRadius) {
-        return Expanded(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              // Avatar with medal + glow (no shape+borderRadius conflict)
-              Stack(
-                clipBehavior: Clip.none,
-                alignment: Alignment.center,
-                children: [
-                  // Glow ring behind avatar — fixed size, opacity-only pulse
-                  Container(
-                    width: avatarRadius * 2 + 20,
-                    height: avatarRadius * 2 + 20,
-                    decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(avatarRadius + 10),
-                      color: widget.color.withValues(
-                        alpha: isFirst ? _glowAnim.value : 0.15,
-                      ),
-                    ),
-                  ),
-                  // Avatar
-                  widget.child.photoUrl != null
-                      ? CircleAvatar(
-                          radius: avatarRadius,
-                          backgroundImage: CachedNetworkImageProvider(
-                              widget.child.photoUrl!),
-                        )
-                      : DefaultAvatarCircle(
-                          gender: widget.child.gender,
-                          radius: avatarRadius,
-                          seed: widget.child.id,
-                        ),
-                  // Medal emoji
-                  Positioned(
-                    bottom: -5,
-                    right: -2,
-                    child: Text(
-                      _medals[widget.place - 1],
-                      style: TextStyle(fontSize: isFirst ? 18 : 14),
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 10),
-              Text(
-                widget.child.lastName,
-                textAlign: TextAlign.center,
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                style: TextStyle(
-                  color: AppColors.textPrimary,
-                  fontSize: isFirst ? 13 : 11,
-                  fontWeight: FontWeight.w700,
+    final ringWidth = isFirst ? 3.5 : 2.5;
+    final badgeSize = isFirst ? 24.0 : 20.0;
+
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        // Crown icon for 1st place (full-color, no tint)
+        if (isFirst)
+          const TriumphIcon(TIcon.crown, size: 40)
+        else
+          const SizedBox(height: 40),
+
+        const SizedBox(height: 6),
+
+        // Avatar with ring + place badge
+        Stack(
+          clipBehavior: Clip.none,
+          alignment: Alignment.center,
+          children: [
+            // Animated glow ring
+            Container(
+              width: avatarRadius * 2 + ringWidth * 2 + 8,
+              height: avatarRadius * 2 + ringWidth * 2 + 8,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                border: Border.all(color: widget.color, width: ringWidth),
+                color: widget.color.withValues(
+                  alpha: isFirst ? _glowAnim.value : 0.10,
                 ),
               ),
-              const SizedBox(height: 3),
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+            ),
+            // Avatar
+            widget.child.photoUrl != null
+                ? CircleAvatar(
+                    radius: avatarRadius,
+                    backgroundImage:
+                        CachedNetworkImageProvider(widget.child.photoUrl!),
+                  )
+                : DefaultAvatarCircle(
+                    gender: widget.child.gender,
+                    radius: avatarRadius,
+                    seed: widget.child.id,
+                  ),
+            // Place badge at bottom of ring
+            Positioned(
+              bottom: -(badgeSize / 2 - 4),
+              child: Container(
+                width: badgeSize,
+                height: badgeSize,
                 decoration: BoxDecoration(
-                  color: widget.color.withValues(alpha: 0.15),
-                  borderRadius: BorderRadius.circular(10),
-                  border: Border.all(
-                    color: widget.color.withValues(alpha: 0.4),
-                  ),
+                  shape: BoxShape.circle,
+                  color: widget.color,
+                  border: Border.all(color: AppColors.background, width: 2),
                 ),
-                child: CountUpText(
-                  widget.child.totalPoints,
-                  suffix: ' б',
+                alignment: Alignment.center,
+                child: Text(
+                  '${widget.place}',
                   style: TextStyle(
-                    color: widget.color,
-                    fontWeight: FontWeight.bold,
-                    fontSize: isFirst ? 13 : 11,
-                  ),
-                  duration: const Duration(milliseconds: 700),
-                ),
-              ),
-              const SizedBox(height: 8),
-              // Podium block
-              ClipRRect(
-                borderRadius:
-                    const BorderRadius.vertical(top: Radius.circular(10)),
-                child: Container(
-                  height: widget.height,
-                  alignment: Alignment.topCenter,
-                  padding: const EdgeInsets.only(top: 8),
-                  decoration: BoxDecoration(
-                    gradient: LinearGradient(
-                      begin: Alignment.topCenter,
-                      end: Alignment.bottomCenter,
-                      colors: [
-                        widget.color.withValues(alpha: 0.35),
-                        widget.color.withValues(alpha: 0.10),
-                      ],
-                    ),
-                    border: Border(
-                      top: BorderSide(
-                          color: widget.color.withValues(alpha: 0.7),
-                          width: isFirst ? 2 : 1.5),
-                      left: BorderSide(
-                          color: widget.color.withValues(alpha: 0.25)),
-                      right: BorderSide(
-                          color: widget.color.withValues(alpha: 0.25)),
-                    ),
-                  ),
-                  child: Text(
-                    '${widget.place}',
-                    style: TextStyle(
-                      color: Colors.white.withValues(alpha: 0.85),
-                      fontSize: isFirst ? 30 : 22,
-                      fontWeight: FontWeight.w900,
-                      height: 1,
-                    ),
+                    color: Colors.white,
+                    fontSize: isFirst ? 11 : 9,
+                    fontWeight: FontWeight.w900,
+                    height: 1,
                   ),
                 ),
               ),
-            ],
+            ),
+          ],
+        ),
+
+        SizedBox(height: badgeSize / 2 + 8),
+
+        // Name
+        Text(
+          widget.child.lastName,
+          textAlign: TextAlign.center,
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+          style: TextStyle(
+            color: AppColors.textPrimary,
+            fontSize: isFirst ? 13 : 11,
+            fontWeight: FontWeight.w600,
           ),
-        );
+        ),
+
+        const SizedBox(height: 4),
+
+        // Points — gold for all positions
+        CountUpText(
+          widget.child.totalPoints,
+          suffix: '',
+          style: TextStyle(
+            color: AppColors.goldMedal,
+            fontWeight: FontWeight.w800,
+            fontSize: isFirst ? 18 : 15,
+          ),
+          duration: const Duration(milliseconds: 700),
+        ),
+
+        const SizedBox(height: 8),
+      ],
+    );
   }
 }
 

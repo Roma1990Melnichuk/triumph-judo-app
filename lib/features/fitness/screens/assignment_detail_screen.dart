@@ -33,11 +33,44 @@ class AssignmentDetailScreen extends ConsumerWidget {
     if (assignment == null) {
       return Scaffold(
         backgroundColor: AppColors.background,
-        appBar: AppBar(title: const Text('Завдання')),
-        body: const Center(
-            child:
-                Text('Завдання не знайдено',
-                    style: TextStyle(color: AppColors.textSecondary))),
+        body: SafeArea(
+          child: Column(
+            children: [
+              Padding(
+                padding: const EdgeInsets.fromLTRB(12, 8, 12, 0),
+                child: Row(
+                  children: [
+                    GestureDetector(
+                      onTap: () => context.pop(),
+                      child: Container(
+                        width: 44,
+                        height: 44,
+                        decoration: BoxDecoration(
+                          color: AppColors.surface2,
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: const Center(
+                          child: ColorFiltered(
+                            colorFilter: ColorFilter.mode(AppColors.textPrimary, BlendMode.srcIn),
+                            child: TriumphIcon(TIcon.back, size: 22),
+                          ),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    const Text('Завдання', style: TextStyle(fontSize: 20, fontWeight: FontWeight.w800)),
+                  ],
+                ),
+              ),
+              const Expanded(
+                child: Center(
+                  child: Text('Завдання не знайдено',
+                      style: TextStyle(color: AppColors.textSecondary)),
+                ),
+              ),
+            ],
+          ),
+        ),
       );
     }
 
@@ -72,18 +105,58 @@ class AssignmentDetailScreen extends ConsumerWidget {
 
     return Scaffold(
       backgroundColor: AppColors.background,
-      appBar: AppBar(
-        backgroundColor: AppColors.background,
-        title: Text(assignment.exerciseName),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.more_vert),
-            onPressed: () => _showOptions(context, ref, assignment),
-          ),
-        ],
-      ),
-      body: ListView(
-        padding: const EdgeInsets.only(bottom: 100),
+      body: SafeArea(
+        child: Column(
+          children: [
+            Padding(
+              padding: const EdgeInsets.fromLTRB(12, 8, 12, 0),
+              child: Row(
+                children: [
+                  GestureDetector(
+                    onTap: () => context.pop(),
+                    child: Container(
+                      width: 44,
+                      height: 44,
+                      decoration: BoxDecoration(
+                        color: AppColors.surface2,
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: const Center(
+                        child: ColorFiltered(
+                          colorFilter: ColorFilter.mode(AppColors.textPrimary, BlendMode.srcIn),
+                          child: TriumphIcon(TIcon.back, size: 22),
+                        ),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Text(
+                      assignment.exerciseName,
+                      style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w800),
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ),
+                  GestureDetector(
+                    onTap: () => _showOptions(context, ref, assignment),
+                    child: Container(
+                      width: 44,
+                      height: 44,
+                      decoration: BoxDecoration(
+                        color: AppColors.surface2,
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: const Center(
+                        child: Icon(Icons.more_vert, size: 22, color: AppColors.textSecondary),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            Expanded(
+              child: ListView(
+                padding: const EdgeInsets.only(bottom: 100),
         children: [
           // ── Hero card ───────────────────────────────────────────────────
           Container(
@@ -198,6 +271,10 @@ class AssignmentDetailScreen extends ConsumerWidget {
               unit: assignment.exerciseUnit,
             ),
         ],
+      ),
+    ),
+  ],
+),
       ),
       floatingActionButton: FloatingActionButton.extended(
         onPressed: () => context.push(

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import '../../../core/constants/achievement_defs.dart';
 import '../../../core/constants/app_colors.dart';
 import '../../../core/constants/belt_levels.dart';
@@ -8,6 +9,7 @@ import '../../../core/models/child_model.dart';
 import '../../../core/models/group_model.dart';
 import '../../../shared/widgets/achievement_badge.dart';
 import '../../../shared/widgets/gradient_button.dart';
+import '../../../shared/widgets/triumph_icon.dart';
 import '../../auth/providers/auth_provider.dart';
 import '../../schedule/providers/group_provider.dart';
 import '../../team/providers/children_provider.dart';
@@ -125,7 +127,16 @@ class _BulkGrantAchievementsScreenState
       );
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-          content: Text('✅ Видано $total досягнень'),
+          content: Row(
+            children: [
+              const ColorFiltered(
+                colorFilter: ColorFilter.mode(Colors.white, BlendMode.srcIn),
+                child: TriumphIcon(TIcon.success, size: 18),
+              ),
+              const SizedBox(width: 8),
+              Text('Видано $total досягнень'),
+            ],
+          ),
           backgroundColor: AppColors.success,
         ));
         setState(() {
@@ -156,10 +167,42 @@ class _BulkGrantAchievementsScreenState
 
     return Scaffold(
       backgroundColor: AppColors.background,
-      appBar: AppBar(title: const Text('Масова видача досягнень')),
-      body: ListView(
-        padding: const EdgeInsets.all(16),
-        children: [
+      body: SafeArea(
+        child: Column(
+          children: [
+            Padding(
+              padding: const EdgeInsets.fromLTRB(12, 8, 12, 0),
+              child: Row(
+                children: [
+                  GestureDetector(
+                    onTap: () => context.pop(),
+                    child: Container(
+                      width: 44,
+                      height: 44,
+                      decoration: BoxDecoration(
+                        color: AppColors.surface2,
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: const Center(
+                        child: ColorFiltered(
+                          colorFilter: ColorFilter.mode(AppColors.textPrimary, BlendMode.srcIn),
+                          child: TriumphIcon(TIcon.back, size: 22),
+                        ),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  const Text(
+                    'Масова видача досягнень',
+                    style: TextStyle(fontSize: 20, fontWeight: FontWeight.w800),
+                  ),
+                ],
+              ),
+            ),
+            Expanded(
+              child: ListView(
+                padding: const EdgeInsets.all(16),
+                children: [
           _athleteCard(children, groups, birthYears, matched),
           const SizedBox(height: 16),
           _achievementsCard(visibleDefs),
@@ -196,6 +239,10 @@ class _BulkGrantAchievementsScreenState
           const SizedBox(height: 32),
         ],
       ),
+      ),
+    ],
+  ),
+  ),
     );
   }
 

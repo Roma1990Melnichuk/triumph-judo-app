@@ -22,46 +22,45 @@ class _BeltOverviewScreenState extends ConsumerState<BeltOverviewScreen> {
   BeltLevel _selected = BeltLevel.whiteYellow;
 
   static const _beltDescriptions = <BeltLevel, String>{
-    BeltLevel.whiteYellow:   'Базові техніки падіння та перші кроки на шляху майстра',
-    BeltLevel.yellow:        'Базові кидки та утримання — основа класичного дзюдо',
-    BeltLevel.yellowOrange:  'Розвиток технічного арсеналу та комбінацій',
-    BeltLevel.orange:        'Вдосконалення техніки, тактики та фізичної підготовки',
-    BeltLevel.orangeGreen:   'Перші кроки до змагальної практики',
-    BeltLevel.green:         'Стабілізація техніки та тактичне мислення',
-    BeltLevel.greenBlue:     'Складні комбінації та спеціалізація',
-    BeltLevel.blue:          'Майстерність і знання ката',
-    BeltLevel.blueBrown:     'Поглиблена спеціалізація та суддівство',
-    BeltLevel.brown:         'Рівень майстра — передостанній крок',
-    BeltLevel.black:         'Вища майстерність — Дан',
+    BeltLevel.whiteYellow:  'Базові техніки падіння та перші кроки на шляху майстра',
+    BeltLevel.yellow:       'Базові кидки та утримання — основа класичного дзюдо',
+    BeltLevel.yellowOrange: 'Розвиток технічного арсеналу та комбінацій',
+    BeltLevel.orange:       'Вдосконалення техніки, тактики та фізичної підготовки',
+    BeltLevel.orangeGreen:  'Перші кроки до змагальної практики',
+    BeltLevel.green:        'Стабілізація техніки та тактичне мислення',
+    BeltLevel.greenBlue:    'Складні комбінації та спеціалізація',
+    BeltLevel.blue:         'Майстерність і знання ката',
+    BeltLevel.blueBrown:    'Поглиблена спеціалізація та суддівство',
+    BeltLevel.brown:        'Рівень майстра — передостанній крок',
+    BeltLevel.black:        'Вища майстерність — Дан',
   };
 
   static const _beltLevels = <BeltLevel, String>{
-    BeltLevel.whiteYellow:   '9 кю',
-    BeltLevel.yellow:        '8 кю',
-    BeltLevel.yellowOrange:  '7 кю',
-    BeltLevel.orange:        '6 кю',
-    BeltLevel.orangeGreen:   '5 кю',
-    BeltLevel.green:         '4 кю',
-    BeltLevel.greenBlue:     '3 кю',
-    BeltLevel.blue:          '2 кю',
-    BeltLevel.blueBrown:     '1 кю',
-    BeltLevel.brown:         '1 дан',
-    BeltLevel.black:         '2+ дан',
+    BeltLevel.whiteYellow:  '9 кю',
+    BeltLevel.yellow:       '8 кю',
+    BeltLevel.yellowOrange: '7 кю',
+    BeltLevel.orange:       '6 кю',
+    BeltLevel.orangeGreen:  '5 кю',
+    BeltLevel.green:        '4 кю',
+    BeltLevel.greenBlue:    '3 кю',
+    BeltLevel.blue:         '2 кю',
+    BeltLevel.blueBrown:    '1 кю',
+    BeltLevel.brown:        '1 дан',
+    BeltLevel.black:        '2+ дан',
   };
 
   @override
   Widget build(BuildContext context) {
-    final user        = ref.watch(currentUserModelProvider).value;
-    final isCoach     = user?.isCoach ?? false;
-    final allReqs     = ref.watch(beltRequirementsProvider);
-    final req         = allReqs.value?[_selected];
-    final belts       = BeltLevel.values.where((b) => b != BeltLevel.white).toList();
+    final user      = ref.watch(currentUserModelProvider).value;
+    final isCoach   = user?.isCoach ?? false;
+    final allReqs   = ref.watch(beltRequirementsProvider);
+    final req       = allReqs.value?[_selected];
+    final belts     = BeltLevel.values.where((b) => b != BeltLevel.white).toList();
 
-    // For parent — show their child's progress
     String? childId;
     if (user?.isParent == true) {
       final children = ref.watch(allChildrenProvider).value ?? [];
-      final myChild = children
+      final myChild  = children
           .where((c) => user?.ownsChild(c.id) ?? false)
           .firstOrNull;
       childId = myChild?.id;
@@ -74,95 +73,133 @@ class _BeltOverviewScreenState extends ConsumerState<BeltOverviewScreen> {
 
     return Scaffold(
       backgroundColor: AppColors.background,
-      appBar: AppBar(
-        title: const Text('Система поясів'),
-        actions: [
-          if (isCoach)
-            IconButton(
-              icon: TriumphIcon(TIcon.team, size: 24),
-              tooltip: 'Масова здача',
-              onPressed: () => context.push('/bulk-belt'),
-            ),
-        ],
-      ),
-      body: Column(
-        children: [
-          // ── Belt level selector ───────────────────────────────────────────
-          Container(
-            height: 72,
-            color: AppColors.surface,
-            child: ListView.builder(
-              scrollDirection: Axis.horizontal,
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-              itemCount: belts.length,
-              itemBuilder: (context, i) {
-                final b = belts[i];
-                final isActive = b == _selected;
-                return GestureDetector(
-                  onTap: () => setState(() => _selected = b),
-                  child: AnimatedContainer(
-                    duration: const Duration(milliseconds: 180),
-                    margin: const EdgeInsets.only(right: 8),
-                    width: 48,
-                    height: 48,
-                    decoration: BoxDecoration(
-                      color: isActive
-                          ? b.color.withValues(alpha: 0.2)
-                          : AppColors.surface2,
-                      shape: BoxShape.circle,
-                      border: Border.all(
-                        color: isActive ? b.color : AppColors.surface3,
-                        width: isActive ? 2.5 : 1,
+      body: SafeArea(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // ── Header ──────────────────────────────────────────────────────
+            Padding(
+              padding: const EdgeInsets.fromLTRB(20, 16, 16, 12),
+              child: Row(
+                children: [
+                  const Expanded(
+                    child: Text(
+                      'Система поясів',
+                      style: TextStyle(
+                        fontSize: 24,
+                        fontWeight: FontWeight.w800,
+                        color: AppColors.textPrimary,
                       ),
-                      boxShadow: isActive
-                          ? [
-                              BoxShadow(
-                                color: b.color.withValues(alpha: 0.4),
-                                blurRadius: 8,
-                              )
-                            ]
-                          : null,
-                    ),
-                    child: Center(
-                      child: BeltSpriteIcon(belt: b, size: 36),
                     ),
                   ),
-                );
-              },
+                  if (isCoach)
+                    GestureDetector(
+                      onTap: () => context.push('/bulk-belt'),
+                      child: Container(
+                        width: 44,
+                        height: 44,
+                        decoration: BoxDecoration(
+                          color: AppColors.surface2,
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(color: AppColors.surface3),
+                        ),
+                        alignment: Alignment.center,
+                        child: const ColorFiltered(
+                          colorFilter: ColorFilter.mode(
+                              AppColors.textSecondary, BlendMode.srcIn),
+                          child: TriumphIcon(TIcon.team, size: 22),
+                        ),
+                      ),
+                    ),
+                ],
+              ),
             ),
-          ),
 
-          const Divider(height: 1),
+            // ── Belt selector ────────────────────────────────────────────────
+            SizedBox(
+              height: 84,
+              child: ListView.builder(
+                scrollDirection: Axis.horizontal,
+                padding: const EdgeInsets.fromLTRB(20, 0, 20, 4),
+                itemCount: belts.length,
+                itemBuilder: (context, i) {
+                  final b        = belts[i];
+                  final isActive = b == _selected;
+                  return GestureDetector(
+                    onTap: () => setState(() => _selected = b),
+                    child: AnimatedContainer(
+                      duration: const Duration(milliseconds: 180),
+                      margin: const EdgeInsets.only(right: 10),
+                      width: 56,
+                      decoration: BoxDecoration(
+                        color: isActive
+                            ? b.color.withValues(alpha: 0.15)
+                            : AppColors.surface,
+                        borderRadius: BorderRadius.circular(14),
+                        border: Border.all(
+                          color: isActive ? b.color : AppColors.surface3,
+                          width: isActive ? 2 : 1,
+                        ),
+                        boxShadow: isActive
+                            ? [
+                                BoxShadow(
+                                  color: b.color.withValues(alpha: 0.3),
+                                  blurRadius: 8,
+                                )
+                              ]
+                            : null,
+                      ),
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          BeltSpriteIcon(belt: b, size: 38),
+                          const SizedBox(height: 2),
+                          Text(
+                            b.abbreviation,
+                            style: TextStyle(
+                              fontSize: 9,
+                              fontWeight: FontWeight.w700,
+                              color: isActive
+                                  ? b.color
+                                  : AppColors.textSecondary,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  );
+                },
+              ),
+            ),
 
-          Expanded(
-            child: allReqs.when(
-              loading: () => const Center(child: CircularProgressIndicator()),
-              error: (e, _) => Center(child: Text('Помилка: $e')),
-              data: (_) {
-                return ListView(
-                  padding: const EdgeInsets.all(16),
+            // ── Content ──────────────────────────────────────────────────────
+            Expanded(
+              child: allReqs.when(
+                loading: () =>
+                    const Center(child: CircularProgressIndicator()),
+                error: (e, _) =>
+                    Center(child: Text('Помилка: $e')),
+                data: (_) => ListView(
+                  padding: const EdgeInsets.fromLTRB(20, 12, 20, 24),
                   children: [
-                    // ── Belt hero card ──────────────────────────────────────
                     _BeltHeroCard(
-                      belt: _selected,
+                      belt:        _selected,
                       description: _beltDescriptions[_selected] ?? '',
-                      level: _beltLevels[_selected] ?? '',
-                      exercises: req?.exercises ?? [],
-                      progress: progress,
+                      level:       _beltLevels[_selected] ?? '',
+                      exercises:   req?.exercises ?? [],
+                      progress:    progress,
                     ),
                     const SizedBox(height: 16),
 
-                    // ── Category breakdown ──────────────────────────────────
                     if (req != null && req.exercises.isNotEmpty)
                       _CategoryBreakdown(
-                        req: req,
+                        req:     req,
                         progress: progress,
                         isCoach: isCoach,
-                        belt: _selected,
+                        belt:    _selected,
                       )
                     else
                       Container(
-                        width: double.infinity,
                         padding: const EdgeInsets.all(16),
                         decoration: BoxDecoration(
                           color: AppColors.surface,
@@ -204,13 +241,14 @@ class _BeltOverviewScreenState extends ConsumerState<BeltOverviewScreen> {
                         onPressed: () => context.push('/belts/edit'),
                       ),
                     ],
-                    const SizedBox(height: 80),
+
+                    const SizedBox(height: 32),
                   ],
-                );
-              },
+                ),
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
@@ -230,10 +268,10 @@ class _BeltHeroCard extends StatelessWidget {
   });
 
   final BeltLevel belt;
-  final String description;
-  final String level;
+  final String    description;
+  final String    level;
   final List<Exercise> exercises;
-  final dynamic progress;
+  final dynamic   progress;
 
   int get _passed {
     if (progress == null) return 0;
@@ -241,132 +279,154 @@ class _BeltHeroCard extends StatelessWidget {
     return p.values.where((v) => v).length;
   }
 
-  int get _total => exercises.length;
-
-  double get _pct => _total > 0 ? _passed / _total : 0;
+  int    get _total => exercises.length;
+  double get _pct   => _total > 0 ? _passed / _total : 0;
 
   @override
   Widget build(BuildContext context) {
+    final beltColor = belt.color;
+
     return Container(
-      padding: const EdgeInsets.all(18),
       decoration: BoxDecoration(
         color: AppColors.surface,
         borderRadius: BorderRadius.circular(20),
         border: Border.all(
-          color: belt.color.withValues(alpha: 0.3),
+          color: beltColor.withValues(alpha: 0.35),
           width: 1.5,
         ),
         boxShadow: [
           BoxShadow(
-            color: belt.color.withValues(alpha: 0.12),
-            blurRadius: 16,
+            color: beltColor.withValues(alpha: 0.1),
+            blurRadius: 20,
           ),
         ],
       ),
       child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Belt icon + name + level
-          Row(
-            children: [
-              Container(
-                width: 52,
-                height: 52,
-                decoration: BoxDecoration(
-                  color: belt.color.withValues(alpha: 0.15),
-                  shape: BoxShape.circle,
-                  border: Border.all(
-                    color: belt.color.withValues(alpha: 0.5),
-                    width: 2,
-                  ),
-                ),
-                child: Center(
-                  child: BeltSpriteIcon(belt: belt, size: 28),
-                ),
+          // ── Hero top section ───────────────────────────────────────────
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.fromLTRB(20, 24, 20, 20),
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                begin: Alignment.topCenter,
+                end: Alignment.bottomCenter,
+                colors: [
+                  beltColor.withValues(alpha: 0.22),
+                  beltColor.withValues(alpha: 0.04),
+                ],
               ),
-              const SizedBox(width: 14),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      '${belt.displayName} пояс',
-                      style: const TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
-                        color: AppColors.textPrimary,
-                      ),
-                    ),
-                    Text(
-                      level,
-                      style: const TextStyle(
-                        fontSize: 13,
-                        color: AppColors.textSecondary,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 12),
-
-          // Description
-          if (description.isNotEmpty)
-            Text(
-              description,
-              style: const TextStyle(
-                fontSize: 13,
-                color: AppColors.textSecondary,
-                height: 1.4,
-              ),
+              borderRadius:
+                  const BorderRadius.vertical(top: Radius.circular(18)),
             ),
-
-          if (_total > 0 && progress != null) ...[
-            const SizedBox(height: 16),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            child: Column(
               children: [
-                const Text(
-                  'Загальна готовність',
-                  style: TextStyle(
-                    fontSize: 13,
-                    fontWeight: FontWeight.w500,
-                    color: AppColors.textSecondary,
-                  ),
-                ),
+                BeltSpriteIcon(belt: belt, size: 88),
+                const SizedBox(height: 14),
                 Text(
-                  '${(_pct * 100).round()}%',
-                  style: TextStyle(
-                    fontSize: 15,
-                    fontWeight: FontWeight.bold,
-                    color: _pct == 1.0 ? AppColors.success : AppColors.accent,
+                  '${belt.displayName} пояс',
+                  style: const TextStyle(
+                    fontSize: 22,
+                    fontWeight: FontWeight.w800,
+                    color: AppColors.textPrimary,
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+                const SizedBox(height: 8),
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                      horizontal: 14, vertical: 4),
+                  decoration: BoxDecoration(
+                    color: beltColor.withValues(alpha: 0.18),
+                    borderRadius: BorderRadius.circular(20),
+                    border: Border.all(
+                        color: beltColor.withValues(alpha: 0.5)),
+                  ),
+                  child: Text(
+                    level,
+                    style: TextStyle(
+                      fontSize: 13,
+                      fontWeight: FontWeight.w700,
+                      color: beltColor == const Color(0xFF212121)
+                          ? AppColors.textSecondary
+                          : beltColor,
+                    ),
                   ),
                 ),
               ],
             ),
-            const SizedBox(height: 8),
-            ClipRRect(
-              borderRadius: BorderRadius.circular(4),
-              child: LinearProgressIndicator(
-                value: _pct,
-                minHeight: 8,
-                backgroundColor: AppColors.surface3,
-                valueColor: AlwaysStoppedAnimation<Color>(
-                  _pct == 1.0 ? AppColors.success : AppColors.accent,
-                ),
-              ),
+          ),
+
+          // ── Description + progress ─────────────────────────────────────
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 14, 16, 16),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                if (description.isNotEmpty)
+                  Text(
+                    description,
+                    style: const TextStyle(
+                      fontSize: 13,
+                      color: AppColors.textSecondary,
+                      height: 1.5,
+                    ),
+                    textAlign: TextAlign.center,
+                  ),
+
+                if (_total > 0 && progress != null) ...[
+                  const SizedBox(height: 16),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      const Text(
+                        'Загальна готовність',
+                        style: TextStyle(
+                          fontSize: 13,
+                          fontWeight: FontWeight.w500,
+                          color: AppColors.textSecondary,
+                        ),
+                      ),
+                      Text(
+                        '${(_pct * 100).round()}%',
+                        style: TextStyle(
+                          fontSize: 15,
+                          fontWeight: FontWeight.bold,
+                          color: _pct == 1.0
+                              ? AppColors.success
+                              : AppColors.accent,
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 8),
+                  ClipRRect(
+                    borderRadius: BorderRadius.circular(4),
+                    child: LinearProgressIndicator(
+                      value: _pct,
+                      minHeight: 8,
+                      backgroundColor: AppColors.surface3,
+                      valueColor: AlwaysStoppedAnimation<Color>(
+                        _pct == 1.0
+                            ? AppColors.success
+                            : AppColors.accent,
+                      ),
+                    ),
+                  ),
+                ] else if (_total > 0) ...[
+                  const SizedBox(height: 10),
+                  Text(
+                    '$_total вправ',
+                    style: const TextStyle(
+                      fontSize: 13,
+                      color: AppColors.textSecondary,
+                    ),
+                    textAlign: TextAlign.center,
+                  ),
+                ],
+              ],
             ),
-          ] else if (_total > 0) ...[
-            const SizedBox(height: 12),
-            Text(
-              '$_total вправ',
-              style: const TextStyle(
-                fontSize: 13,
-                color: AppColors.textSecondary,
-              ),
-            ),
-          ],
+          ),
         ],
       ),
     );
@@ -387,7 +447,7 @@ class _CategoryBreakdown extends StatelessWidget {
 
   final BeltRequirementModel req;
   final dynamic progress;
-  final bool isCoach;
+  final bool     isCoach;
   final BeltLevel belt;
 
   static const _categoryIcons = <ExerciseCategory, TIcon>{
@@ -411,10 +471,10 @@ class _CategoryBreakdown extends StatelessWidget {
       clipBehavior: Clip.antiAlias,
       child: Column(
         children: byCategory.entries.toList().asMap().entries.map((outer) {
-          final i = outer.key;
-          final cat = outer.value.key;
+          final i         = outer.key;
+          final cat       = outer.value.key;
           final exercises = outer.value.value;
-          final total = exercises.length;
+          final total     = exercises.length;
 
           int passed = 0;
           if (progress != null) {
@@ -422,21 +482,22 @@ class _CategoryBreakdown extends StatelessWidget {
             passed = exercises.where((e) => p[e.id] == true).length;
           }
 
-          final isDone = progress != null && passed == total;
-          final icon = _categoryIcons[cat] ?? TIcon.training;
+          final isDone      = progress != null && passed == total;
+          final icon        = _categoryIcons[cat] ?? TIcon.training;
           final hasAnyVideo = exercises.any((e) => e.videoUrl.isNotEmpty);
 
           Widget? trailingWidget;
           if (isDone) {
-            trailingWidget =
-                const Icon(Icons.check_circle, color: AppColors.success, size: 22);
+            trailingWidget = const Icon(
+                Icons.check_circle, color: AppColors.success, size: 22);
           } else if (progress != null) {
             trailingWidget = Text(
               '${(passed / total * 100).round()}%',
               style: const TextStyle(
-                  color: AppColors.accent,
-                  fontWeight: FontWeight.bold,
-                  fontSize: 13),
+                color: AppColors.accent,
+                fontWeight: FontWeight.bold,
+                fontSize: 13,
+              ),
             );
           }
 
@@ -454,7 +515,9 @@ class _CategoryBreakdown extends StatelessWidget {
                     width: 40,
                     height: 40,
                     decoration: BoxDecoration(
-                      color: (isDone ? AppColors.success : AppColors.accent)
+                      color: (isDone
+                              ? AppColors.success
+                              : AppColors.accent)
                           .withValues(alpha: 0.12),
                       borderRadius: BorderRadius.circular(12),
                     ),
@@ -468,22 +531,28 @@ class _CategoryBreakdown extends StatelessWidget {
                   ),
                   title: Row(
                     children: [
-                      Text(cat.displayName,
-                          style: const TextStyle(
-                              fontWeight: FontWeight.w500,
-                              fontSize: 14,
-                              color: AppColors.textPrimary)),
+                      Text(
+                        cat.displayName,
+                        style: const TextStyle(
+                          fontWeight: FontWeight.w500,
+                          fontSize: 14,
+                          color: AppColors.textPrimary,
+                        ),
+                      ),
                       if (hasAnyVideo) ...[
                         const SizedBox(width: 6),
                         const ColorFiltered(
-                          colorFilter: ColorFilter.mode(AppColors.accent, BlendMode.srcIn),
+                          colorFilter: ColorFilter.mode(
+                              AppColors.accent, BlendMode.srcIn),
                           child: TriumphIcon(TIcon.video, size: 13),
                         ),
                       ],
                     ],
                   ),
                   subtitle: Text(
-                    progress != null ? '$passed з $total' : '$total вправ',
+                    progress != null
+                        ? '$passed з $total'
+                        : '$total вправ',
                     style: const TextStyle(
                         fontSize: 12, color: AppColors.textSecondary),
                   ),
@@ -508,10 +577,13 @@ class _CategoryBreakdown extends StatelessWidget {
                         ),
                       ),
                       subtitle: ex.description.isNotEmpty
-                          ? Text(ex.description,
+                          ? Text(
+                              ex.description,
                               style: const TextStyle(
-                                  fontSize: 11,
-                                  color: AppColors.textSecondary))
+                                fontSize: 11,
+                                color: AppColors.textSecondary,
+                              ),
+                            )
                           : null,
                       trailing: Row(
                         mainAxisSize: MainAxisSize.min,
@@ -522,16 +594,18 @@ class _CategoryBreakdown extends StatelessWidget {
                                   context, ex.videoUrl,
                                   title: ex.name),
                               child: Container(
-                                padding: const EdgeInsets.symmetric(
-                                    horizontal: 8, vertical: 3),
+                                padding:
+                                    const EdgeInsets.symmetric(
+                                        horizontal: 8, vertical: 3),
                                 decoration: BoxDecoration(
                                   color: AppColors.accent
                                       .withValues(alpha: 0.12),
                                   borderRadius:
                                       BorderRadius.circular(8),
                                   border: Border.all(
-                                      color: AppColors.accent
-                                          .withValues(alpha: 0.35)),
+                                    color: AppColors.accent
+                                        .withValues(alpha: 0.35),
+                                  ),
                                 ),
                                 child: const Row(
                                   mainAxisSize: MainAxisSize.min,
@@ -540,12 +614,14 @@ class _CategoryBreakdown extends StatelessWidget {
                                         color: AppColors.accent,
                                         size: 13),
                                     SizedBox(width: 3),
-                                    Text('Відео',
-                                        style: TextStyle(
-                                            color: AppColors.accent,
-                                            fontSize: 11,
-                                            fontWeight:
-                                                FontWeight.w600)),
+                                    Text(
+                                      'Відео',
+                                      style: TextStyle(
+                                        color: AppColors.accent,
+                                        fontSize: 11,
+                                        fontWeight: FontWeight.w600,
+                                      ),
+                                    ),
                                   ],
                                 ),
                               ),

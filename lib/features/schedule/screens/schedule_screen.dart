@@ -17,34 +17,28 @@ class ScheduleScreen extends ConsumerStatefulWidget {
 
 class _ScheduleScreenState extends ConsumerState<ScheduleScreen> {
   DateTime _selectedDate = DateTime.now();
+  late DateTime _displayMonth;
+
+  @override
+  void initState() {
+    super.initState();
+    final now = DateTime.now();
+    _displayMonth = DateTime(now.year, now.month);
+  }
 
   DateTime get _dateOnly =>
       DateTime(_selectedDate.year, _selectedDate.month, _selectedDate.day);
 
-  /// ISO weekday: 1=Mon … 7=Sun
   int get _weekday => _selectedDate.weekday;
 
-  Future<void> _pickDate() async {
-    final picked = await showDatePicker(
-      context: context,
-      initialDate: _selectedDate,
-      firstDate: DateTime(2020),
-      lastDate: DateTime(2030),
-      locale: const Locale('uk'),
-    );
-    if (picked != null) {
-      setState(() => _selectedDate = picked);
-    }
-  }
+  static const _shortMonths = [
+    'січня','лютого','березня','квітня','травня','червня',
+    'липня','серпня','вересня','жовтня','листопада','грудня',
+  ];
+  static const _weekdayShort = ['Пн','Вт','Ср','Чт','Пт','Сб','Нд'];
 
-  String _formatDate(DateTime d) {
-    const months = [
-      'січня','лютого','березня','квітня','травня','червня',
-      'липня','серпня','вересня','жовтня','листопада','грудня',
-    ];
-    const weekdays = ['Пн','Вт','Ср','Чт','Пт','Сб','Нд'];
-    return '${weekdays[d.weekday - 1]}, ${d.day} ${months[d.month - 1]} ${d.year}';
-  }
+  String _formatDate(DateTime d) =>
+      '${_weekdayShort[d.weekday - 1]}, ${d.day} ${_shortMonths[d.month - 1]}';
 
   @override
   Widget build(BuildContext context) {
@@ -55,152 +49,129 @@ class _ScheduleScreenState extends ConsumerState<ScheduleScreen> {
 
     return Scaffold(
       backgroundColor: AppColors.background,
-      appBar: AppBar(
-        title: const Text('Розклад тренувань'),
-      ),
-      body: schedulesAsync.when(
-        loading: () => const Center(child: CircularProgressIndicator()),
-        error: (e, _) => Center(child: Text('Помилка: $e')),
-        data: (schedules) {
-          final todaySchedules = schedules
-              .where((s) => s.daysOfWeek.contains(_weekday))
-              .toList();
-          final children = childrenAsync.value ?? [];
+      body: SafeArea(
+        child: schedulesAsync.when(
+          loading: () => const Center(child: CircularProgressIndicator()),
+          error: (e, _) => Center(child: Text('Помилка: $e')),
+          data: (schedules) {
+            final trainingWeekdays =
+                schedules.expand((s) => s.daysOfWeek).toSet();
+            final todaySchedules =
+                schedules.where((s) => s.daysOfWeek.contains(_weekday)).toList();
+            final children = childrenAsync.value ?? [];
 
-          return ListView(
-            padding: const EdgeInsets.all(16),
-            children: [
-              // ── Date picker row ──────────────────────────────────────────
-              Card(
-                child: ListTile(
-                  leading: const ColorFiltered(
-                    colorFilter: ColorFilter.mode(AppColors.primary, BlendMode.srcIn),
-                    child: TriumphIcon(TIcon.calendar, size: 22),
+            return ListView(
+              padding: EdgeInsets.zero,
+              children: [
+                // ── Header ─────────────────────────────────────────────────
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(20, 16, 12, 0),
+                  child: Row(
+                    children: [
+                      const Expanded(
+                        child: Text(
+                          'Розклад',
+                          style: TextStyle(
+                            fontSize: 24,
+                            fontWeight: FontWeight.w800,
+                            color: AppColors.textPrimary,
+                          ),
+                        ),
+                      ),
+                      GestureDetector(
+                        onTap: () => _showAddScheduleDialog(context, coachId),
+                        child: Container(
+                          width: 36,
+                          height: 36,
+                          decoration: const BoxDecoration(
+                            gradient: AppColors.ctaGradient,
+                            shape: BoxShape.circle,
+                          ),
+                          child: const Icon(Icons.add, color: Colors.white, size: 20),
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                    ],
                   ),
-                  title: Text(
+                ),
+                const SizedBox(height: 16),
+
+                // ── Month calendar ──────────────────────────────────────────
+                _MonthCalendar(
+                  displayMonth: _displayMonth,
+                  selectedDate: _selectedDate,
+                  trainingWeekdays: trainingWeekdays,
+                  onDayTap: (date) => setState(() => _selectedDate = date),
+                  onPrevMonth: () => setState(() {
+                    _displayMonth = DateTime(
+                        _displayMonth.year, _displayMonth.month - 1);
+                  }),
+                  onNextMonth: () => setState(() {
+                    _displayMonth = DateTime(
+                        _displayMonth.year, _displayMonth.month + 1);
+                  }),
+                ),
+
+                const SizedBox(height: 20),
+
+                // ── Sessions for selected day ────────────────────────────
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(20, 0, 20, 10),
+                  child: Text(
                     _formatDate(_selectedDate),
-                    style: const TextStyle(fontWeight: FontWeight.w600),
-                  ),
-                  trailing: const ColorFiltered(
-                    colorFilter: ColorFilter.mode(AppColors.textSecondary, BlendMode.srcIn),
-                    child: TriumphIcon(TIcon.calendar, size: 20),
-                  ),
-                  onTap: _pickDate,
-                ),
-              ),
-              const SizedBox(height: 16),
-
-              // ── Today's sessions ─────────────────────────────────────────
-              const Text(
-                'Заняття на обрану дату',
-                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
-              ),
-              const SizedBox(height: 8),
-
-              if (todaySchedules.isEmpty)
-                Card(
-                  child: Padding(
-                    padding: const EdgeInsets.all(20),
-                    child: Center(
-                      child: Text(
-                        'Немає занять на цей день',
-                        style: TextStyle(color: AppColors.textSecondary),
-                      ),
+                    style: const TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w600,
+                      color: AppColors.textSecondary,
                     ),
-                  ),
-                )
-              else
-                ...todaySchedules.map((schedule) => _SessionCard(
-                      schedule: schedule,
-                      date: _dateOnly,
-                      children: children,
-                      coachId: coachId,
-                    )),
-
-              const SizedBox(height: 24),
-
-              // ── Recurring schedules ──────────────────────────────────────
-              Row(
-                children: [
-                  const Expanded(
-                    child: Text(
-                      'Регулярний розклад',
-                      style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
-                    ),
-                  ),
-                  IconButton(
-                    icon: const Icon(Icons.add_circle, color: AppColors.primary),
-                    onPressed: () => _showAddScheduleDialog(context, coachId),
-                    tooltip: 'Додати розклад',
-                  ),
-                ],
-              ),
-              const SizedBox(height: 8),
-
-              if (schedules.isEmpty)
-                Card(
-                  child: Padding(
-                    padding: const EdgeInsets.all(20),
-                    child: Center(
-                      child: Column(
-                        children: [
-                          ColorFiltered(
-                            colorFilter: const ColorFilter.mode(AppColors.textSecondary, BlendMode.srcIn),
-                            child: TriumphIcon(TIcon.calendar, size: 40),
-                          ),
-                          const SizedBox(height: 8),
-                          Text(
-                            'Розклад ще не створений',
-                            style: TextStyle(color: AppColors.textSecondary),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                )
-              else
-                Card(
-                  child: Column(
-                    children: schedules.asMap().entries.map((entry) {
-                      final i = entry.key;
-                      final s = entry.value;
-                      return Column(
-                        children: [
-                          ListTile(
-                            leading: CircleAvatar(
-                              backgroundColor: AppColors.primary,
-                              radius: 18,
-                              child: const ColorFiltered(
-                                colorFilter: ColorFilter.mode(Colors.white, BlendMode.srcIn),
-                                child: TriumphIcon(TIcon.training, size: 18),
-                              ),
-                            ),
-                            title: Text(
-                              s.label,
-                              style: const TextStyle(fontWeight: FontWeight.w600),
-                            ),
-                            subtitle: Text(
-                              '${s.daysLabel}  •  ${s.timeStart}–${s.timeEnd}',
-                              style: const TextStyle(color: AppColors.textSecondary),
-                            ),
-                            trailing: IconButton(
-                              icon: const ColorFiltered(colorFilter: ColorFilter.mode(AppColors.error, BlendMode.srcIn), child: TriumphIcon(TIcon.delete, size: 22)),
-                              onPressed: () =>
-                                  _confirmDelete(context, s.id, s.label),
-                            ),
-                          ),
-                          if (i < schedules.length - 1)
-                            const Divider(height: 1),
-                        ],
-                      );
-                    }).toList(),
                   ),
                 ),
 
-              const SizedBox(height: 32),
-            ],
-          );
-        },
+                if (todaySchedules.isEmpty)
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 20),
+                    child: _EmptyCard(text: 'Немає занять на цей день'),
+                  )
+                else
+                  ...todaySchedules.map((s) => _SessionCard(
+                        schedule: s,
+                        date: _dateOnly,
+                        children: children,
+                        coachId: coachId,
+                      )),
+
+                const SizedBox(height: 24),
+
+                // ── Recurring schedules ──────────────────────────────────
+                const Padding(
+                  padding: EdgeInsets.fromLTRB(20, 0, 20, 10),
+                  child: Text(
+                    'Регулярний розклад',
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w700,
+                      color: AppColors.textPrimary,
+                    ),
+                  ),
+                ),
+
+                if (schedules.isEmpty)
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 20),
+                    child: _EmptyCard(text: 'Розклад ще не створений'),
+                  )
+                else
+                  ...schedules.map((s) => _ScheduleItemTile(
+                        schedule: s,
+                        onDelete: () =>
+                            _confirmDelete(context, s.id, s.label),
+                      )),
+
+                const SizedBox(height: 40),
+              ],
+            );
+          },
+        ),
       ),
     );
   }
@@ -338,7 +309,8 @@ class _ScheduleScreenState extends ConsumerState<ScheduleScreen> {
                     return;
                   }
                   if (selectedDays.isEmpty) {
-                    setDialogState(() => labelError = 'Оберіть хоча б один день');
+                    setDialogState(
+                        () => labelError = 'Оберіть хоча б один день');
                     return;
                   }
 
@@ -368,7 +340,287 @@ class _ScheduleScreenState extends ConsumerState<ScheduleScreen> {
   }
 }
 
-// ── Session card with attendance toggles ────────────────────────────────────
+// ── Month calendar ────────────────────────────────────────────────────────────
+
+class _MonthCalendar extends StatelessWidget {
+  const _MonthCalendar({
+    required this.displayMonth,
+    required this.selectedDate,
+    required this.trainingWeekdays,
+    required this.onDayTap,
+    required this.onPrevMonth,
+    required this.onNextMonth,
+  });
+
+  final DateTime displayMonth;
+  final DateTime selectedDate;
+  final Set<int> trainingWeekdays;
+  final ValueChanged<DateTime> onDayTap;
+  final VoidCallback onPrevMonth;
+  final VoidCallback onNextMonth;
+
+  static const _monthNames = [
+    'Січень','Лютий','Березень','Квітень','Травень','Червень',
+    'Липень','Серпень','Вересень','Жовтень','Листопад','Грудень',
+  ];
+  static const _dayLabels = ['Пн','Вт','Ср','Чт','Пт','Сб','Нд'];
+
+  @override
+  Widget build(BuildContext context) {
+    final firstDay = DateTime(displayMonth.year, displayMonth.month, 1);
+    final daysInMonth =
+        DateTime(displayMonth.year, displayMonth.month + 1, 0).day;
+    final startOffset = firstDay.weekday - 1;
+    final today = DateTime.now();
+
+    return Container(
+      margin: const EdgeInsets.symmetric(horizontal: 20),
+      padding: const EdgeInsets.fromLTRB(12, 12, 12, 16),
+      decoration: BoxDecoration(
+        color: AppColors.surface,
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: AppColors.surface3),
+      ),
+      child: Column(
+        children: [
+          // Month nav
+          Row(
+            children: [
+              IconButton(
+                icon: const Icon(Icons.chevron_left,
+                    color: AppColors.textSecondary),
+                onPressed: onPrevMonth,
+                padding: EdgeInsets.zero,
+                constraints:
+                    const BoxConstraints(minWidth: 32, minHeight: 32),
+              ),
+              Expanded(
+                child: Text(
+                  '${_monthNames[displayMonth.month - 1]} ${displayMonth.year}',
+                  textAlign: TextAlign.center,
+                  style: const TextStyle(
+                    fontWeight: FontWeight.w700,
+                    fontSize: 15,
+                    color: AppColors.textPrimary,
+                  ),
+                ),
+              ),
+              IconButton(
+                icon: const Icon(Icons.chevron_right,
+                    color: AppColors.textSecondary),
+                onPressed: onNextMonth,
+                padding: EdgeInsets.zero,
+                constraints:
+                    const BoxConstraints(minWidth: 32, minHeight: 32),
+              ),
+            ],
+          ),
+          const SizedBox(height: 6),
+
+          // Day-of-week headers
+          Row(
+            children: _dayLabels
+                .map((label) => Expanded(
+                      child: Text(
+                        label,
+                        textAlign: TextAlign.center,
+                        style: const TextStyle(
+                          fontSize: 11,
+                          fontWeight: FontWeight.w600,
+                          color: AppColors.textSecondary,
+                        ),
+                      ),
+                    ))
+                .toList(),
+          ),
+          const SizedBox(height: 8),
+
+          // Day grid
+          GridView.builder(
+            shrinkWrap: true,
+            physics: const NeverScrollableScrollPhysics(),
+            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+              crossAxisCount: 7,
+              childAspectRatio: 1,
+            ),
+            itemCount: startOffset + daysInMonth,
+            itemBuilder: (_, index) {
+              if (index < startOffset) return const SizedBox();
+              final dayNum = index - startOffset + 1;
+              final date = DateTime(
+                  displayMonth.year, displayMonth.month, dayNum);
+              final isSelected = date.day == selectedDate.day &&
+                  date.month == selectedDate.month &&
+                  date.year == selectedDate.year;
+              final isToday = date.day == today.day &&
+                  date.month == today.month &&
+                  date.year == today.year;
+              final hasTraining =
+                  trainingWeekdays.contains(date.weekday);
+
+              return GestureDetector(
+                onTap: () => onDayTap(date),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Container(
+                      width: 30,
+                      height: 30,
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        color: isSelected
+                            ? AppColors.primary
+                            : Colors.transparent,
+                        border: isToday && !isSelected
+                            ? Border.all(
+                                color: AppColors.primary, width: 1.5)
+                            : null,
+                      ),
+                      alignment: Alignment.center,
+                      child: Text(
+                        '$dayNum',
+                        style: TextStyle(
+                          fontSize: 12,
+                          fontWeight: isSelected || isToday
+                              ? FontWeight.w700
+                              : FontWeight.normal,
+                          color: isSelected
+                              ? Colors.white
+                              : AppColors.textPrimary,
+                        ),
+                      ),
+                    ),
+                    SizedBox(
+                      height: 6,
+                      child: hasTraining
+                          ? Center(
+                              child: Container(
+                                width: 4,
+                                height: 4,
+                                decoration: BoxDecoration(
+                                  shape: BoxShape.circle,
+                                  color: isSelected
+                                      ? Colors.white
+                                      : AppColors.primary,
+                                ),
+                              ),
+                            )
+                          : null,
+                    ),
+                  ],
+                ),
+              );
+            },
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+// ── Empty placeholder ─────────────────────────────────────────────────────────
+
+class _EmptyCard extends StatelessWidget {
+  const _EmptyCard({required this.text});
+  final String text;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: AppColors.surface,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: AppColors.surface3),
+      ),
+      child: Center(
+        child: Text(
+          text,
+          style: const TextStyle(color: AppColors.textSecondary),
+        ),
+      ),
+    );
+  }
+}
+
+// ── Recurring schedule tile ───────────────────────────────────────────────────
+
+class _ScheduleItemTile extends StatelessWidget {
+  const _ScheduleItemTile({
+    required this.schedule,
+    required this.onDelete,
+  });
+  final TrainingScheduleModel schedule;
+  final VoidCallback onDelete;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      margin: const EdgeInsets.fromLTRB(20, 0, 20, 8),
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+      decoration: BoxDecoration(
+        color: AppColors.surface,
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: AppColors.surface3),
+      ),
+      child: Row(
+        children: [
+          Container(
+            width: 42,
+            height: 42,
+            decoration: const BoxDecoration(
+              color: AppColors.surface2,
+              shape: BoxShape.circle,
+            ),
+            child: const Center(
+              child: ColorFiltered(
+                colorFilter:
+                    ColorFilter.mode(AppColors.primary, BlendMode.srcIn),
+                child: TriumphIcon(TIcon.training, size: 20),
+              ),
+            ),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  schedule.label,
+                  style: const TextStyle(
+                    fontWeight: FontWeight.w600,
+                    fontSize: 14,
+                    color: AppColors.textPrimary,
+                  ),
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  '${schedule.daysLabel}  •  ${schedule.timeStart}–${schedule.timeEnd}',
+                  style: const TextStyle(
+                    color: AppColors.textSecondary,
+                    fontSize: 12,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          IconButton(
+            icon: const ColorFiltered(
+              colorFilter:
+                  ColorFilter.mode(AppColors.error, BlendMode.srcIn),
+              child: TriumphIcon(TIcon.delete, size: 20),
+            ),
+            onPressed: onDelete,
+            padding: EdgeInsets.zero,
+            constraints: const BoxConstraints(minWidth: 32),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+// ── Session card with attendance ─────────────────────────────────────────────
 
 class _SessionCard extends ConsumerWidget {
   const _SessionCard({
@@ -388,106 +640,156 @@ class _SessionCard extends ConsumerWidget {
     final sessionId = TrainingSessionModel.makeId(schedule.id, date);
     final sessionAsync = ref.watch(sessionProvider(sessionId));
 
-    return Card(
-      margin: const EdgeInsets.only(bottom: 12),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // Header
-          Padding(
-            padding: const EdgeInsets.fromLTRB(16, 14, 8, 0),
-            child: Row(
-              children: [
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        schedule.label,
-                        style: const TextStyle(
-                          fontWeight: FontWeight.bold,
-                          fontSize: 15,
-                        ),
-                      ),
-                      Text(
-                        '${schedule.timeStart}–${schedule.timeEnd}',
-                        style: const TextStyle(
-                          color: AppColors.textSecondary,
-                          fontSize: 13,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                TextButton.icon(
-                  icon: const ColorFiltered(colorFilter: ColorFilter.mode(AppColors.success, BlendMode.srcIn), child: TriumphIcon(TIcon.success, size: 18)),
-                  label: const Text('Всі присутні'),
-                  onPressed: () => ref
-                      .read(scheduleNotifierProvider.notifier)
-                      .resetToAllPresent(
-                        schedule: schedule,
-                        date: date,
-                        coachId: coachId,
-                      ),
-                ),
-              ],
-            ),
-          ),
-          const Divider(height: 16),
-
-          // Children attendance list
-          sessionAsync.when(
-            loading: () => const Padding(
-              padding: EdgeInsets.all(16),
-              child: Center(child: CircularProgressIndicator()),
-            ),
-            error: (_, __) => const SizedBox(),
-            data: (session) {
-              if (children.isEmpty) {
-                return const Padding(
-                  padding: EdgeInsets.fromLTRB(16, 0, 16, 16),
-                  child: Text(
-                    'Немає спортсменів',
-                    style: TextStyle(color: AppColors.textSecondary),
-                  ),
-                );
-              }
-              return Column(
-                children: children.asMap().entries.map((entry) {
-                  final i = entry.key;
-                  final child = entry.value;
-                  final isPresent = session?.isPresent(child.id) ?? true;
-                  return Column(
-                    children: [
-                      SwitchListTile(
-                        dense: true,
-                        title: Text(child.fullName),
-                        subtitle: Text(
-                          child.weightCategory,
-                          style: const TextStyle(
-                              color: AppColors.textSecondary, fontSize: 12),
-                        ),
-                        value: isPresent,
-                        activeThumbColor: AppColors.primary,
-                        onChanged: (val) => ref
-                            .read(scheduleNotifierProvider.notifier)
-                            .toggleAttendance(
-                              schedule: schedule,
-                              date: date,
-                              childId: child.id,
-                              present: val,
-                              coachId: coachId,
-                            ),
-                      ),
-                      if (i < children.length - 1)
-                        const Divider(height: 1, indent: 16, endIndent: 16),
-                    ],
-                  );
-                }).toList(),
-              );
-            },
+    return Container(
+      margin: const EdgeInsets.fromLTRB(20, 0, 20, 12),
+      decoration: BoxDecoration(
+        color: AppColors.surface,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: AppColors.surface3),
+        boxShadow: [
+          BoxShadow(
+            color: AppColors.primary.withValues(alpha: 0.10),
+            blurRadius: 8,
+            offset: const Offset(0, 2),
           ),
         ],
+      ),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(16),
+        child: IntrinsicHeight(
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              // Red left accent bar
+              Container(width: 4, color: AppColors.primary),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // Header row
+                    Padding(
+                      padding: const EdgeInsets.fromLTRB(14, 12, 8, 0),
+                      child: Row(
+                        children: [
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  schedule.label,
+                                  style: const TextStyle(
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 15,
+                                    color: AppColors.textPrimary,
+                                  ),
+                                ),
+                                Text(
+                                  '${schedule.timeStart}–${schedule.timeEnd}',
+                                  style: const TextStyle(
+                                    color: AppColors.primary,
+                                    fontSize: 13,
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                          TextButton.icon(
+                            icon: const ColorFiltered(
+                              colorFilter: ColorFilter.mode(
+                                  AppColors.success, BlendMode.srcIn),
+                              child: TriumphIcon(TIcon.success, size: 16),
+                            ),
+                            label: const Text(
+                              'Всі присутні',
+                              style: TextStyle(fontSize: 12),
+                            ),
+                            onPressed: () => ref
+                                .read(scheduleNotifierProvider.notifier)
+                                .resetToAllPresent(
+                                  schedule: schedule,
+                                  date: date,
+                                  coachId: coachId,
+                                ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    const Divider(height: 16),
+
+                    // Attendance list
+                    sessionAsync.when(
+                      loading: () => const Padding(
+                        padding: EdgeInsets.all(16),
+                        child: Center(child: CircularProgressIndicator()),
+                      ),
+                      error: (_, __) => const SizedBox(),
+                      data: (session) {
+                        if (children.isEmpty) {
+                          return const Padding(
+                            padding: EdgeInsets.fromLTRB(14, 0, 14, 14),
+                            child: Text(
+                              'Немає спортсменів',
+                              style: TextStyle(
+                                  color: AppColors.textSecondary),
+                            ),
+                          );
+                        }
+                        return Column(
+                          children: children.asMap().entries.map((entry) {
+                            final i = entry.key;
+                            final child = entry.value;
+                            final isPresent =
+                                session?.isPresent(child.id) ?? true;
+                            return Column(
+                              children: [
+                                SwitchListTile(
+                                  dense: true,
+                                  title: Text(
+                                    child.fullName,
+                                    style: const TextStyle(
+                                        color: AppColors.textPrimary),
+                                  ),
+                                  subtitle: Text(
+                                    child.weightCategory,
+                                    style: const TextStyle(
+                                      color: AppColors.textSecondary,
+                                      fontSize: 12,
+                                    ),
+                                  ),
+                                  value: isPresent,
+                                  activeThumbColor: AppColors.primary,
+                                  activeTrackColor: AppColors.primary
+                                      .withValues(alpha: 0.3),
+                                  onChanged: (val) => ref
+                                      .read(scheduleNotifierProvider
+                                          .notifier)
+                                      .toggleAttendance(
+                                        schedule: schedule,
+                                        date: date,
+                                        childId: child.id,
+                                        present: val,
+                                        coachId: coachId,
+                                      ),
+                                ),
+                                if (i < children.length - 1)
+                                  const Divider(
+                                      height: 1,
+                                      indent: 16,
+                                      endIndent: 16),
+                              ],
+                            );
+                          }).toList(),
+                        );
+                      },
+                    ),
+                    const SizedBox(height: 4),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
       ),
     );
   }

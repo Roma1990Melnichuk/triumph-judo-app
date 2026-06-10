@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../core/constants/belt_levels.dart';
 
-/// Shows a belt illustration from the spritesheet (assets/belts/belts.png).
+/// Shows a belt illustration from the spritesheet (assets/belts/belts.webp).
 /// Grid: 5 columns × 5 rows. We use rows 0–2 for our 12 belt levels.
 class BeltSpriteIcon extends StatelessWidget {
   const BeltSpriteIcon({super.key, required this.belt, this.size = 64});
@@ -53,7 +53,7 @@ class BeltSpriteIcon extends StatelessWidget {
               width: imgW,
               height: imgH * scaleFactor,
               child: Image.asset(
-                'assets/belts/belts.png',
+                'assets/belts/belts.webp',
                 fit: BoxFit.fill,
               ),
             ),

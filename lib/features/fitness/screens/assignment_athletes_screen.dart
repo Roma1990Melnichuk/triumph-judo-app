@@ -6,6 +6,7 @@ import '../../../core/constants/belt_levels.dart';
 import '../../../core/models/child_model.dart';
 
 import '../../../shared/widgets/default_avatar.dart';
+import '../../../shared/widgets/triumph_icon.dart';
 import '../../team/providers/children_provider.dart';
 import '../providers/fitness_assignment_provider.dart';
 
@@ -49,10 +50,43 @@ class _AssignmentAthletesScreenState
     if (assignment == null) {
       return Scaffold(
         backgroundColor: AppColors.background,
-        appBar: AppBar(title: const Text('Спортсмени')),
-        body: const Center(
-          child: Text('Завдання не знайдено',
-              style: TextStyle(color: AppColors.textSecondary)),
+        body: SafeArea(
+          child: Column(
+            children: [
+              Padding(
+                padding: const EdgeInsets.fromLTRB(12, 8, 12, 0),
+                child: Row(
+                  children: [
+                    GestureDetector(
+                      onTap: () => context.pop(),
+                      child: Container(
+                        width: 44,
+                        height: 44,
+                        decoration: BoxDecoration(
+                          color: AppColors.surface2,
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: const Center(
+                          child: ColorFiltered(
+                            colorFilter: ColorFilter.mode(AppColors.textPrimary, BlendMode.srcIn),
+                            child: TriumphIcon(TIcon.back, size: 22),
+                          ),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    const Text('Спортсмени', style: TextStyle(fontSize: 20, fontWeight: FontWeight.w800)),
+                  ],
+                ),
+              ),
+              const Expanded(
+                child: Center(
+                  child: Text('Завдання не знайдено',
+                      style: TextStyle(color: AppColors.textSecondary)),
+                ),
+              ),
+            ],
+          ),
         ),
       );
     }
@@ -112,22 +146,50 @@ class _AssignmentAthletesScreenState
 
     return Scaffold(
       backgroundColor: AppColors.background,
-      appBar: AppBar(
-        backgroundColor: AppColors.background,
-        title: const Text('Спортсмени'),
-        bottom: TabBar(
-          controller: _tab,
-          indicatorColor: AppColors.primary,
-          labelColor: AppColors.textPrimary,
-          unselectedLabelColor: AppColors.textSecondary,
-          tabs: const [
-            Tab(text: 'Усі'),
-            Tab(text: 'Відстають'),
-          ],
-        ),
-      ),
-      body: Column(
-        children: [
+      body: SafeArea(
+        child: Column(
+          children: [
+            Padding(
+              padding: const EdgeInsets.fromLTRB(12, 8, 12, 0),
+              child: Row(
+                children: [
+                  GestureDetector(
+                    onTap: () => context.pop(),
+                    child: Container(
+                      width: 44,
+                      height: 44,
+                      decoration: BoxDecoration(
+                        color: AppColors.surface2,
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: const Center(
+                        child: ColorFiltered(
+                          colorFilter: ColorFilter.mode(AppColors.textPrimary, BlendMode.srcIn),
+                          child: TriumphIcon(TIcon.back, size: 22),
+                        ),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  const Expanded(
+                    child: Text(
+                      'Спортсмени',
+                      style: TextStyle(fontSize: 20, fontWeight: FontWeight.w800),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            TabBar(
+              controller: _tab,
+              indicatorColor: AppColors.primary,
+              labelColor: AppColors.textPrimary,
+              unselectedLabelColor: AppColors.textSecondary,
+              tabs: const [
+                Tab(text: 'Усі'),
+                Tab(text: 'Відстають'),
+              ],
+            ),
           Padding(
             padding: const EdgeInsets.fromLTRB(16, 10, 16, 4),
             child: Row(
@@ -207,6 +269,7 @@ class _AssignmentAthletesScreenState
                   ),
           ),
         ],
+      ),
       ),
     );
   }

@@ -56,49 +56,88 @@ class _BeltRequirementsScreenState
 
     return Scaffold(
       backgroundColor: AppColors.background,
-      appBar: AppBar(
-        title: const Text('Вимоги до поясів'),
-        actions: [
-          if (isCoach)
-            IconButton(
-              icon: const Icon(Icons.groups),
-              tooltip: 'Масова здача вимог',
-              onPressed: () => context.push('/bulk-belt'),
-            ),
-        ],
-        bottom: TabBar(
-          controller: _tabController,
-          isScrollable: true,
-          labelColor: AppColors.accent,
-          unselectedLabelColor: Colors.white70,
-          indicatorColor: AppColors.accent,
-          tabs: belts.map((b) {
-            final next = b.next!;
-            return Tab(
+      body: SafeArea(
+        child: Column(
+          children: [
+            Padding(
+              padding: const EdgeInsets.fromLTRB(12, 8, 12, 0),
               child: Row(
-                mainAxisSize: MainAxisSize.min,
                 children: [
-                  Container(
-                    width: 12,
-                    height: 12,
-                    decoration: BoxDecoration(
-                      color: next.color,
-                      shape: BoxShape.circle,
-                      border: next == BeltLevel.white
-                          ? Border.all(color: Colors.white38)
-                          : null,
+                  GestureDetector(
+                    onTap: () => context.pop(),
+                    child: Container(
+                      width: 44,
+                      height: 44,
+                      decoration: BoxDecoration(
+                        color: AppColors.surface2,
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: const Center(
+                        child: ColorFiltered(
+                          colorFilter: ColorFilter.mode(AppColors.textPrimary, BlendMode.srcIn),
+                          child: TriumphIcon(TIcon.back, size: 22),
+                        ),
+                      ),
                     ),
                   ),
-                  const SizedBox(width: 6),
-                  Text(next.displayName, style: const TextStyle(fontSize: 12)),
+                  const SizedBox(width: 12),
+                  const Expanded(
+                    child: Text(
+                      'Вимоги до поясів',
+                      style: TextStyle(fontSize: 20, fontWeight: FontWeight.w800),
+                    ),
+                  ),
+                  if (isCoach)
+                    GestureDetector(
+                      onTap: () => context.push('/bulk-belt'),
+                      child: Container(
+                        width: 44,
+                        height: 44,
+                        decoration: BoxDecoration(
+                          color: AppColors.surface2,
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: const Center(
+                          child: Icon(Icons.groups, color: AppColors.textPrimary, size: 22),
+                        ),
+                      ),
+                    ),
                 ],
               ),
-            );
-          }).toList(),
-          onTap: (_) {},
-        ),
-      ),
-      body: allReqs.when(
+            ),
+            TabBar(
+              controller: _tabController,
+              isScrollable: true,
+              labelColor: AppColors.accent,
+              unselectedLabelColor: Colors.white70,
+              indicatorColor: AppColors.accent,
+              tabs: belts.map((b) {
+                final next = b.next!;
+                return Tab(
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Container(
+                        width: 12,
+                        height: 12,
+                        decoration: BoxDecoration(
+                          color: next.color,
+                          shape: BoxShape.circle,
+                          border: next == BeltLevel.white
+                              ? Border.all(color: Colors.white38)
+                              : null,
+                        ),
+                      ),
+                      const SizedBox(width: 6),
+                      Text(next.displayName, style: const TextStyle(fontSize: 12)),
+                    ],
+                  ),
+                );
+              }).toList(),
+              onTap: (_) {},
+            ),
+            Expanded(
+              child: allReqs.when(
         loading: () => const Center(child: CircularProgressIndicator()),
         error: (e, _) => Center(child: Text('Помилка: $e')),
         data: (reqs) {
@@ -120,6 +159,10 @@ class _BeltRequirementsScreenState
           );
         },
       ),
+      ),
+    ],
+  ),
+  ),
     );
   }
 }

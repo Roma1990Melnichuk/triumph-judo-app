@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import '../../../core/constants/app_colors.dart';
 import '../../../core/models/attendance_model.dart';
 import '../../../core/models/group_model.dart';
@@ -60,12 +61,45 @@ class _GroupDetailScreenState extends ConsumerState<GroupDetailScreen> {
 
         return Scaffold(
           backgroundColor: AppColors.background,
-          appBar: AppBar(
-            title: Text(group.name),
-          ),
-          body: ListView(
-            padding: const EdgeInsets.all(16),
-            children: [
+          body: SafeArea(
+            child: Column(
+              children: [
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(12, 8, 12, 0),
+                  child: Row(
+                    children: [
+                      GestureDetector(
+                        onTap: () => context.pop(),
+                        child: Container(
+                          width: 44,
+                          height: 44,
+                          decoration: BoxDecoration(
+                            color: AppColors.surface2,
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: const Center(
+                            child: ColorFiltered(
+                              colorFilter: ColorFilter.mode(AppColors.textPrimary, BlendMode.srcIn),
+                              child: TriumphIcon(TIcon.back, size: 22),
+                            ),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Text(
+                          group.name,
+                          style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w800),
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                Expanded(
+                  child: ListView(
+                    padding: const EdgeInsets.all(16),
+                    children: [
               // ── Header card ─────────────────────────────────────────────
               _GroupHeaderCard(
                 group: group,
@@ -94,7 +128,11 @@ class _GroupDetailScreenState extends ConsumerState<GroupDetailScreen> {
               ),
 
               const SizedBox(height: 80),
+                ],
+              ),
+              ),
             ],
+          ),
           ),
         );
       },

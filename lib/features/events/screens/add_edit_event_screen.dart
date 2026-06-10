@@ -1,11 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 import '../../../core/constants/app_colors.dart';
 import '../../../core/constants/belt_levels.dart';
 import '../../../core/models/event_model.dart';
 import '../../../features/auth/providers/auth_provider.dart';
 import '../../../shared/widgets/gradient_button.dart';
+import '../../../shared/widgets/triumph_icon.dart';
 import '../providers/events_provider.dart';
 
 class AddEditEventScreen extends ConsumerStatefulWidget {
@@ -120,14 +122,44 @@ class _AddEditEventScreenState extends ConsumerState<AddEditEventScreen> {
     final isEdit = _original != null;
     return Scaffold(
       backgroundColor: AppColors.background,
-      appBar: AppBar(
-        title: Text(isEdit ? 'Редагувати подію' : 'Нова подія'),
-      ),
-      body: Form(
-        key: _form,
-        child: ListView(
-          padding: const EdgeInsets.all(16),
+      body: SafeArea(
+        child: Column(
           children: [
+            Padding(
+              padding: const EdgeInsets.fromLTRB(12, 8, 12, 0),
+              child: Row(
+                children: [
+                  GestureDetector(
+                    onTap: () => context.pop(),
+                    child: Container(
+                      width: 44,
+                      height: 44,
+                      decoration: BoxDecoration(
+                        color: AppColors.surface2,
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: const Center(
+                        child: ColorFiltered(
+                          colorFilter: ColorFilter.mode(AppColors.textPrimary, BlendMode.srcIn),
+                          child: TriumphIcon(TIcon.back, size: 22),
+                        ),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Text(
+                    isEdit ? 'Редагувати подію' : 'Нова подія',
+                    style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w800),
+                  ),
+                ],
+              ),
+            ),
+            Expanded(
+              child: Form(
+                key: _form,
+                child: ListView(
+                  padding: const EdgeInsets.all(16),
+                  children: [
             // Title
             TextFormField(
               controller: _titleCtrl,
@@ -324,6 +356,10 @@ class _AddEditEventScreenState extends ConsumerState<AddEditEventScreen> {
           ],
         ),
       ),
+      ),
+    ],
+  ),
+  ),
     );
   }
 }

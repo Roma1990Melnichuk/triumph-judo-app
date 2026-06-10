@@ -46,11 +46,11 @@ class _AmbientBackgroundState extends State<AmbientBackground>
     return Stack(children: [
       widget.child,
       // Fog layer 1 — red blob top-left
-      IgnorePointer(
-        child: AnimatedBuilder(
-          animation: _ctrl1,
-          builder: (_, __) => Positioned.fill(
-            child: CustomPaint(painter: _FogPainter(_ctrl1.value, _ctrl2.value)),
+      Positioned.fill(
+        child: IgnorePointer(
+          child: AnimatedBuilder(
+            animation: _ctrl1,
+            builder: (_, __) => CustomPaint(painter: _FogPainter(_ctrl1.value, _ctrl2.value)),
           ),
         ),
       ),
@@ -685,7 +685,7 @@ class TriumphNavIcon extends StatelessWidget {
   Widget build(BuildContext context) {
     final index = (row * 7 + col).clamp(0, _kTriumphIconNames.length - 1);
     return Image.asset(
-      'assets/icons/ti_${_kTriumphIconNames[index]}.png',
+      'assets/icons/ti_${_kTriumphIconNames[index]}.webp',
       width: size,
       height: size,
       fit: BoxFit.contain,
@@ -693,7 +693,7 @@ class TriumphNavIcon extends StatelessWidget {
   }
 }
 
-// Enum for well-known icon positions in triumph_icons.png
+// Enum for well-known icon positions in triumph_icons.webp
 enum TriumphIconType {
   team,         // Команда     (0, 0)
   athlete,      // Спортсмен   (1, 0)

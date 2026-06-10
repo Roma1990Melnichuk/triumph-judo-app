@@ -95,17 +95,29 @@ final activeChildAssignmentsProvider =
 });
 
 // ── Compute cumulative progress for one assignment / one child ────────────────
-/// Returns the sum of log values for the assignment's exercise within [startDate, deadline].
+/// Returns the progress based on assignment type (sum for rep-based, max for goal-based).
 double assignmentProgress(
   List<FitnessLog> logs,
   FitnessAssignment assignment,
+  String childId,
 ) {
-  return logs
-      .where((l) =>
-          l.exerciseId == assignment.exerciseId &&
-          !l.date.isBefore(assignment.startDate) &&
-          !l.date.isAfter(assignment.deadline))
-      .fold(0.0, (acc, l) => acc + l.value);
+  // Filter logs for this specific child and assignment within date range
+  final relevantLogs = logs.where((l) =>
+      l.childId == childId &&
+      (l.assignmentId == assignment.id || l.assignmentId == null) && // Support legacy/manual logs
+      l.exerciseId == assignment.exerciseId &&
+      !l.date.isBefore(assignment.startDate) &&
+      !l.date.isAfter(assignment.deadline));
+
+  if (relevantLogs.isEmpty) return 0.0;
+
+  if (assignment.isCumulative) {
+    // Sum of all values (e.g. 1000 pushups total)
+    return relevantLogs.fold(0.0, (acc, l) => acc + l.value);
+  } else {
+    // Peak value (e.g. 3 min plank record)
+    return relevantLogs.map((l) => l.value).reduce((a, b) => a > b ? a : b);
+  }
 }
 
 // ── Notifier ──────────────────────────────────────────────────────────────────
@@ -127,6 +139,7 @@ class AssignmentNotifier extends StateNotifier<AsyncValue<void>> {
     required List<String> assignedChildIds,
     String coachComment = '',
     AssignmentStatus status = AssignmentStatus.active,
+    bool isCumulative = true,
   }) async {
     state = const AsyncValue.loading();
     state = await AsyncValue.guard(() async {
@@ -145,6 +158,7 @@ class AssignmentNotifier extends StateNotifier<AsyncValue<void>> {
               assignedChildIds: assignedChildIds,
               coachComment: coachComment,
               status: status,
+              isCumulative: isCumulative,
             ).toFirestore(),
           );
     });
