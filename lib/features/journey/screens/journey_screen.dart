@@ -258,80 +258,183 @@ class _HeroSection extends StatelessWidget {
     required this.shimmerCtrl,
   });
 
+  Color _borderColor() {
+    switch (glowLevel) {
+      case _GlowLevel.none:
+        return AppColors.surface3;
+      case _GlowLevel.orange:
+        return AppColors.orange.withValues(alpha: 0.4);
+      case _GlowLevel.faintGold:
+      case _GlowLevel.gold:
+        return AppColors.accent.withValues(alpha: 0.35);
+      case _GlowLevel.strongGold:
+      case _GlowLevel.redGold:
+        return AppColors.accent.withValues(alpha: 0.55);
+      case _GlowLevel.master:
+        return const Color(0xFFAA00FF).withValues(alpha: 0.5);
+      case _GlowLevel.legendary:
+        return AppColors.accent.withValues(alpha: 0.65);
+    }
+  }
+
+  List<BoxShadow> _cardGlow() {
+    if (streak < 7) return [];
+    switch (glowLevel) {
+      case _GlowLevel.none:
+      case _GlowLevel.orange:
+        return [];
+      case _GlowLevel.faintGold:
+      case _GlowLevel.gold:
+        return [BoxShadow(color: AppColors.accent.withValues(alpha: 0.18), blurRadius: 20, spreadRadius: 2)];
+      case _GlowLevel.strongGold:
+      case _GlowLevel.redGold:
+        return [BoxShadow(color: AppColors.accent.withValues(alpha: 0.28), blurRadius: 30, spreadRadius: 4)];
+      case _GlowLevel.master:
+        return [BoxShadow(color: const Color(0xFFAA00FF).withValues(alpha: 0.3), blurRadius: 36, spreadRadius: 6)];
+      case _GlowLevel.legendary:
+        return [
+          BoxShadow(color: AppColors.accent.withValues(alpha: 0.35), blurRadius: 40, spreadRadius: 6),
+          BoxShadow(color: const Color(0xFFAA00FF).withValues(alpha: 0.2), blurRadius: 24, spreadRadius: 2),
+        ];
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.symmetric(vertical: 32, horizontal: 20),
+      clipBehavior: Clip.hardEdge,
       decoration: BoxDecoration(
-        color: AppColors.surface,
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: AppColors.surface3, width: 1),
+        color: const Color(0xFF0D0D0D),
+        borderRadius: BorderRadius.circular(24),
+        border: Border.all(color: _borderColor(), width: 1.5),
+        boxShadow: _cardGlow(),
       ),
-      child: Column(
-        children: [
-          _JudokaAvatar(
-            glowLevel: glowLevel,
-            shouldPulse: shouldPulse,
-            shouldAnimate: shouldAnimate,
-            pulseAnim: pulseAnim,
-            shimmerCtrl: shimmerCtrl,
-          ),
-          const SizedBox(height: 16),
-          // Large streak number
-          RichText(
-            textAlign: TextAlign.center,
-            text: TextSpan(
-              children: [
-                TextSpan(
-                  text: '$streak',
-                  style: TextStyle(
-                    fontSize: 56,
-                    fontWeight: FontWeight.w900,
-                    color: streak >= 7 ? AppColors.accent : AppColors.orange,
-                    letterSpacing: -2,
-                    height: 1,
-                  ),
+      child: IntrinsicHeight(
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            // ── Left: streak info ──────────────────────────────────────────
+            Expanded(
+              flex: 5,
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(20, 28, 12, 28),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    const Text(
+                      'ТВОЯ СЕРІЯ',
+                      style: TextStyle(
+                        fontSize: 10,
+                        fontWeight: FontWeight.w700,
+                        letterSpacing: 2.5,
+                        color: AppColors.textSecondary,
+                      ),
+                    ),
+                    const SizedBox(height: 10),
+                    Row(
+                      crossAxisAlignment: CrossAxisAlignment.end,
+                      children: [
+                        const Text('🔥', style: TextStyle(fontSize: 26)),
+                        const SizedBox(width: 6),
+                        Text(
+                          '$streak',
+                          style: TextStyle(
+                            fontSize: 58,
+                            fontWeight: FontWeight.w900,
+                            color: streak >= 7 ? AppColors.accent : AppColors.orange,
+                            letterSpacing: -3,
+                            height: 0.85,
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 6),
+                    const Text(
+                      'ДНІВ ПОСПІЛЬ',
+                      style: TextStyle(
+                        fontSize: 10,
+                        fontWeight: FontWeight.w700,
+                        letterSpacing: 2,
+                        color: AppColors.textSecondary,
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                    // Stage chip with ShaderMask shimmer for high levels
+                    streak >= 30
+                        ? ShaderMask(
+                            shaderCallback: (bounds) => const LinearGradient(
+                              colors: [
+                                Color(0xFFFFD21A),
+                                Color(0xFFFF6B00),
+                                Color(0xFFFFD21A),
+                              ],
+                            ).createShader(bounds),
+                            blendMode: BlendMode.srcIn,
+                            child: Container(
+                              padding: const EdgeInsets.symmetric(
+                                  horizontal: 12, vertical: 5),
+                              decoration: BoxDecoration(
+                                border: Border.all(
+                                    color: AppColors.accent.withValues(alpha: 0.5)),
+                                borderRadius: BorderRadius.circular(20),
+                              ),
+                              child: Text(
+                                stageName.toUpperCase(),
+                                style: const TextStyle(
+                                  fontSize: 10,
+                                  fontWeight: FontWeight.w800,
+                                  letterSpacing: 1.5,
+                                  color: Colors.white,
+                                ),
+                              ),
+                            ),
+                          )
+                        : Container(
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 12, vertical: 5),
+                            decoration: BoxDecoration(
+                              gradient: streak >= 7 ? AppColors.ctaGradient : null,
+                              color: streak < 7 ? AppColors.surface3 : null,
+                              borderRadius: BorderRadius.circular(20),
+                            ),
+                            child: Text(
+                              stageName.toUpperCase(),
+                              style: TextStyle(
+                                fontSize: 10,
+                                fontWeight: FontWeight.w800,
+                                letterSpacing: 1.5,
+                                color: streak >= 7
+                                    ? Colors.white
+                                    : AppColors.textSecondary,
+                              ),
+                            ),
+                          ),
+                  ],
                 ),
-                const TextSpan(
-                  text: '\nДНІВ ПОСПІЛЬ',
-                  style: TextStyle(
-                    fontSize: 13,
-                    fontWeight: FontWeight.w700,
-                    color: AppColors.textSecondary,
-                    letterSpacing: 2,
-                    height: 1.6,
-                  ),
-                ),
-              ],
-            ),
-          ),
-          const SizedBox(height: 8),
-          // Stage name chip
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
-            decoration: BoxDecoration(
-              gradient: streak >= 7 ? AppColors.ctaGradient : null,
-              color: streak < 7 ? AppColors.surface3 : null,
-              borderRadius: BorderRadius.circular(20),
-            ),
-            child: Text(
-              stageName.toUpperCase(),
-              style: TextStyle(
-                fontSize: 12,
-                fontWeight: FontWeight.w800,
-                letterSpacing: 2,
-                color: streak >= 7 ? AppColors.background : AppColors.textSecondary,
               ),
             ),
-          ),
-        ],
+
+            // ── Right: character image ────────────────────────────────────
+            Expanded(
+              flex: 4,
+              child: _JudokaAvatar(
+                glowLevel: glowLevel,
+                shouldPulse: shouldPulse,
+                shouldAnimate: shouldAnimate,
+                pulseAnim: pulseAnim,
+                shimmerCtrl: shimmerCtrl,
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
 }
 
-// ── Judoka avatar with glow ───────────────────────────────────────────────────
+// ── Judoka avatar — real character images pr1–pr8 ─────────────────────────────
 
 class _JudokaAvatar extends StatelessWidget {
   final _GlowLevel glowLevel;
@@ -348,111 +451,59 @@ class _JudokaAvatar extends StatelessWidget {
     required this.shimmerCtrl,
   });
 
-  List<BoxShadow> _shadowsFor(_GlowLevel level, double scale) {
+  static String _assetFor(_GlowLevel level) {
     switch (level) {
-      case _GlowLevel.none:
-        return [];
-      case _GlowLevel.orange:
-        return [
-          BoxShadow(
-            color: AppColors.orange.withOpacity(0.35 * scale),
-            blurRadius: 18 * scale,
-            spreadRadius: 2 * scale,
-          ),
-        ];
-      case _GlowLevel.faintGold:
-        return [
-          BoxShadow(
-            color: AppColors.accent.withOpacity(0.25 * scale),
-            blurRadius: 20 * scale,
-            spreadRadius: 3 * scale,
-          ),
-        ];
-      case _GlowLevel.gold:
-        return [
-          BoxShadow(
-            color: AppColors.accent.withOpacity(0.45 * scale),
-            blurRadius: 30 * scale,
-            spreadRadius: 6 * scale,
-          ),
-        ];
-      case _GlowLevel.strongGold:
-        return [
-          BoxShadow(
-            color: AppColors.accent.withOpacity(0.6 * scale),
-            blurRadius: 40 * scale,
-            spreadRadius: 10 * scale,
-          ),
-          BoxShadow(
-            color: AppColors.orange.withOpacity(0.3 * scale),
-            blurRadius: 20 * scale,
-            spreadRadius: 4 * scale,
-          ),
-        ];
-      case _GlowLevel.redGold:
-        return [
-          BoxShadow(
-            color: AppColors.accent.withOpacity(0.5 * scale),
-            blurRadius: 50 * scale,
-            spreadRadius: 14 * scale,
-          ),
-          BoxShadow(
-            color: AppColors.primary.withOpacity(0.4 * scale),
-            blurRadius: 30 * scale,
-            spreadRadius: 8 * scale,
-          ),
-        ];
-      case _GlowLevel.master:
-        return [
-          BoxShadow(
-            color: const Color(0xFFAA00FF).withOpacity(0.45 * scale),
-            blurRadius: 55 * scale,
-            spreadRadius: 16 * scale,
-          ),
-          BoxShadow(
-            color: AppColors.accent.withOpacity(0.4 * scale),
-            blurRadius: 30 * scale,
-            spreadRadius: 8 * scale,
-          ),
-        ];
-      case _GlowLevel.legendary:
-        return [
-          BoxShadow(
-            color: AppColors.accent.withOpacity(0.5 * scale),
-            blurRadius: 60 * scale,
-            spreadRadius: 20 * scale,
-          ),
-          BoxShadow(
-            color: AppColors.primary.withOpacity(0.4 * scale),
-            blurRadius: 40 * scale,
-            spreadRadius: 12 * scale,
-          ),
-          BoxShadow(
-            color: const Color(0xFFAA00FF).withOpacity(0.3 * scale),
-            blurRadius: 25 * scale,
-            spreadRadius: 6 * scale,
-          ),
-        ];
+      case _GlowLevel.none:       return 'assets/progress/pr1.png';
+      case _GlowLevel.orange:     return 'assets/progress/pr2.png';
+      case _GlowLevel.faintGold:  return 'assets/progress/pr3.png';
+      case _GlowLevel.gold:       return 'assets/progress/pr4.png';
+      case _GlowLevel.strongGold: return 'assets/progress/pr5.png';
+      case _GlowLevel.redGold:    return 'assets/progress/pr6.png';
+      case _GlowLevel.master:     return 'assets/progress/pr7.png';
+      case _GlowLevel.legendary:  return 'assets/progress/pr8.png';
     }
   }
 
-  Color _bgColor(_GlowLevel level) {
-    switch (level) {
-      case _GlowLevel.none:
-        return AppColors.surface3;
-      case _GlowLevel.orange:
-        return AppColors.orange.withOpacity(0.15);
-      case _GlowLevel.faintGold:
-      case _GlowLevel.gold:
-        return AppColors.accent.withOpacity(0.12);
-      case _GlowLevel.strongGold:
-      case _GlowLevel.redGold:
-        return AppColors.accent.withOpacity(0.18);
-      case _GlowLevel.master:
-        return const Color(0xFFAA00FF).withOpacity(0.15);
-      case _GlowLevel.legendary:
-        return AppColors.accent.withOpacity(0.2);
+  Widget _buildImage(double scale) {
+    final asset = _assetFor(glowLevel);
+
+    // ShaderMask: bottom fade to blend seamlessly into the dark card
+    Widget img = ShaderMask(
+      shaderCallback: (bounds) => const LinearGradient(
+        begin: Alignment.topCenter,
+        end: Alignment.bottomCenter,
+        colors: [Colors.white, Colors.white, Colors.transparent],
+        stops: [0.0, 0.65, 1.0],
+      ).createShader(bounds),
+      blendMode: BlendMode.dstIn,
+      child: Image.asset(
+        asset,
+        fit: BoxFit.contain,
+      ),
+    );
+
+    // For legendary/master: add purple radial overlay via second ShaderMask
+    if (glowLevel == _GlowLevel.legendary || glowLevel == _GlowLevel.master) {
+      img = ShaderMask(
+        shaderCallback: (bounds) => RadialGradient(
+          center: Alignment.center,
+          radius: 0.9,
+          colors: [
+            const Color(0xFFAA00FF).withValues(alpha:
+                glowLevel == _GlowLevel.legendary ? 0.22 : 0.14),
+            Colors.transparent,
+          ],
+        ).createShader(bounds),
+        blendMode: BlendMode.srcATop,
+        child: img,
+      );
     }
+
+    return Transform.scale(
+      scale: scale,
+      alignment: Alignment.bottomCenter,
+      child: img,
+    );
   }
 
   @override
@@ -460,54 +511,16 @@ class _JudokaAvatar extends StatelessWidget {
     if (shouldAnimate) {
       return AnimatedBuilder(
         animation: Listenable.merge([pulseAnim, shimmerCtrl]),
-        builder: (_, __) {
-          final scale = shouldPulse ? pulseAnim.value : 1.0;
-          return _buildCircle(scale);
-        },
+        builder: (_, __) => _buildImage(shouldPulse ? pulseAnim.value : 1.0),
       );
     }
     if (shouldPulse) {
       return AnimatedBuilder(
         animation: pulseAnim,
-        builder: (_, __) => _buildCircle(pulseAnim.value),
+        builder: (_, __) => _buildImage(pulseAnim.value),
       );
     }
-    return _buildCircle(1.0);
-  }
-
-  Color _iconTint(_GlowLevel level) {
-    switch (level) {
-      case _GlowLevel.none:
-        return AppColors.textSecondary;
-      case _GlowLevel.orange:
-        return AppColors.orange;
-      case _GlowLevel.faintGold:
-      case _GlowLevel.gold:
-      case _GlowLevel.strongGold:
-      case _GlowLevel.redGold:
-      case _GlowLevel.legendary:
-        return AppColors.accent;
-      case _GlowLevel.master:
-        return const Color(0xFFCC88FF);
-    }
-  }
-
-  Widget _buildCircle(double scale) {
-    return Container(
-      width: 100,
-      height: 100,
-      decoration: BoxDecoration(
-        shape: BoxShape.circle,
-        color: _bgColor(glowLevel),
-        boxShadow: _shadowsFor(glowLevel, scale),
-      ),
-      child: Center(
-        child: ColorFiltered(
-          colorFilter: ColorFilter.mode(_iconTint(glowLevel), BlendMode.srcIn),
-          child: TriumphIcon(TIcon.athlete, size: 72),
-        ),
-      ),
-    );
+    return _buildImage(1.0);
   }
 }
 

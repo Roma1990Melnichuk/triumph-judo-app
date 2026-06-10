@@ -231,6 +231,11 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: '/achievement-stats',
         parentNavigatorKey: _rootNavKey,
+        redirect: (context, state) {
+          final user = ProviderScope.containerOf(context).read(currentUserModelProvider).value;
+          if (user == null || !user.isCoach) return '/home';
+          return null;
+        },
         pageBuilder: (_, s) => _fadeScale(s, const AchievementStatsScreen()),
       ),
       GoRoute(
