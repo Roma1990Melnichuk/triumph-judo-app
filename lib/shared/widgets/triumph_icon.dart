@@ -115,6 +115,11 @@ class TriumphIcon extends StatelessWidget {
     TIcon.calendar3d,
   };
 
+  /// True for icons that are PNG with a transparent background.
+  /// These can safely use [ColorFilter] (e.g. white tint on dark surfaces).
+  /// WebP icons have opaque backgrounds — ColorFilter turns them into solid squares.
+  static bool hasTransparentBg(TIcon icon) => _pngIcons.contains(icon);
+
   static String _assetPath(TIcon icon) {
     final ext = _pngIcons.contains(icon) ? 'png' : 'webp';
     return 'assets/icons/ti_${icon.name}.$ext';

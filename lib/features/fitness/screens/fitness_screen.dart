@@ -134,7 +134,7 @@ class _FitnessScreenState extends ConsumerState<FitnessScreen> {
           ? FloatingActionButton(
               onPressed: () => _showAddExerciseDialog(context),
               tooltip: 'Нова вправа',
-              child: const ColorFiltered(colorFilter: ColorFilter.mode(Colors.white, BlendMode.srcIn), child: TriumphIcon(TIcon.add, size: 24)),
+              child: const Icon(Icons.add, color: Colors.white, size: 24),
             )
           : null,
     );

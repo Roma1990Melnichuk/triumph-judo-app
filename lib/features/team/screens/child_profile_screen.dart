@@ -1,6 +1,6 @@
 import 'dart:io';
 import 'package:cached_network_image/cached_network_image.dart';
-import 'package:firebase_storage/firebase_storage.dart';
+import '../../../core/utils/cloudinary_upload.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:image_picker/image_picker.dart';
@@ -483,8 +483,8 @@ class _ChildProfileScreenState extends ConsumerState<ChildProfileScreen>
                     labelStyle: const TextStyle(
                         fontSize: 13, fontWeight: FontWeight.w600),
                     tabs: const [
+                      Tab(text: 'Прогрес до поясу'),
                       Tab(text: 'Досягнення'),
-                      Tab(text: 'Результати'),
                       Tab(text: 'Відвідування'),
                       Tab(text: 'Нагороди клубу'),
                     ],
@@ -495,14 +495,7 @@ class _ChildProfileScreenState extends ConsumerState<ChildProfileScreen>
             body: TabBarView(
               controller: _tabController,
               children: [
-                // ── Tab 0: Досягнення (competition results) ──────────────
-                _DosyagnennyaTab(
-                  childId: childId,
-                  results: results,
-                  isCoach: isCoach,
-                  onDelete: (r) => _deleteResult(context, ref, r),
-                ),
-                // ── Tab 1: Результати (belt progress) ────────────────────
+                // ── Tab 0: Прогрес до поясу (belt progress) ──────────────
                 _ResultatyTab(
                   childId: childId,
                   child: child,
@@ -510,6 +503,13 @@ class _ChildProfileScreenState extends ConsumerState<ChildProfileScreen>
                   beltReqAsync: beltReqAsync,
                   beltProgressAsync: beltProgressAsync,
                   isCoach: isCoach,
+                ),
+                // ── Tab 1: Досягнення (competition results) ───────────────
+                _DosyagnennyaTab(
+                  childId: childId,
+                  results: results,
+                  isCoach: isCoach,
+                  onDelete: (r) => _deleteResult(context, ref, r),
                 ),
                 // ── Tab 2: Відзнаки (info + attendance) ─────────────────
                 _VidznakiTab(
@@ -761,11 +761,11 @@ class _AthleteEditSheetState extends ConsumerState<_AthleteEditSheet> {
     try {
       String? photoUrl = widget.child.photoUrl;
       if (_photoFile != null) {
-        final ref = FirebaseStorage.instance
-            .ref('children/${widget.child.id}/avatar.jpg');
         final bytes = await _photoFile!.readAsBytes();
-        await ref.putData(bytes, SettableMetadata(contentType: 'image/jpeg'));
-        photoUrl = await ref.getDownloadURL();
+        photoUrl = await uploadImageToCloudinary(
+          bytes,
+          'children_${widget.child.id}',
+        );
       }
       final updated = widget.child.copyWith(
         firstName: firstName,
@@ -895,50 +895,6 @@ class _AthleteEditSheetState extends ConsumerState<_AthleteEditSheet> {
   }
 }
 
-class _InfoCard extends StatelessWidget {
-  const _InfoCard({
-    this.icon,
-    this.tIcon,
-    required this.label,
-    required this.value,
-  }) : assert(icon != null || tIcon != null);
-
-  final IconData? icon;
-  final TIcon? tIcon;
-  final String label;
-  final String value;
-
-  @override
-  Widget build(BuildContext context) {
-    return Expanded(
-      child: Card(
-        child: Padding(
-          padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 8),
-          child: Column(
-            children: [
-              if (tIcon != null)
-                ColorFiltered(
-                  colorFilter: const ColorFilter.mode(AppColors.primary, BlendMode.srcIn),
-                  child: TriumphIcon(tIcon!, size: 20),
-                )
-              else
-                Icon(icon, color: AppColors.primary, size: 20),
-              const SizedBox(height: 4),
-              Text(
-                value,
-                style: const TextStyle(
-                    fontWeight: FontWeight.bold, fontSize: 16),
-              ),
-              Text(label,
-                  style: const TextStyle(
-                      color: AppColors.textSecondary, fontSize: 11)),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-}
 
 class _SectionHeader extends StatelessWidget {
   const _SectionHeader({required this.title, this.action});
@@ -1349,11 +1305,14 @@ class _MembershipSection extends ConsumerWidget {
                     if (membership != null &&
                         membership!.planName.isNotEmpty) ...[
                       const SizedBox(width: 8),
-                      Text(
-                        membership!.planName,
-                        style: const TextStyle(
-                          fontSize: 12,
-                          color: AppColors.textSecondary,
+                      Flexible(
+                        child: Text(
+                          membership!.planName,
+                          overflow: TextOverflow.ellipsis,
+                          style: const TextStyle(
+                            fontSize: 12,
+                            color: AppColors.textSecondary,
+                          ),
                         ),
                       ),
                     ],
@@ -1899,7 +1858,7 @@ class _DosyagnennyaTab extends StatelessWidget {
                       if (isCoach) ...[
                         const SizedBox(width: 4),
                         IconButton(
-                          icon: const ColorFiltered(colorFilter: ColorFilter.mode(AppColors.error, BlendMode.srcIn), child: TriumphIcon(TIcon.delete, size: 22)),
+                          icon: const Icon(Icons.delete_outline, color: AppColors.error, size: 22),
                           onPressed: () => onDelete(r),
                           padding: EdgeInsets.zero,
                           constraints: const BoxConstraints(),
@@ -1912,7 +1871,7 @@ class _DosyagnennyaTab extends StatelessWidget {
         const SizedBox(height: 16),
         if (isCoach)
           ElevatedButton.icon(
-            icon: const ColorFiltered(colorFilter: ColorFilter.mode(Colors.white, BlendMode.srcIn), child: TriumphIcon(TIcon.add, size: 18)),
+            icon: const Icon(Icons.add, color: Colors.white, size: 18),
             label: const Text('Додати результат'),
             onPressed: () => context.push('/team/$childId/add-result'),
           ),
@@ -1997,27 +1956,6 @@ class _VidznakiTab extends StatelessWidget {
     return ListView(
       padding: const EdgeInsets.all(16),
       children: [
-        // Info cards
-        Row(
-          children: [
-            _InfoCard(
-                icon: Icons.cake,
-                label: 'Рік нар.',
-                value: '${child.birthYear}'),
-            const SizedBox(width: 8),
-            _InfoCard(
-                icon: Icons.scale,
-                label: 'Вага',
-                value: displayWeight(child.weightCategory)),
-            const SizedBox(width: 8),
-            _InfoCard(
-                tIcon: TIcon.trophy,
-                label: 'Балів',
-                value: '${child.totalPoints}'),
-          ],
-        ),
-        const SizedBox(height: 16),
-
         // Belt + coach card
         Card(
           child: Padding(

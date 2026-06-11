@@ -24,25 +24,25 @@ class _MainScaffoldState extends ConsumerState<MainScaffold>
   static const _coachRoutes  = ['/home', '/team', '/rating', '/events', '/belts', '/settings'];
   static const _parentRoutes = ['/home', '/team', '/rating', '/events', '/settings'];
 
-  // Nav icon types
+  // PNG icons with transparent backgrounds — no white-bg artifacts on dark navbar
   static const _coachIcons = [
     TIcon.home3d,      // Головна
-    TIcon.team,        // Команда
+    TIcon.dojo3d,      // Команда
     TIcon.rating3d,    // Рейтинг
     TIcon.calendar3d,  // Графік
     TIcon.belts3d,     // Пояси
-    TIcon.settings3d,  // Налашт.
+    TIcon.settings3d,  // Налаштування
   ];
   static const _parentIcons = [
     TIcon.home3d,      // Головна
-    TIcon.team,        // Команда
+    TIcon.dojo3d,      // Команда
     TIcon.rating3d,    // Рейтинг
     TIcon.calendar3d,  // Графік
-    TIcon.settings3d,  // Налашт.
+    TIcon.settings3d,  // Налаштування
   ];
 
-  static const _coachLabels  = ['Головна', 'Команда', 'Рейтинг', 'Графік', 'Пояси', 'Налаштування'];
-  static const _parentLabels = ['Головна', 'Команда', 'Рейтинг', 'Графік', 'Налаштування'];
+  static const _coachLabels  = ['Головна', 'Команда', 'Рейтинг', 'Графік', 'Пояси', 'Налашт.'];
+  static const _parentLabels = ['Головна', 'Команда', 'Рейтинг', 'Графік', 'Налашт.'];
 
   @override
   void initState() {
@@ -181,19 +181,27 @@ class _NavItem extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final iconWidget = TriumphIcon(icon, size: 26);
     return Column(
       mainAxisAlignment: MainAxisAlignment.center,
       mainAxisSize: MainAxisSize.min,
       children: [
-        GlowIcon(
-          isActive: active,
-          color: AppColors.orange,
-          icon: active
-              ? iconWidget
-              : Opacity(opacity: 0.42, child: iconWidget),
+        // Icon — full opacity when active, dimmed when inactive
+        Opacity(
+          opacity: active ? 1.0 : 0.4,
+          child: TriumphIcon(icon, size: 28),
         ),
         const SizedBox(height: 3),
+        // Orange dot indicator below the icon
+        AnimatedContainer(
+          duration: const Duration(milliseconds: 200),
+          width: active ? 18 : 0,
+          height: 3,
+          decoration: BoxDecoration(
+            color: AppColors.orange,
+            borderRadius: BorderRadius.circular(2),
+          ),
+        ),
+        const SizedBox(height: 2),
         AnimatedDefaultTextStyle(
           duration: const Duration(milliseconds: 200),
           style: TextStyle(

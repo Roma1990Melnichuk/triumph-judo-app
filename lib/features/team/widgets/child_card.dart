@@ -6,7 +6,6 @@ import '../../../core/constants/app_colors.dart';
 import '../../../core/constants/belt_levels.dart';
 import '../../../core/models/child_model.dart';
 import '../../../core/models/membership_model.dart';
-import '../../../features/auth/providers/auth_provider.dart';
 import '../../../features/belts/providers/belt_provider.dart';
 import '../../../features/individual_training/providers/individual_training_provider.dart';
 import '../../../features/schedule/providers/group_provider.dart';
@@ -72,7 +71,7 @@ class ChildCard extends ConsumerWidget {
         onTap: onTap,
         splashColor: AppColors.primary.withValues(alpha: 0.06),
         child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
           child: Row(
             children: [
               // ── Rank ─────────────────────────────────────────────────────
@@ -92,20 +91,20 @@ class ChildCard extends ConsumerWidget {
               AthleteProgressCircle(
                 progress: progressPct,
                 color: child.beltReady ? AppColors.success : (nextBelt?.color ?? AppColors.accent),
-                size: 54,
+                size: 46,
                 child: child.photoUrl != null
                     ? CircleAvatar(
-                        radius: 22,
+                        radius: 18,
                         backgroundImage:
                             CachedNetworkImageProvider(child.photoUrl!),
                       )
                     : DefaultAvatarCircle(
                         gender: child.gender,
-                        radius: 22,
+                        radius: 18,
                         seed: child.id,
                       ),
               ),
-              const SizedBox(width: 14),
+              const SizedBox(width: 10),
 
               // ── Info ─────────────────────────────────────────────────────
               Expanded(
@@ -264,9 +263,9 @@ class ChildCard extends ConsumerWidget {
                   Text(
                     '${child.totalPoints}',
                     style: const TextStyle(
-                      fontSize: 20,
+                      fontSize: 17,
                       fontWeight: FontWeight.w900,
-                      color: AppColors.accent, // gold
+                      color: AppColors.accent,
                     ),
                   ),
                   const Text(

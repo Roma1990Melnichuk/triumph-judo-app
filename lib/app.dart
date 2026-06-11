@@ -7,6 +7,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'core/constants/app_colors.dart';
 import 'core/models/user_model.dart';
 import 'features/auth/providers/auth_provider.dart';
+import 'features/auth/screens/access_removed_screen.dart';
 import 'features/auth/screens/login_screen.dart';
 import 'features/auth/screens/register_screen.dart';
 import 'features/auth/screens/splash_screen.dart';
@@ -126,6 +127,22 @@ final routerProvider = Provider<GoRouter>((ref) {
     redirect: (context, state) {
       final authState = ref.read(authStateProvider);
       final userModel = ref.read(currentUserModelProvider);
+
+      // If a parent has no linked children, block the app and show removal screen
+      if (authState.value != null && !userModel.isLoading) {
+        final user = userModel.value;
+        if (user != null && user.isParent) {
+          final hasNoChildren = user.childIds.isEmpty &&
+              (user.childId == null || user.childId!.isEmpty);
+          if (hasNoChildren && state.matchedLocation != '/removed') {
+            return '/removed';
+          }
+          if (!hasNoChildren && state.matchedLocation == '/removed') {
+            return '/home';
+          }
+        }
+      }
+
       return computeRedirect(
         isLoading: authState.isLoading ||
             (authState.hasValue && userModel.isLoading),
@@ -135,6 +152,7 @@ final routerProvider = Provider<GoRouter>((ref) {
     },
     routes: [
       GoRoute(path: '/splash',        builder: (_, __) => const SplashScreen()),
+      GoRoute(path: '/removed',       builder: (_, __) => const AccessRemovedScreen()),
       GoRoute(path: '/auth/login',    builder: (_, __) => const LoginScreen()),
       GoRoute(path: '/auth/register', builder: (_, __) => const RegisterScreen()),
       GoRoute(
@@ -188,6 +206,11 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: '/bulk-fitness-goals',
         parentNavigatorKey: _rootNavKey,
+        redirect: (context, state) {
+          final user = ProviderScope.containerOf(context).read(currentUserModelProvider).value;
+          if (user == null || !user.isCoach) return '/home';
+          return null;
+        },
         pageBuilder: (_, s) => _fadeSlide(s, const BulkFitnessGoalsScreen()),
       ),
       GoRoute(
@@ -206,6 +229,11 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: '/belts/edit',
         parentNavigatorKey: _rootNavKey,
+        redirect: (context, state) {
+          final user = ProviderScope.containerOf(context).read(currentUserModelProvider).value;
+          if (user == null || !user.isCoach) return '/home';
+          return null;
+        },
         pageBuilder: (_, s) => _fadeSlide(s, const BeltRequirementsScreen()),
       ),
       GoRoute(

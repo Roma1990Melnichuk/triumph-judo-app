@@ -236,7 +236,11 @@ class _BeltOverviewScreenState extends ConsumerState<BeltOverviewScreen> {
                         style: OutlinedButton.styleFrom(
                           foregroundColor: AppColors.accent,
                           side: const BorderSide(color: AppColors.accent),
-                          minimumSize: const Size(double.infinity, 44),
+                          minimumSize: const Size(double.infinity, 48),
+                          padding: const EdgeInsets.symmetric(vertical: 12),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
                         ),
                         onPressed: () => context.push('/belts/edit'),
                       ),
@@ -321,7 +325,20 @@ class _BeltHeroCard extends StatelessWidget {
             ),
             child: Column(
               children: [
-                BeltSpriteIcon(belt: belt, size: 88),
+                Container(
+                  width: 100,
+                  height: 100,
+                  decoration: BoxDecoration(
+                    color: beltColor.withValues(alpha: 0.15),
+                    shape: BoxShape.circle,
+                    border: Border.all(
+                      color: beltColor.withValues(alpha: 0.30),
+                      width: 1.5,
+                    ),
+                  ),
+                  alignment: Alignment.center,
+                  child: BeltSpriteIcon(belt: belt, size: 72),
+                ),
                 const SizedBox(height: 14),
                 Text(
                   '${belt.displayName} пояс',
@@ -450,11 +467,11 @@ class _CategoryBreakdown extends StatelessWidget {
   final bool     isCoach;
   final BeltLevel belt;
 
-  static const _categoryIcons = <ExerciseCategory, TIcon>{
-    ExerciseCategory.technique:   TIcon.training,
-    ExerciseCategory.physical:    TIcon.experience,
-    ExerciseCategory.theory:      TIcon.info,
-    ExerciseCategory.competition: TIcon.tournament,
+  static const _categoryIcons = <ExerciseCategory, IconData>{
+    ExerciseCategory.technique:   Icons.sports_kabaddi,
+    ExerciseCategory.physical:    Icons.fitness_center,
+    ExerciseCategory.theory:      Icons.menu_book_outlined,
+    ExerciseCategory.competition: Icons.emoji_events_outlined,
   };
 
   @override
@@ -483,7 +500,7 @@ class _CategoryBreakdown extends StatelessWidget {
           }
 
           final isDone      = progress != null && passed == total;
-          final icon        = _categoryIcons[cat] ?? TIcon.training;
+          final icon        = _categoryIcons[cat] ?? Icons.fitness_center;
           final hasAnyVideo = exercises.any((e) => e.videoUrl.isNotEmpty);
 
           Widget? trailingWidget;
@@ -522,12 +539,10 @@ class _CategoryBreakdown extends StatelessWidget {
                           .withValues(alpha: 0.12),
                       borderRadius: BorderRadius.circular(12),
                     ),
-                    child: ColorFiltered(
-                      colorFilter: ColorFilter.mode(
-                        isDone ? AppColors.success : AppColors.accent,
-                        BlendMode.srcIn,
-                      ),
-                      child: TriumphIcon(icon, size: 22),
+                    child: Icon(
+                      icon,
+                      size: 22,
+                      color: isDone ? AppColors.success : AppColors.accent,
                     ),
                   ),
                   title: Row(

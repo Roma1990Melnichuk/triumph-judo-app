@@ -113,7 +113,7 @@ class SettingsScreen extends ConsumerWidget {
           _MenuSection(
             items: [
               _MenuItem(
-                tIcon: TIcon.profile,
+                icon: Icons.person_outline,
                 color: AppColors.primary,
                 label: 'Редагувати профіль',
                 onTap: () => _showEditProfile(context, ref, user!),
@@ -131,7 +131,7 @@ class SettingsScreen extends ConsumerWidget {
                   onTap: () => _showTariffEditor(context, ref),
                 ),
                 _MenuItem(
-                  tIcon: TIcon.team,
+                  icon: Icons.group_outlined,
                   color: const Color(0xFF34C759),
                   label: 'Імпорт спортсменів',
                   onTap: () => _showCsvImport(context, ref, user!),
@@ -167,7 +167,7 @@ class SettingsScreen extends ConsumerWidget {
                   onTap: () => context.push('/achievements'),
                 ),
                 _MenuItem(
-                  tIcon: TIcon.belts,
+                  icon: Icons.style,
                   color: const Color(0xFFFF9500),
                   label: 'Масова здача поясів',
                   onTap: () => context.push('/bulk-belt'),
@@ -181,13 +181,13 @@ class SettingsScreen extends ConsumerWidget {
                   ),
                 ),
                 _MenuItem(
-                  tIcon: TIcon.statistics,
+                  icon: Icons.bar_chart,
                   color: const Color(0xFF30D158),
                   label: 'Масові фітнес-цілі',
                   onTap: () => context.push('/bulk-fitness-goals'),
                 ),
                 _MenuItem(
-                  tIcon: TIcon.records,
+                  icon: Icons.history,
                   color: const Color(0xFF5AC8FA),
                   label: 'Експорт даних',
                   onTap: () => _showExportMenu(context, ref),
@@ -206,21 +206,21 @@ class SettingsScreen extends ConsumerWidget {
                   onTap: () => context.push('/individual-training'),
                 ),
                 _MenuItem(
-                  tIcon: TIcon.athlete,
+                  icon: Icons.child_care,
                   color: AppColors.primary,
                   label: 'Моя дитина',
                   onTap: () => _showLinkChild(context, ref, user!),
                 ),
               ],
               _MenuItem(
-                tIcon: TIcon.notifications,
+                icon: Icons.notifications_outlined,
                 color: const Color(0xFFFF3B30),
                 label: 'Сповіщення',
                 badge: unreadCount > 0 ? unreadCount : null,
                 onTap: () => context.push('/notifications'),
               ),
               _MenuItem(
-                tIcon: TIcon.info,
+                icon: Icons.info_outline,
                 color: AppColors.textSecondary,
                 label: 'Про додаток',
                 onTap: () => _showAbout(context),
@@ -312,10 +312,7 @@ class SettingsScreen extends ConsumerWidget {
                       TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
             ),
             ListTile(
-              leading: const ColorFiltered(
-                colorFilter: ColorFilter.mode(AppColors.info, BlendMode.srcIn),
-                child: TriumphIcon(TIcon.team, size: 24),
-              ),
+              leading: const Icon(Icons.group_outlined, color: AppColors.info, size: 24),
               title: const Text('Команда (список спортсменів)'),
               subtitle: Text('${allChildren.length} спортсменів'),
               onTap: () {
@@ -324,10 +321,7 @@ class SettingsScreen extends ConsumerWidget {
               },
             ),
             ListTile(
-              leading: const ColorFiltered(
-                colorFilter: ColorFilter.mode(AppColors.accent, BlendMode.srcIn),
-                child: TriumphIcon(TIcon.trophy, size: 24),
-              ),
+              leading: const Icon(Icons.emoji_events_outlined, color: AppColors.accent, size: 24),
               title: const Text('Результати змагань'),
               subtitle: Text('${allResults.length} результатів'),
               onTap: () {
@@ -720,7 +714,7 @@ class _CompetitionTypesSheetState
                   style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
               TextButton.icon(
                 onPressed: () => _openAddDialog(context),
-                icon: const ColorFiltered(colorFilter: ColorFilter.mode(Colors.white, BlendMode.srcIn), child: TriumphIcon(TIcon.add, size: 18)),
+                icon: const Icon(Icons.add, color: Colors.white, size: 18),
                 label: const Text('Додати'),
               ),
             ],
@@ -743,7 +737,7 @@ class _CompetitionTypesSheetState
                             contentPadding: EdgeInsets.zero,
                             title: Text(t.name),
                             trailing: IconButton(
-                              icon: const ColorFiltered(colorFilter: ColorFilter.mode(AppColors.error, BlendMode.srcIn), child: TriumphIcon(TIcon.delete, size: 22)),
+                              icon: const Icon(Icons.delete_outline, color: AppColors.error, size: 22),
                               onPressed: () => ref
                                   .read(competitionsNotifierProvider.notifier)
                                   .deleteCompetitionType(t.id),
@@ -944,10 +938,7 @@ class _CoachManagementSheetState
         SnackBar(
           content: Row(
             children: [
-              const ColorFiltered(
-                colorFilter: ColorFilter.mode(Colors.white, BlendMode.srcIn),
-                child: TriumphIcon(TIcon.success, size: 18),
-              ),
+              const Icon(Icons.check_circle_outline, color: Colors.white, size: 18),
               const SizedBox(width: 8),
               const Text('Права тренера надано'),
             ],
@@ -1059,10 +1050,7 @@ class _LinkChildSheetState extends ConsumerState<_LinkChildSheet> {
               contentPadding: EdgeInsets.zero,
               leading: const CircleAvatar(
                 backgroundColor: AppColors.primary,
-                child: ColorFiltered(
-                  colorFilter: ColorFilter.mode(Colors.white, BlendMode.srcIn),
-                  child: TriumphIcon(TIcon.athlete, size: 22),
-                ),
+                child: const Icon(Icons.person, color: Colors.white, size: 22),
               ),
               title: Text(myChild.fullName,
                   style: const TextStyle(fontWeight: FontWeight.w600)),

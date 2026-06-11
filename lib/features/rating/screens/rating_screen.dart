@@ -902,7 +902,7 @@ class _PodiumItemState extends State<_PodiumItem>
   @override
   Widget build(BuildContext context) {
     final isFirst = widget.place == 1;
-    final avatarRadius = isFirst ? 32.0 : 24.0;
+    final avatarRadius = isFirst ? 44.0 : 34.0;
 
     return Expanded(
       child: AnimatedBuilder(
@@ -921,17 +921,17 @@ class _PodiumItemState extends State<_PodiumItem>
   }
 
   Widget _buildContent(bool isFirst, double avatarRadius) {
-    final ringWidth = isFirst ? 3.5 : 2.5;
-    final badgeSize = isFirst ? 24.0 : 20.0;
+    final ringWidth = isFirst ? 4.0 : 3.0;
+    final badgeSize = isFirst ? 28.0 : 24.0;
 
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
         // Crown icon for 1st place (full-color, no tint)
         if (isFirst)
-          const TriumphIcon(TIcon.crown, size: 40)
+          const TriumphIcon(TIcon.crown, size: 54)
         else
-          const SizedBox(height: 40),
+          const SizedBox(height: 54),
 
         const SizedBox(height: 6),
 
@@ -980,7 +980,7 @@ class _PodiumItemState extends State<_PodiumItem>
                   '${widget.place}',
                   style: TextStyle(
                     color: Colors.white,
-                    fontSize: isFirst ? 11 : 9,
+                    fontSize: isFirst ? 13 : 11,
                     fontWeight: FontWeight.w900,
                     height: 1,
                   ),

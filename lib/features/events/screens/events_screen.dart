@@ -358,7 +358,7 @@ class _EventsScreenState extends ConsumerState<EventsScreen> {
             const SizedBox(height: 8),
             TextButton.icon(
               onPressed: () => context.push('/events/add'),
-              icon: const ColorFiltered(colorFilter: ColorFilter.mode(Colors.white, BlendMode.srcIn), child: TriumphIcon(TIcon.add, size: 18)),
+              icon: const Icon(Icons.add, color: Colors.white, size: 18),
               label: const Text('Додати подію'),
             ),
           ],

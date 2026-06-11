@@ -629,6 +629,7 @@ class _DateRow extends StatelessWidget {
         onTap: () async {
           final picked = await showDatePicker(
             context: context,
+            locale: const Locale('uk'),
             initialDate: date,
             firstDate: DateTime(2020),
             lastDate: DateTime.now().add(const Duration(days: 365 * 3)),

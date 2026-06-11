@@ -637,7 +637,7 @@ class _AssignmentListTile extends StatelessWidget {
             ),
           ),
           IconButton(
-            icon: const ColorFiltered(colorFilter: ColorFilter.mode(AppColors.error, BlendMode.srcIn), child: TriumphIcon(TIcon.delete, size: 22)),
+            icon: const Icon(Icons.delete_outline, color: AppColors.error, size: 22),
             onPressed: onDelete,
             tooltip: 'Видалити',
           ),
@@ -841,6 +841,7 @@ class _GoalFormCard extends StatelessWidget {
   Future<void> _pickDeadline(BuildContext context) async {
     final picked = await showDatePicker(
       context: context,
+      locale: const Locale('uk'),
       initialDate: deadline,
       firstDate: DateTime.now(),
       lastDate: DateTime.now().add(const Duration(days: 365 * 2)),

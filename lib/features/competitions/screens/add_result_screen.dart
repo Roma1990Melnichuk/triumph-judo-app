@@ -8,7 +8,6 @@ import '../../../core/models/competition_result_model.dart';
 import '../../../features/auth/providers/auth_provider.dart';
 import '../../../features/team/providers/children_provider.dart';
 import '../../../shared/widgets/gradient_button.dart';
-import '../../../shared/widgets/triumph_icon.dart';
 import '../providers/competitions_provider.dart';
 
 class AddResultScreen extends ConsumerStatefulWidget {
@@ -75,10 +74,7 @@ class _AddResultScreenState extends ConsumerState<AddResultScreen> {
             ),
             child: Column(
               children: [
-                ColorFiltered(
-                  colorFilter: ColorFilter.mode(medalColor, BlendMode.srcIn),
-                  child: const TriumphIcon(TIcon.medal, size: 32),
-                ),
+                Icon(Icons.military_tech_rounded, size: 32, color: medalColor),
                 const SizedBox(height: 4),
                 Text(
                   '$p місце',
@@ -130,6 +126,7 @@ class _AddResultScreenState extends ConsumerState<AddResultScreen> {
   Future<void> _pickDate() async {
     final d = await showDatePicker(
       context: context,
+      locale: const Locale('uk'),
       initialDate: _date,
       firstDate: DateTime(2000),
       lastDate: DateTime.now(),
@@ -197,10 +194,8 @@ class _AddResultScreenState extends ConsumerState<AddResultScreen> {
                         borderRadius: BorderRadius.circular(12),
                       ),
                       child: const Center(
-                        child: ColorFiltered(
-                          colorFilter: ColorFilter.mode(AppColors.textPrimary, BlendMode.srcIn),
-                          child: TriumphIcon(TIcon.back, size: 22),
-                        ),
+                        child: Icon(Icons.arrow_back_ios_new,
+                            size: 20, color: AppColors.textPrimary),
                       ),
                     ),
                   ),
@@ -228,10 +223,7 @@ class _AddResultScreenState extends ConsumerState<AddResultScreen> {
                 enableSuggestions: true,
                 decoration: const InputDecoration(
                   labelText: 'Назва змагань',
-                  prefixIcon: ColorFiltered(
-                    colorFilter: ColorFilter.mode(AppColors.textSecondary, BlendMode.srcIn),
-                    child: TriumphIcon(TIcon.trophy, size: 22),
-                  ),
+                  prefixIcon: const Icon(Icons.emoji_events_outlined, color: AppColors.textSecondary),
                 ),
                 validator: FormValidators.competitionName,
               ),
@@ -245,10 +237,7 @@ class _AddResultScreenState extends ConsumerState<AddResultScreen> {
                   value: _selectedType,
                   dropdownColor: AppColors.surface2,
                   decoration: const InputDecoration(
-                    prefixIcon: ColorFiltered(
-                      colorFilter: ColorFilter.mode(AppColors.textSecondary, BlendMode.srcIn),
-                      child: TriumphIcon(TIcon.category, size: 22),
-                    ),
+                    prefixIcon: const Icon(Icons.category_outlined, color: AppColors.textSecondary),
                     hintText: 'Оберіть тип',
                   ),
                   items: types
@@ -331,10 +320,7 @@ class _AddResultScreenState extends ConsumerState<AddResultScreen> {
                 keyboardType: TextInputType.number,
                 decoration: const InputDecoration(
                   labelText: 'Кількість балів',
-                  prefixIcon: const ColorFiltered(
-                    colorFilter: ColorFilter.mode(AppColors.textSecondary, BlendMode.srcIn),
-                    child: TriumphIcon(TIcon.trophy, size: 22),
-                  ),
+                  prefixIcon: const Icon(Icons.star_outline, color: AppColors.textSecondary),
                 ),
                 validator: FormValidators.points,
               ),
@@ -353,10 +339,7 @@ class _AddResultScreenState extends ConsumerState<AddResultScreen> {
                   ),
                   child: Row(
                     children: [
-                      const ColorFiltered(
-                        colorFilter: ColorFilter.mode(AppColors.primary, BlendMode.srcIn),
-                        child: TriumphIcon(TIcon.calendar, size: 20),
-                      ),
+                      const Icon(Icons.calendar_today, size: 20, color: AppColors.primary),
                       const SizedBox(width: 12),
                       Expanded(
                         child: Column(
@@ -378,10 +361,7 @@ class _AddResultScreenState extends ConsumerState<AddResultScreen> {
                           ],
                         ),
                       ),
-                      const ColorFiltered(
-                        colorFilter: ColorFilter.mode(AppColors.textSecondary, BlendMode.srcIn),
-                        child: TriumphIcon(TIcon.calendar, size: 18),
-                      ),
+                      const Icon(Icons.chevron_right, size: 20, color: AppColors.textSecondary),
                     ],
                   ),
                 ),

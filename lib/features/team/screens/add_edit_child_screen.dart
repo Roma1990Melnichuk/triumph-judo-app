@@ -1,6 +1,6 @@
 import 'dart:io';
 import 'package:cached_network_image/cached_network_image.dart';
-import 'package:firebase_storage/firebase_storage.dart';
+import '../../../core/utils/cloudinary_upload.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -168,14 +168,8 @@ class _AddEditChildScreenState extends ConsumerState<AddEditChildScreen> {
     String? photoUrl = _existingPhotoUrl;
     if (_photoFile != null) {
       try {
-        final storageRef = FirebaseStorage.instance
-            .ref('children/$childId/avatar.jpg');
         final bytes = await _photoFile!.readAsBytes();
-        await storageRef.putData(
-          bytes,
-          SettableMetadata(contentType: 'image/jpeg'),
-        );
-        photoUrl = await storageRef.getDownloadURL();
+        photoUrl = await uploadImageToCloudinary(bytes, 'children_$childId');
       } catch (e) {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
@@ -347,7 +341,7 @@ class _AddEditChildScreenState extends ConsumerState<AddEditChildScreen> {
                       Center(
                         child: TextButton.icon(
                           onPressed: () => setState(() => _photoFile = null),
-                          icon: const ColorFiltered(colorFilter: ColorFilter.mode(AppColors.error, BlendMode.srcIn), child: TriumphIcon(TIcon.delete, size: 22)),
+                          icon: const Icon(Icons.delete_outline, color: AppColors.error, size: 22),
                           label: const Text('Видалити фото',
                               style: TextStyle(
                                   color: AppColors.error, fontSize: 13)),
@@ -382,6 +376,14 @@ class _AddEditChildScreenState extends ConsumerState<AddEditChildScreen> {
                         hintText: '+380XXXXXXXXX',
                         prefixIcon: Icon(Icons.phone_outlined),
                       ),
+                      validator: (v) {
+                        if (v == null || v.trim().isEmpty) return null;
+                        final clean = v.trim().replaceAll(RegExp(r'[\s\-()]'), '');
+                        if (!RegExp(r'^\+380\d{9}$').hasMatch(clean)) {
+                          return 'Формат: +380XXXXXXXXX';
+                        }
+                        return null;
+                      },
                     ),
                     const SizedBox(height: 16),
 

@@ -1,5 +1,4 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:uuid/uuid.dart';
 import '../../../core/services/analytics_service.dart';
@@ -162,6 +161,12 @@ final weightCategoriesProvider = Provider<List<String>>((ref) {
   return result;
 });
 
+// ── O(1) child lookup map ───────────────────────────────────────────────────
+final childByIdMapProvider = Provider<Map<String, ChildModel>>((ref) {
+  final children = ref.watch(allChildrenProvider).value ?? [];
+  return {for (final c in children) c.id: c};
+});
+
 // ── Single child by ID ──────────────────────────────────────────────────────
 final childByIdProvider =
     StreamProvider.family<ChildModel?, String>((ref, childId) {
@@ -178,10 +183,9 @@ final childByIdProvider =
 
 // ── CRUD notifier ───────────────────────────────────────────────────────────
 class ChildrenNotifier extends StateNotifier<AsyncValue<void>> {
-  ChildrenNotifier(this._db, this._storage) : super(const AsyncValue.data(null));
+  ChildrenNotifier(this._db) : super(const AsyncValue.data(null));
 
   final FirebaseFirestore _db;
-  final FirebaseStorage _storage;
   final _uuid = const Uuid();
 
   Future<void> addChild(ChildModel child) async {
@@ -206,7 +210,7 @@ class ChildrenNotifier extends StateNotifier<AsyncValue<void>> {
       final batch = _db.batch();
       batch.delete(_db.collection('children').doc(childId));
 
-      // Also delete competition results for this child
+      // Delete competition results for this child
       final results = await _db
           .collection('competition_results')
           .where('childId', isEqualTo: childId)
@@ -226,10 +230,26 @@ class ChildrenNotifier extends StateNotifier<AsyncValue<void>> {
 
       await batch.commit();
 
-      // Try to delete photo (non-critical)
-      try {
-        await _storage.ref('children/$childId/avatar.jpg').delete();
-      } catch (_) {}
+      // Revoke access: remove childId from all linked parent accounts
+      final parentQuery = await _db
+          .collection('users')
+          .where('childIds', arrayContains: childId)
+          .get();
+      if (parentQuery.docs.isNotEmpty) {
+        final parentBatch = _db.batch();
+        for (final doc in parentQuery.docs) {
+          final data = doc.data();
+          final update = <String, dynamic>{
+            'childIds': FieldValue.arrayRemove([childId]),
+          };
+          if (data['childId'] == childId) {
+            update['childId'] = FieldValue.delete();
+          }
+          parentBatch.update(doc.reference, update);
+        }
+        await parentBatch.commit();
+      }
+
     });
   }
 
@@ -469,8 +489,5 @@ class ChildrenNotifier extends StateNotifier<AsyncValue<void>> {
 
 final childrenNotifierProvider =
     StateNotifierProvider<ChildrenNotifier, AsyncValue<void>>((ref) {
-  return ChildrenNotifier(
-    ref.watch(firestoreProvider),
-    FirebaseStorage.instance,
-  );
+  return ChildrenNotifier(ref.watch(firestoreProvider));
 });

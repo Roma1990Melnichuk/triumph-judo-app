@@ -61,7 +61,8 @@ class CsvImportService {
 
     for (var i = 1; i < rows.length; i++) {
       final row = rows[i];
-      if (row.isEmpty || row.every((e) => e.toString().trim().isEmpty)) continue;
+      // ERR-02 Fix: Better empty row validation to avoid RangeError
+      if (row.isEmpty || row.every((e) => e == null || e.toString().trim().isEmpty)) continue;
 
       final lastName = _cell(row, lastNameIdx);
       final firstName = _cell(row, firstNameIdx);

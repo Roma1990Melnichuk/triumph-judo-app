@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../core/constants/app_colors.dart';
 import '../providers/membership_provider.dart';
+import '../utils/subscription_date_utils.dart';
 import '../../../shared/widgets/triumph_icon.dart';
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -76,33 +77,27 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen>
     super.dispose();
   }
 
-  static DateTime _computeEndDate(String planName, int multiplier, DateTime start) {
-    if (planName.contains('Разове')) {
-      return start.add(Duration(days: multiplier));
-    }
-    if (planName.contains('тиждень')) {
-      return start.add(Duration(days: 7 * multiplier));
-    }
-    final monthMatch = RegExp(r'(\d+)\s*місяц').firstMatch(planName);
-    if (monthMatch != null) {
-      final months = int.parse(monthMatch.group(1)!) * multiplier;
-      return DateTime(start.year, start.month + months, start.day);
-    }
-    return DateTime(start.year, start.month + multiplier, start.day);
-  }
 
   Future<void> _pay() async {
     if (_isProcessing) return;
     setState(() => _isProcessing = true);
 
     final now = DateTime.now();
-    final endDate = _computeEndDate(widget.planName, widget.variantMultiplier, now);
+    // FIN-01: if the child already has an active membership, extend from its
+    // endDate so existing days are not lost.
+    final currentMembership = ref.read(membershipByAthleteProvider(widget.childId)).value;
+    final startDate = resolveSubscriptionStart(
+      now: now,
+      isCurrentlyActive: currentMembership?.isActive ?? false,
+      currentEndDate: currentMembership?.endDate,
+    );
+    final endDate = computeSubscriptionEndDate(widget.planName, widget.variantMultiplier, startDate);
 
     try {
       await ref.read(membershipNotifierProvider.notifier).setMembership(
             athleteId: widget.childId,
             planName: widget.planName,
-            startDate: now,
+            startDate: startDate,
             endDate: endDate,
             amount: widget.amount,
           );

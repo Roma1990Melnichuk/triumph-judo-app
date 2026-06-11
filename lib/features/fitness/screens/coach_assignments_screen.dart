@@ -134,7 +134,7 @@ class _CoachAssignmentsScreenState extends ConsumerState<CoachAssignmentsScreen>
         onPressed: () => context.push('/assignments/create'),
         backgroundColor: AppColors.fabBg,
         foregroundColor: AppColors.fabIcon,
-        child: const ColorFiltered(colorFilter: ColorFilter.mode(Colors.white, BlendMode.srcIn), child: TriumphIcon(TIcon.add, size: 24)),
+        child: const Icon(Icons.add, color: Colors.white, size: 24),
       ),
     );
   }
@@ -383,7 +383,7 @@ class _CoachAssignmentCard extends ConsumerWidget {
             ),
             if (a.status == AssignmentStatus.active)
               ListTile(
-                leading: const ColorFiltered(colorFilter: ColorFilter.mode(AppColors.success, BlendMode.srcIn), child: TriumphIcon(TIcon.success, size: 18)),
+                leading: const Icon(Icons.check_circle_outline, color: AppColors.success, size: 18),
                 title: const Text('Завершити завдання'),
                 onTap: () {
                   Navigator.pop(sheetCtx);
@@ -393,7 +393,7 @@ class _CoachAssignmentCard extends ConsumerWidget {
                 },
               ),
             ListTile(
-              leading: const ColorFiltered(colorFilter: ColorFilter.mode(AppColors.error, BlendMode.srcIn), child: TriumphIcon(TIcon.delete, size: 22)),
+              leading: const Icon(Icons.delete_outline, color: AppColors.error, size: 22),
               title: const Text('Видалити',
                   style: TextStyle(color: AppColors.error)),
               onTap: () {

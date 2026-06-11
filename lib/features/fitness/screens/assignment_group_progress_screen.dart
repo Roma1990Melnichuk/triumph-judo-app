@@ -1074,6 +1074,7 @@ class _EditGoalDialogState extends State<_EditGoalDialog> {
               onTap: () async {
                 final picked = await showDatePicker(
                   context: context,
+                  locale: const Locale('uk'),
                   initialDate: _deadline,
                   firstDate: DateTime.now(),
                   lastDate: DateTime.now()

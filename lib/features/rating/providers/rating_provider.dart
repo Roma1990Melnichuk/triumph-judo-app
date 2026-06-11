@@ -16,7 +16,7 @@ class RatingFilter {
     this.birthYear,
     this.weightCategory,
     this.gender,
-    this.top20Only = true,
+    this.top20Only = false,
     this.competitionYear,
   });
 

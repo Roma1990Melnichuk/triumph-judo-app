@@ -1,6 +1,5 @@
-import 'dart:io';
 import 'package:file_picker/file_picker.dart';
-import 'package:firebase_storage/firebase_storage.dart';
+import '../../../core/utils/cloudinary_upload.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -311,7 +310,7 @@ class _BeltTabState extends ConsumerState<_BeltTab> {
                             setState(() => _editing = true);
                             _addExercise();
                           },
-                          icon: const ColorFiltered(colorFilter: ColorFilter.mode(Colors.white, BlendMode.srcIn), child: TriumphIcon(TIcon.add, size: 18)),
+                          icon: const Icon(Icons.add, color: Colors.white, size: 18),
                           label: const Text('Додати вправу'),
                         ),
                       ],
@@ -387,7 +386,7 @@ class _BeltTabState extends ConsumerState<_BeltTab> {
             padding: const EdgeInsets.all(16),
             child: ElevatedButton.icon(
               onPressed: _addExercise,
-              icon: const ColorFiltered(colorFilter: ColorFilter.mode(Colors.white, BlendMode.srcIn), child: TriumphIcon(TIcon.add, size: 18)),
+              icon: const Icon(Icons.add, color: Colors.white, size: 18),
               label: const Text('Додати вправу'),
             ),
           ),
@@ -440,11 +439,8 @@ class _ExerciseDialogState extends State<_ExerciseDialog> {
     if (picked.path == null) return;
     setState(() => _uploading = true);
     try {
-      final ext = picked.extension ?? 'mp4';
-      final ref = FirebaseStorage.instance
-          .ref('exercise_videos/${const Uuid().v4()}.$ext');
-      await ref.putFile(File(picked.path!));
-      final url = await ref.getDownloadURL();
+      final videoId = const Uuid().v4();
+      final url = await uploadVideoToCloudinary(picked.path!, 'exercise_$videoId');
       if (mounted) setState(() => _urlCtrl.text = url);
     } catch (e) {
       if (mounted) {

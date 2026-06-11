@@ -1,0 +1,25 @@
+rules_version = '2';
+service firebase.storage {
+  match /b/{bucket}/o {
+
+    function isAuth() { return request.auth != null; }
+
+    function isCoach() {
+      return isAuth() &&
+        firestore.get(/databases/(default)/documents/users/$(request.auth.uid))
+          .data.get('role', 'parent') == 'coach';
+    }
+
+    // Child avatars — coaches write, any authenticated user reads
+    match /children/{childId}/avatar.jpg {
+      allow read:  if isAuth();
+      allow write: if isCoach();
+    }
+
+    // Exercise demo videos — coaches write, any authenticated user reads
+    match /exercise_videos/{videoId} {
+      allow read:  if isAuth();
+      allow write: if isCoach();
+    }
+  }
+}

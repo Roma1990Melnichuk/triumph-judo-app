@@ -313,7 +313,7 @@ class AssignmentDetailScreen extends ConsumerWidget {
           },
         ),
         backgroundColor: AppColors.primary,
-        icon: const ColorFiltered(colorFilter: ColorFilter.mode(Colors.white, BlendMode.srcIn), child: TriumphIcon(TIcon.add, size: 24)),
+        icon: const Icon(Icons.add, color: Colors.white, size: 24),
         label: const Text('Додати результат',
             style: TextStyle(color: Colors.white)),
       ),

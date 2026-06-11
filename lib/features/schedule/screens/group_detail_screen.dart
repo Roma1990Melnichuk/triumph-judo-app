@@ -678,7 +678,7 @@ class _AttendanceSection extends ConsumerWidget {
                           mainAxisAlignment: MainAxisAlignment.end,
                           children: [
                             TextButton.icon(
-                              icon: const ColorFiltered(colorFilter: ColorFilter.mode(AppColors.success, BlendMode.srcIn), child: TriumphIcon(TIcon.success, size: 18)),
+                              icon: const Icon(Icons.check_circle_outline, color: AppColors.success, size: 18),
                               label: const Text('Всі присутні'),
                               onPressed: () => ref
                                   .read(groupNotifierProvider.notifier)

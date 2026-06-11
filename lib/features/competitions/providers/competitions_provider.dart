@@ -1,4 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:uuid/uuid.dart';
 import '../../../core/models/competition_result_model.dart';
@@ -19,7 +20,10 @@ final childResultsProvider =
       .orderBy('date', descending: true)
       .snapshots()
       .map((s) => s.docs.map(CompetitionResultModel.fromFirestore).toList())
-      .handleError((_) {});
+      .handleError((e) {
+        debugPrint('Error in childResultsProvider: $e');
+        return <CompetitionResultModel>[];
+      });
 });
 
 // ── Total competition results count (for medals stat on dashboard) ────────────

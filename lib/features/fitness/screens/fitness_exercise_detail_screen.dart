@@ -233,7 +233,7 @@ class FitnessExerciseDetailScreen extends ConsumerWidget {
       floatingActionButton: FloatingActionButton(
         onPressed: () => _showAddLogDialog(context, ref),
         tooltip: 'Додати результат',
-        child: const ColorFiltered(colorFilter: ColorFilter.mode(Colors.white, BlendMode.srcIn), child: TriumphIcon(TIcon.add, size: 24)),
+        child: const Icon(Icons.add, color: Colors.white, size: 24),
       ),
     );
   }
@@ -723,7 +723,7 @@ class _LogTile extends StatelessWidget {
           ],
         ),
         trailing: IconButton(
-          icon: const ColorFiltered(colorFilter: ColorFilter.mode(AppColors.error, BlendMode.srcIn), child: TriumphIcon(TIcon.delete, size: 22)),
+          icon: const Icon(Icons.delete_outline, color: AppColors.error, size: 22),
           onPressed: () async {
             final ok = await showDialog<bool>(
               context: context,
@@ -859,6 +859,7 @@ class _AddLogSheetState extends State<_AddLogSheet> {
                 onTap: () async {
                   final picked = await showDatePicker(
                     context: context,
+                    locale: const Locale('uk'),
                     initialDate: _date,
                     firstDate: DateTime(2020),
                     lastDate: DateTime.now(),
@@ -1029,6 +1030,7 @@ class _SetGoalDialogState extends State<_SetGoalDialog> {
             onTap: () async {
               final picked = await showDatePicker(
                 context: context,
+                locale: const Locale('uk'),
                 initialDate: _deadline,
                 firstDate: DateTime.now(),
                 lastDate: DateTime.now().add(const Duration(days: 730)),

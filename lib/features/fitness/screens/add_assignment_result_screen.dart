@@ -232,6 +232,7 @@ class _AddAssignmentResultScreenState
             onTap: () async {
               final picked = await showDatePicker(
                 context: context,
+                locale: const Locale('uk'),
                 initialDate: _date,
                 firstDate: assignment?.startDate ??
                     DateTime.now().subtract(const Duration(days: 365)),

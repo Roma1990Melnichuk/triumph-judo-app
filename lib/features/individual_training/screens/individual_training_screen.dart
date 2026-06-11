@@ -242,7 +242,7 @@ class _CoachView extends ConsumerWidget {
       floatingActionButton: FloatingActionButton(
         onPressed: () => _showAddSlotDialog(context, ref, userId, coachName),
         tooltip: 'Додати слот',
-        child: const ColorFiltered(colorFilter: ColorFilter.mode(Colors.white, BlendMode.srcIn), child: TriumphIcon(TIcon.add, size: 24)),
+        child: const Icon(Icons.add, color: Colors.white, size: 24),
       ),
     );
   }
@@ -789,7 +789,7 @@ class _AddSlotSheetState extends ConsumerState<_AddSlotSheet> {
                 minimumSize: const Size(0, 48),
                 padding: const EdgeInsets.symmetric(horizontal: 12),
               ),
-              child: const ColorFiltered(colorFilter: ColorFilter.mode(Colors.white, BlendMode.srcIn), child: TriumphIcon(TIcon.add, size: 18)),
+              child: const Icon(Icons.add, color: Colors.white, size: 18),
             ),
           ]),
           const SizedBox(height: 8),
