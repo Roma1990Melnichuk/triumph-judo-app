@@ -55,80 +55,168 @@ class _FitnessScreenState extends ConsumerState<FitnessScreen> {
 
     final loading = _seeding || exercisesAsync.isLoading;
 
+    final activeAssignments =
+        ref.watch(activeChildAssignmentsProvider(widget.childId));
+
     return Scaffold(
       backgroundColor: AppColors.background,
-      body: SafeArea(
-        child: Column(
-          children: [
-            Padding(
-              padding: const EdgeInsets.fromLTRB(12, 8, 20, 8),
-              child: Row(
-                children: [
-                  GestureDetector(
-                    onTap: () => context.pop(),
-                    child: Container(
-                      width: 44,
-                      height: 44,
-                      decoration: BoxDecoration(
-                        color: AppColors.surface2,
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      child: const Center(
-                        child: ColorFiltered(
-                          colorFilter: ColorFilter.mode(AppColors.textPrimary, BlendMode.srcIn),
-                          child: TriumphIcon(TIcon.back, size: 22),
-                        ),
-                      ),
-                    ),
+      body: CustomScrollView(
+        physics: const BouncingScrollPhysics(),
+        slivers: [
+          SliverAppBar(
+            expandedHeight: 140,
+            pinned: true,
+            backgroundColor: AppColors.background,
+            elevation: 0,
+            leading: GestureDetector(
+              onTap: () => context.pop(),
+              child: const Icon(
+                Icons.arrow_back_ios_new,
+                color: AppColors.textPrimary,
+                size: 20,
+              ),
+            ),
+            flexibleSpace: FlexibleSpaceBar(
+              collapseMode: CollapseMode.pin,
+              background: Container(
+                decoration: const BoxDecoration(
+                  gradient: LinearGradient(
+                    colors: [Color(0xFF1A1A1A), AppColors.background],
+                    begin: Alignment.topCenter,
+                    end: Alignment.bottomCenter,
                   ),
-                  const SizedBox(width: 12),
-                  Expanded(
+                ),
+                child: SafeArea(
+                  child: Padding(
+                    padding: const EdgeInsets.fromLTRB(20, 0, 20, 16),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
+                      mainAxisAlignment: MainAxisAlignment.end,
                       children: [
                         const Text(
                           'Фізична підготовка',
                           style: TextStyle(
-                            fontSize: 20,
+                            fontSize: 26,
                             fontWeight: FontWeight.w800,
-                            color: AppColors.textPrimary,
+                            color: Colors.white,
                           ),
                         ),
                         if (widget.childName.isNotEmpty)
                           Text(
                             widget.childName,
                             style: const TextStyle(
-                              fontSize: 12,
+                              fontSize: 13,
                               color: AppColors.textSecondary,
                             ),
                           ),
                       ],
                     ),
                   ),
-                ],
+                ),
               ),
             ),
-            Expanded(
-              child: loading
-                  ? const Center(child: CircularProgressIndicator())
-                  : exercises.isEmpty
-                      ? const Center(
-                          child: Text(
-                            'Немає вправ',
-                            style: TextStyle(color: AppColors.textSecondary),
-                          ),
-                        )
-                      : _FitnessBody(
-                          childId: widget.childId,
-                          childName: widget.childName,
-                          exercises: exercises,
-                          statsMap: statsMap,
-                          logs: logs,
-                          isCoach: isCoach,
+            title: const Text(
+              'Фізична підготовка',
+              style: TextStyle(
+                fontSize: 17,
+                fontWeight: FontWeight.bold,
+                color: AppColors.textPrimary,
+              ),
+            ),
+          ),
+
+          if (loading)
+            const SliverFillRemaining(
+              child: Center(child: CircularProgressIndicator()),
+            )
+          else if (exercises.isEmpty)
+            const SliverFillRemaining(
+              child: Center(
+                child: Text(
+                  'Немає вправ',
+                  style: TextStyle(color: AppColors.textSecondary),
+                ),
+              ),
+            )
+          else ...[
+            // ── Active assignments ─────────────────────────────────────────
+            if (activeAssignments.isNotEmpty) ...[
+              SliverToBoxAdapter(
+                child: Padding(
+                  padding: const EdgeInsets.fromLTRB(12, 12, 12, 0),
+                  child: Row(
+                    children: [
+                      ColorFiltered(
+                        colorFilter: const ColorFilter.mode(
+                            AppColors.accent, BlendMode.srcIn),
+                        child: TriumphIcon(TIcon.tasks, size: 16),
+                      ),
+                      const SizedBox(width: 6),
+                      Text(
+                        'Активні завдання (${activeAssignments.length})',
+                        style: const TextStyle(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 13,
+                          color: AppColors.accent,
                         ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+              SliverPadding(
+                padding: const EdgeInsets.fromLTRB(12, 8, 12, 4),
+                sliver: SliverList(
+                  delegate: SliverChildBuilderDelegate(
+                    (_, i) => Padding(
+                      padding: const EdgeInsets.only(bottom: 8),
+                      child: _AssignmentCard(
+                        assignment: activeAssignments[i],
+                        logs: logs,
+                        childId: widget.childId,
+                      ),
+                    ),
+                    childCount: activeAssignments.length,
+                  ),
+                ),
+              ),
+            ],
+
+            // ── Personal logs (coach view only) ───────────────────────────
+            if (isCoach) ..._personalLogsSection(logs),
+
+            // ── Exercise grid ──────────────────────────────────────────────
+            SliverPadding(
+              padding: const EdgeInsets.all(12),
+              sliver: SliverGrid(
+                gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                  crossAxisCount: 2,
+                  crossAxisSpacing: 10,
+                  mainAxisSpacing: 10,
+                  childAspectRatio: 1.05,
+                ),
+                delegate: SliverChildBuilderDelegate(
+                  (ctx, i) {
+                    final ex = exercises[i];
+                    return _ExerciseCard(
+                      exercise: ex,
+                      stat: statsMap[ex.id] ?? const _ExStat(),
+                      onTap: () => context.push(
+                        '/fitness/${widget.childId}/exercise/${ex.id}',
+                        extra: {
+                          'name': ex.name,
+                          'unit': ex.unit,
+                          'childName': widget.childName,
+                        },
+                      ),
+                    );
+                  },
+                  childCount: exercises.length,
+                ),
+              ),
             ),
           ],
-        ),
+        ],
       ),
       floatingActionButton: isCoach
           ? FloatingActionButton(
@@ -137,122 +225,6 @@ class _FitnessScreenState extends ConsumerState<FitnessScreen> {
               child: const Icon(Icons.add, color: Colors.white, size: 24),
             )
           : null,
-    );
-  }
-
-  void _showAddExerciseDialog(BuildContext context) {
-    showDialog<void>(
-      context: context,
-      builder: (_) => _AddExerciseDialog(
-        onCreate: (name, unit) =>
-            ref.read(fitnessNotifierProvider.notifier).addExercise(name, unit),
-      ),
-    );
-  }
-}
-
-// ── Body: assignments banner + exercise grid ──────────────────────────────────
-
-class _FitnessBody extends ConsumerWidget {
-  const _FitnessBody({
-    required this.childId,
-    required this.childName,
-    required this.exercises,
-    required this.statsMap,
-    required this.logs,
-    required this.isCoach,
-  });
-
-  final String childId;
-  final String childName;
-  final List<FitnessExercise> exercises;
-  final Map<String, _ExStat> statsMap;
-  final List<FitnessLog> logs;
-  final bool isCoach;
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final activeAssignments =
-        ref.watch(activeChildAssignmentsProvider(childId));
-
-    return CustomScrollView(
-      slivers: [
-        // ── Active assignments ───────────────────────────────────────────
-        if (activeAssignments.isNotEmpty) ...[
-          SliverToBoxAdapter(
-            child: Padding(
-              padding: const EdgeInsets.fromLTRB(12, 12, 12, 0),
-              child: Row(
-                children: [
-                  ColorFiltered(
-                    colorFilter: const ColorFilter.mode(AppColors.accent, BlendMode.srcIn),
-                    child: TriumphIcon(TIcon.tasks, size: 16),
-                  ),
-                  const SizedBox(width: 6),
-                  Text(
-                    'Активні завдання (${activeAssignments.length})',
-                    style: const TextStyle(
-                      fontWeight: FontWeight.bold,
-                      fontSize: 13,
-                      color: AppColors.accent,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ),
-          SliverPadding(
-            padding: const EdgeInsets.fromLTRB(12, 8, 12, 4),
-            sliver: SliverList(
-              delegate: SliverChildBuilderDelegate(
-                (_, i) => Padding(
-                  padding: const EdgeInsets.only(bottom: 8),
-                  child: _AssignmentCard(
-                    assignment: activeAssignments[i],
-                    logs: logs,
-                    childId: childId,
-                  ),
-                ),
-                childCount: activeAssignments.length,
-              ),
-            ),
-          ),
-        ],
-
-        // ── Personal logs (coach view only) ─────────────────────────────
-        if (isCoach) ..._personalLogsSection(logs),
-
-        // ── Exercise grid ────────────────────────────────────────────────
-        SliverPadding(
-          padding: const EdgeInsets.all(12),
-          sliver: SliverGrid(
-            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-              crossAxisCount: 2,
-              crossAxisSpacing: 10,
-              mainAxisSpacing: 10,
-              childAspectRatio: 1.05,
-            ),
-            delegate: SliverChildBuilderDelegate(
-              (ctx, i) {
-                final ex = exercises[i];
-                return _ExerciseCard(
-                  exercise: ex,
-                  stat: statsMap[ex.id] ?? const _ExStat(),
-                  onTap: () => context.push(
-                    '/fitness/$childId/exercise/${ex.id}',
-                    extra: {
-                      'name': ex.name,
-                      'unit': ex.unit,
-                      'childName': childName,
-                    },
-                  ),
-                );
-              },
-              childCount: exercises.length,
-            ),
-          ),
-        ),
-      ],
     );
   }
 
@@ -273,7 +245,8 @@ class _FitnessBody extends ConsumerWidget {
           child: Row(
             children: [
               ColorFiltered(
-                colorFilter: const ColorFilter.mode(AppColors.textSecondary, BlendMode.srcIn),
+                colorFilter: const ColorFilter.mode(
+                    AppColors.textSecondary, BlendMode.srcIn),
                 child: TriumphIcon(TIcon.training, size: 16),
               ),
               const SizedBox(width: 6),
@@ -297,7 +270,8 @@ class _FitnessBody extends ConsumerWidget {
               final log = recent[i];
               return Container(
                 margin: const EdgeInsets.only(bottom: 6),
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                 decoration: BoxDecoration(
                   color: AppColors.surface,
                   borderRadius: BorderRadius.circular(10),
@@ -308,7 +282,8 @@ class _FitnessBody extends ConsumerWidget {
                     Expanded(
                       child: Text(
                         log.exerciseName,
-                        style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w500),
+                        style: const TextStyle(
+                            fontSize: 13, fontWeight: FontWeight.w500),
                         overflow: TextOverflow.ellipsis,
                       ),
                     ),
@@ -324,7 +299,8 @@ class _FitnessBody extends ConsumerWidget {
                     const SizedBox(width: 8),
                     Text(
                       '${log.date.day}.${log.date.month.toString().padLeft(2, '0')}',
-                      style: const TextStyle(fontSize: 11, color: AppColors.textSecondary),
+                      style: const TextStyle(
+                          fontSize: 11, color: AppColors.textSecondary),
                     ),
                   ],
                 ),
@@ -335,6 +311,16 @@ class _FitnessBody extends ConsumerWidget {
         ),
       ),
     ];
+  }
+
+  void _showAddExerciseDialog(BuildContext context) {
+    showDialog<void>(
+      context: context,
+      builder: (_) => _AddExerciseDialog(
+        onCreate: (name, unit) =>
+            ref.read(fitnessNotifierProvider.notifier).addExercise(name, unit),
+      ),
+    );
   }
 }
 
@@ -570,8 +556,7 @@ class _ExerciseCard extends StatelessWidget {
             ] else
               const Text(
                 'Немає записів',
-                style:
-                    TextStyle(color: AppColors.textSecondary, fontSize: 11),
+                style: TextStyle(color: AppColors.textSecondary, fontSize: 11),
               ),
           ],
         ),
@@ -653,8 +638,8 @@ class _AddExerciseDialogState extends State<_AddExerciseDialog> {
                 onTap: () => setState(() => _unitCtrl.text = u),
                 child: AnimatedContainer(
                   duration: const Duration(milliseconds: 120),
-                  padding: const EdgeInsets.symmetric(
-                      horizontal: 10, vertical: 5),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
                   decoration: BoxDecoration(
                     color: selected
                         ? AppColors.primary
@@ -670,9 +655,8 @@ class _AddExerciseDialogState extends State<_AddExerciseDialog> {
                     u,
                     style: TextStyle(
                       fontSize: 12,
-                      fontWeight: selected
-                          ? FontWeight.w600
-                          : FontWeight.w400,
+                      fontWeight:
+                          selected ? FontWeight.w600 : FontWeight.w400,
                       color: selected
                           ? Colors.white
                           : AppColors.textSecondary,

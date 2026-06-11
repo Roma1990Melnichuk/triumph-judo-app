@@ -112,72 +112,84 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
               slivers: [
 
                 // ── Greeting ────────────────────────────────────────────────
-                SliverToBoxAdapter(
-                  child: Padding(
-                    padding: const EdgeInsets.fromLTRB(20, 22, 20, 0),
-                    child: _enter(0, Row(
-                      children: [
-                        DefaultAvatar(
-                          gender: null,
-                          size: 44,
-                          seed: user?.uid,
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        const SizedBox(width: 12),
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                '${_greeting()}, ${user?.name.split(' ').first ?? (isCoach ? 'Тренер' : 'Батьку')}!',
-                                style: const TextStyle(
-                                  fontSize: 22,
-                                  fontWeight: FontWeight.bold,
-                                  color: AppColors.textPrimary,
-                                ),
-                              ),
-                              const SizedBox(height: 3),
-                              const Text(
-                                'Готові до нових перемог?',
-                                style: TextStyle(
-                                  fontSize: 13,
-                                  color: AppColors.textSecondary,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                        // Bell icon with red dot
-                        GestureDetector(
-                          onTap: () => context.push('/notifications'),
-                          child: Stack(
-                            children: [
-                              Container(
-                                width: 44, height: 44,
-                                decoration: BoxDecoration(
-                                  color: AppColors.surface,
-                                  borderRadius: BorderRadius.circular(13),
-                                  border: Border.all(color: AppColors.surface3),
-                                ),
-                                child: const Center(
-                                  child: Icon(Icons.notifications_outlined, size: 26),
-                                ),
-                              ),
-                              Positioned(
-                                right: 9, top: 9,
-                                child: Container(
-                                  width: 8, height: 8,
-                                  decoration: const BoxDecoration(
-                                    color: AppColors.primary,
-                                    shape: BoxShape.circle,
+                SliverAppBar(
+                  expandedHeight: 110,
+                  pinned: false,
+                  floating: true,
+                  snap: true,
+                  backgroundColor: Colors.transparent,
+                  elevation: 0,
+                  automaticallyImplyLeading: false,
+                  flexibleSpace: FlexibleSpaceBar(
+                    collapseMode: CollapseMode.none,
+                    background: SafeArea(
+                      child: Padding(
+                        padding: const EdgeInsets.fromLTRB(20, 16, 20, 0),
+                        child: _enter(0, Row(
+                          children: [
+                            DefaultAvatar(
+                              gender: null,
+                              size: 44,
+                              seed: user?.uid,
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            const SizedBox(width: 12),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    '${_greeting()}, ${user?.name.split(' ').first ?? (isCoach ? 'Тренер' : 'Батьку')}!',
+                                    style: const TextStyle(
+                                      fontSize: 22,
+                                      fontWeight: FontWeight.bold,
+                                      color: AppColors.textPrimary,
+                                    ),
                                   ),
-                                ),
+                                  const SizedBox(height: 3),
+                                  const Text(
+                                    'Готові до нових перемог?',
+                                    style: TextStyle(
+                                      fontSize: 13,
+                                      color: AppColors.textSecondary,
+                                    ),
+                                  ),
+                                ],
                               ),
-                            ],
-                          ),
-                        ),
-                      ],
-                    )),
+                            ),
+                            // Bell icon with red dot
+                            GestureDetector(
+                              onTap: () => context.push('/notifications'),
+                              child: Stack(
+                                children: [
+                                  Container(
+                                    width: 44, height: 44,
+                                    decoration: BoxDecoration(
+                                      color: AppColors.surface,
+                                      borderRadius: BorderRadius.circular(13),
+                                      border: Border.all(color: AppColors.surface3),
+                                    ),
+                                    child: const Center(
+                                      child: Icon(Icons.notifications_outlined, size: 26),
+                                    ),
+                                  ),
+                                  Positioned(
+                                    right: 9, top: 9,
+                                    child: Container(
+                                      width: 8, height: 8,
+                                      decoration: const BoxDecoration(
+                                        color: AppColors.primary,
+                                        shape: BoxShape.circle,
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ],
+                        )),
+                      ),
+                    ),
                   ),
                 ),
 

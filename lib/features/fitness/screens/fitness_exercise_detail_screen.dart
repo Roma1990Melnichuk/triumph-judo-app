@@ -34,10 +34,8 @@ class FitnessExerciseDetailScreen extends ConsumerWidget {
     final logs = ref.watch(exerciseLogsProvider(key)); // asc by date
     final goalAsync = ref.watch(exerciseGoalProvider(key));
     final goal = goalAsync.asData?.value;
+    final peak = ref.watch(peakValueProvider(key));
 
-    final best = logs.isEmpty
-        ? null
-        : logs.map((l) => l.value).reduce(max);
     final latest = logs.isNotEmpty ? logs.last : null;
     final prev = logs.length > 1 ? logs[logs.length - 2] : null;
     final delta = (latest != null && prev != null)
@@ -46,194 +44,263 @@ class FitnessExerciseDetailScreen extends ConsumerWidget {
 
     return Scaffold(
       backgroundColor: AppColors.background,
-      body: SafeArea(
-        child: Column(
-          children: [
-            Padding(
-              padding: const EdgeInsets.fromLTRB(12, 8, 12, 8),
-              child: Row(
-                children: [
-                  GestureDetector(
-                    onTap: () => context.pop(),
-                    child: Container(
-                      width: 44,
-                      height: 44,
-                      decoration: BoxDecoration(
-                        color: AppColors.surface2,
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      child: const Center(
-                        child: ColorFiltered(
-                          colorFilter: ColorFilter.mode(AppColors.textPrimary, BlendMode.srcIn),
-                          child: TriumphIcon(TIcon.back, size: 22),
-                        ),
-                      ),
-                    ),
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: Text(
-                      exerciseName,
-                      style: const TextStyle(
-                        fontSize: 20,
-                        fontWeight: FontWeight.w800,
-                        color: AppColors.textPrimary,
-                      ),
-                    ),
-                  ),
-                  GestureDetector(
-                    onTap: () => _showGoalDialog(context, ref, goal),
-                    child: Container(
-                      width: 44,
-                      height: 44,
-                      decoration: BoxDecoration(
-                        color: AppColors.surface2,
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      child: const Center(
-                        child: Icon(Icons.flag_outlined, size: 22, color: AppColors.textPrimary),
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            Expanded(
-              child: logs.isEmpty
-          ? Center(
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  ColorFiltered(
-                    colorFilter: ColorFilter.mode(AppColors.textSecondary.withValues(alpha: 0.4), BlendMode.srcIn),
-                    child: const TriumphIcon(TIcon.training, size: 56),
-                  ),
-                  const SizedBox(height: 12),
-                  const Text(
-                    'Ще немає записів',
-                    style: TextStyle(color: AppColors.textSecondary),
-                  ),
-                  const SizedBox(height: 4),
-                  const Text(
-                    'Натисніть + щоб додати перший результат',
-                    style: TextStyle(
-                        color: AppColors.textSecondary, fontSize: 12),
-                  ),
-                ],
-              ),
-            )
-          : ListView(
-              padding: const EdgeInsets.only(bottom: 90),
-              children: [
-                // ── Stats row ────────────────────────────────────────────
-                Container(
-                  color: AppColors.surface,
-                  padding: const EdgeInsets.symmetric(
-                      horizontal: 8, vertical: 14),
-                  child: Row(
-                    children: [
-                      _StatCell(
-                        label: 'Найкращий',
-                        value:
-                            best != null ? '${_fmt(best)} $exerciseUnit' : '—',
-                        tIcon: TIcon.trophy,
-                        color: AppColors.goldMedal,
-                      ),
-                      _divider(),
-                      _StatCell(
-                        label: 'Останній',
-                        value: latest != null
-                            ? '${_fmt(latest.value)} $exerciseUnit'
-                            : '—',
-                        icon: Icons.access_time,
-                        color: AppColors.primary,
-                      ),
-                      _divider(),
-                      _StatCell(
-                        label: 'Приріст',
-                        value: delta != null
-                            ? '${delta >= 0 ? '+' : ''}${_fmt(delta)}'
-                            : '—',
-                        icon: delta == null
-                            ? Icons.trending_flat
-                            : delta > 0
-                                ? Icons.trending_up
-                                : Icons.trending_down,
-                        color: delta == null
-                            ? AppColors.textSecondary
-                            : delta > 0
-                                ? AppColors.success
-                                : AppColors.error,
-                      ),
-                    ],
-                  ),
-                ),
-
-                // ── Goal card ─────────────────────────────────────────────
-                if (goal != null) ...[
-                  _GoalCard(
-                    goal: goal,
-                    latest: latest?.value,
-                    unit: exerciseUnit,
-                    onDelete: () => ref
-                        .read(fitnessNotifierProvider.notifier)
-                        .deleteGoal(childId, exerciseId),
-                  ),
-                ],
-
-                // ── Chart ─────────────────────────────────────────────────
-                if (logs.length >= 2) ...[
-                  Padding(
-                    padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
-                    child: Text(
-                      'Прогрес',
-                      style: TextStyle(
-                        fontWeight: FontWeight.w600,
-                        fontSize: 13,
-                        color: AppColors.textSecondary
-                            .withValues(alpha: 0.8),
-                      ),
-                    ),
-                  ),
-                  _ProgressChart(
-                    logs: logs,
-                    goal: goal,
-                    unit: exerciseUnit,
-                    peakValue: best,
-                  ),
-                ],
-
-                // ── History list ──────────────────────────────────────────
-                Padding(
-                  padding: const EdgeInsets.fromLTRB(16, 20, 16, 8),
-                  child: Text(
-                    'Записи (${logs.length})',
-                    style: TextStyle(
-                      fontWeight: FontWeight.w600,
-                      fontSize: 13,
-                      color:
-                          AppColors.textSecondary.withValues(alpha: 0.8),
-                    ),
-                  ),
-                ),
-                ...logs.reversed.map((log) => _LogTile(
-                      log: log,
-                      unit: exerciseUnit,
-                      isBest: best != null && log.value == best,
-                      onDelete: () => ref
-                          .read(fitnessNotifierProvider.notifier)
-                          .deleteLog(log.id),
-                    )),
-              ],
-            ),
-            ),
-          ],
-        ),
-      ),
       floatingActionButton: FloatingActionButton(
         onPressed: () => _showAddLogDialog(context, ref),
         tooltip: 'Додати результат',
         child: const Icon(Icons.add, color: Colors.white, size: 24),
+      ),
+      body: CustomScrollView(
+        physics: const BouncingScrollPhysics(),
+        slivers: [
+          SliverAppBar(
+            expandedHeight: 180,
+            pinned: true,
+            backgroundColor: AppColors.background,
+            elevation: 0,
+            automaticallyImplyLeading: false,
+            leading: GestureDetector(
+              onTap: () => context.pop(),
+              child: const Icon(
+                Icons.arrow_back_ios_new,
+                color: AppColors.textPrimary,
+                size: 20,
+              ),
+            ),
+            actions: [
+              GestureDetector(
+                onTap: () => _showGoalDialog(context, ref, goal),
+                child: const Padding(
+                  padding: EdgeInsets.symmetric(horizontal: 12),
+                  child: Icon(
+                    Icons.flag_outlined,
+                    size: 22,
+                    color: AppColors.textPrimary,
+                  ),
+                ),
+              ),
+            ],
+            title: Text(
+              exerciseName,
+              style: const TextStyle(
+                fontSize: 17,
+                fontWeight: FontWeight.bold,
+                color: AppColors.textPrimary,
+              ),
+            ),
+            flexibleSpace: FlexibleSpaceBar(
+              collapseMode: CollapseMode.pin,
+              background: Container(
+                decoration: const BoxDecoration(
+                  gradient: LinearGradient(
+                    colors: [Color(0xFF1A1A1A), AppColors.background],
+                    begin: Alignment.topCenter,
+                    end: Alignment.bottomCenter,
+                  ),
+                ),
+                child: Padding(
+                  padding: const EdgeInsets.fromLTRB(20, 80, 20, 16),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisAlignment: MainAxisAlignment.end,
+                    children: [
+                      Text(
+                        exerciseName,
+                        style: const TextStyle(
+                          fontSize: 28,
+                          fontWeight: FontWeight.w800,
+                          color: AppColors.textPrimary,
+                        ),
+                      ),
+                      const SizedBox(height: 10),
+                      if (peak != null)
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 12, vertical: 6),
+                          decoration: BoxDecoration(
+                            color: AppColors.goldMedal.withValues(alpha: 0.15),
+                            borderRadius: BorderRadius.circular(8),
+                            border: Border.all(
+                              color:
+                                  AppColors.goldMedal.withValues(alpha: 0.4),
+                            ),
+                          ),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              const Icon(Icons.emoji_events,
+                                  color: AppColors.goldMedal, size: 16),
+                              const SizedBox(width: 6),
+                              Text(
+                                'Рекорд: ${_fmt(peak)} $exerciseUnit',
+                                style: const TextStyle(
+                                  color: AppColors.goldMedal,
+                                  fontWeight: FontWeight.w600,
+                                  fontSize: 13,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          ),
+
+          // ── Empty state ────────────────────────────────────────────────
+          if (logs.isEmpty)
+            const SliverFillRemaining(
+              child: Center(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(
+                      Icons.fitness_center,
+                      color: AppColors.textSecondary,
+                      size: 56,
+                    ),
+                    SizedBox(height: 12),
+                    Text(
+                      'Ще немає записів',
+                      style: TextStyle(color: AppColors.textSecondary),
+                    ),
+                    SizedBox(height: 4),
+                    Text(
+                      'Натисніть + щоб додати перший результат',
+                      style: TextStyle(
+                          color: AppColors.textSecondary, fontSize: 12),
+                    ),
+                  ],
+                ),
+              ),
+            )
+          else ...[
+            // ── Stats row ────────────────────────────────────────────────
+            SliverToBoxAdapter(
+              child: Container(
+                color: AppColors.surface,
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 8, vertical: 14),
+                child: Row(
+                  children: [
+                    _StatCell(
+                      label: 'Найкращий',
+                      value: peak != null
+                          ? '${_fmt(peak)} $exerciseUnit'
+                          : '—',
+                      tIcon: TIcon.trophy,
+                      color: AppColors.goldMedal,
+                    ),
+                    _divider(),
+                    _StatCell(
+                      label: 'Останній',
+                      value: latest != null
+                          ? '${_fmt(latest.value)} $exerciseUnit'
+                          : '—',
+                      icon: Icons.access_time,
+                      color: AppColors.primary,
+                    ),
+                    _divider(),
+                    _StatCell(
+                      label: 'Приріст',
+                      value: delta != null
+                          ? '${delta >= 0 ? '+' : ''}${_fmt(delta)}'
+                          : '—',
+                      icon: delta == null
+                          ? Icons.trending_flat
+                          : delta > 0
+                              ? Icons.trending_up
+                              : Icons.trending_down,
+                      color: delta == null
+                          ? AppColors.textSecondary
+                          : delta > 0
+                              ? AppColors.success
+                              : AppColors.error,
+                    ),
+                  ],
+                ),
+              ),
+            ),
+
+            // ── Goal card ─────────────────────────────────────────────────
+            if (goal != null)
+              SliverToBoxAdapter(
+                child: _GoalCard(
+                  goal: goal,
+                  latest: latest?.value,
+                  unit: exerciseUnit,
+                  onDelete: () => ref
+                      .read(fitnessNotifierProvider.notifier)
+                      .deleteGoal(childId, exerciseId),
+                ),
+              ),
+
+            // ── Chart ─────────────────────────────────────────────────────
+            if (logs.length >= 2) ...[
+              SliverToBoxAdapter(
+                child: Padding(
+                  padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
+                  child: Text(
+                    'Прогрес',
+                    style: TextStyle(
+                      fontWeight: FontWeight.w600,
+                      fontSize: 13,
+                      color: AppColors.textSecondary.withValues(alpha: 0.8),
+                    ),
+                  ),
+                ),
+              ),
+              SliverToBoxAdapter(
+                child: _ProgressChart(
+                  logs: logs,
+                  goal: goal,
+                  unit: exerciseUnit,
+                  peakValue: peak,
+                ),
+              ),
+            ],
+
+            // ── History header ────────────────────────────────────────────
+            SliverToBoxAdapter(
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(16, 20, 16, 8),
+                child: Text(
+                  'Журнал тренувань (${logs.length})',
+                  style: TextStyle(
+                    fontWeight: FontWeight.w600,
+                    fontSize: 13,
+                    color: AppColors.textSecondary.withValues(alpha: 0.8),
+                  ),
+                ),
+              ),
+            ),
+
+            // ── Log entries ───────────────────────────────────────────────
+            SliverList(
+              delegate: SliverChildBuilderDelegate(
+                (context, index) {
+                  final reversed = logs.reversed.toList();
+                  final log = reversed[index];
+                  return _LogTile(
+                    log: log,
+                    unit: exerciseUnit,
+                    isBest: peak != null && log.value == peak,
+                    onDelete: () => ref
+                        .read(fitnessNotifierProvider.notifier)
+                        .deleteLog(log.id),
+                  );
+                },
+                childCount: logs.length,
+              ),
+            ),
+
+            // ── Bottom padding ────────────────────────────────────────────
+            const SliverPadding(
+              padding: EdgeInsets.only(bottom: 90),
+            ),
+          ],
+        ],
       ),
     );
   }
@@ -870,7 +937,7 @@ class _AddLogSheetState extends State<_AddLogSheet> {
                   decoration: const InputDecoration(
                     labelText: 'Дата',
                     suffixIcon: ColorFiltered(
-                      colorFilter: const ColorFilter.mode(AppColors.textSecondary, BlendMode.srcIn),
+                      colorFilter: ColorFilter.mode(AppColors.textSecondary, BlendMode.srcIn),
                       child: TriumphIcon(TIcon.calendar, size: 18),
                     ),
                   ),

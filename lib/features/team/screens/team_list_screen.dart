@@ -65,340 +65,222 @@ class _TeamListScreenState extends ConsumerState<TeamListScreen> {
 
     final total = isCoach ? (allChildren.value?.length ?? 0) : children.length;
 
+    // Apply quick filter
+    final quickFiltered = allChildren.isLoading
+        ? <dynamic>[]
+        : children.where((c) {
+            switch (_quickFilter) {
+              case _TeamFilter.all:   return true;
+              case _TeamFilter.boys:  return c.gender == Gender.male;
+              case _TeamFilter.girls: return c.gender == Gender.female;
+            }
+          }).toList();
+
+    // Compute peer ranks
+    final quickSorted = [...quickFiltered]..sort((a, b) {
+      final cmp = b.totalPoints.compareTo(a.totalPoints);
+      if (cmp != 0) return cmp;
+      return a.lastName.compareTo(b.lastName);
+    });
+    final yearTotals = <int, int>{};
+    final yearCounters = <int, int>{};
+    final sameYearRanks = <String, int>{};
+    final weightTotals = <String, int>{};
+    final weightCounters = <String, int>{};
+    final sameWeightRanks = <String, int>{};
+    for (final c in quickSorted) {
+      yearTotals[c.birthYear] = (yearTotals[c.birthYear] ?? 0) + 1;
+      yearCounters[c.birthYear] = (yearCounters[c.birthYear] ?? 0) + 1;
+      sameYearRanks[c.id] = yearCounters[c.birthYear]!;
+      final wKey = '${c.birthYear}/${c.weightCategory}';
+      weightTotals[wKey] = (weightTotals[wKey] ?? 0) + 1;
+      weightCounters[wKey] = (weightCounters[wKey] ?? 0) + 1;
+      sameWeightRanks[c.id] = weightCounters[wKey]!;
+    }
+
+    final filterWidget = _FilterSection(
+      isCoach: isCoach,
+      filter: filter,
+      quickFilter: _quickFilter,
+      filtersExpanded: _filtersExpanded,
+      searchCtrl: _searchCtrl,
+      coaches: coaches,
+      birthYears: birthYears,
+      birthYearCounts: birthYearCounts,
+      weightCategories: weightCategories,
+      onQuickFilterChanged: (f) => setState(() => _quickFilter = f),
+      onToggleFilters: () => setState(() => _filtersExpanded = !_filtersExpanded),
+      onShowBeltPicker: () => _showBeltPicker(context, filter),
+      onShowYearPicker: () => _showYearPicker(context, filter, birthYears, birthYearCounts),
+      onShowCoachPicker: () => _showCoachPicker(context, filter, coaches),
+      onShowWeightPicker: () => _showWeightPicker(context, filter, weightCategories),
+      onShowGenderPicker: () => _showGenderPicker(context, filter),
+      onShowMembershipPicker: () => _showMembershipPicker(context, filter),
+      ref: ref,
+    );
+
     return Scaffold(
       backgroundColor: AppColors.background,
-      body: SafeArea(
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // ── Header ──────────────────────────────────────────────────────
-            Padding(
-              padding: const EdgeInsets.fromLTRB(20, 16, 16, 12),
-              child: Row(
-                children: [
-                  Expanded(
+      body: CustomScrollView(
+        physics: const BouncingScrollPhysics(),
+        slivers: [
+          // ── Sliver app bar with title ──────────────────────────────────
+          SliverAppBar(
+            expandedHeight: 100,
+            pinned: true,
+            backgroundColor: AppColors.background,
+            elevation: 0,
+            automaticallyImplyLeading: false,
+            flexibleSpace: FlexibleSpaceBar(
+              collapseMode: CollapseMode.pin,
+              background: Container(
+                color: AppColors.background,
+                child: SafeArea(
+                  child: Padding(
+                    padding: const EdgeInsets.fromLTRB(20, 16, 16, 8),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
+                      mainAxisAlignment: MainAxisAlignment.end,
                       children: [
-                        const Text(
-                          'Команда',
-                          style: TextStyle(
-                            fontSize: 24,
-                            fontWeight: FontWeight.w800,
-                            color: AppColors.textPrimary,
-                          ),
-                        ),
-                        Text(
-                          '$total спортсменів',
-                          style: const TextStyle(
-                            fontSize: 12,
-                            color: AppColors.textSecondary,
-                          ),
+                        Row(
+                          children: [
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  const Text(
+                                    'Команда',
+                                    style: TextStyle(
+                                      fontSize: 28,
+                                      fontWeight: FontWeight.w800,
+                                      color: AppColors.textPrimary,
+                                    ),
+                                  ),
+                                  Text(
+                                    '$total спортсменів',
+                                    style: const TextStyle(
+                                      fontSize: 13,
+                                      color: AppColors.textSecondary,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                            if (isCoach)
+                              GestureDetector(
+                                onTap: () {
+                                  final filtered = ref.read(filteredChildrenProvider);
+                                  ExportService.exportAthletes(context, filtered);
+                                },
+                                child: Container(
+                                  width: 44,
+                                  height: 44,
+                                  decoration: BoxDecoration(
+                                    color: AppColors.surface2,
+                                    borderRadius: BorderRadius.circular(12),
+                                    border: Border.all(color: AppColors.surface3),
+                                  ),
+                                  alignment: Alignment.center,
+                                  child: const Icon(Icons.download_outlined,
+                                      color: AppColors.textSecondary, size: 20),
+                                ),
+                              ),
+                            const SizedBox(width: 8),
+                            GestureDetector(
+                              onTap: () =>
+                                  setState(() => _filtersExpanded = !_filtersExpanded),
+                              child: Container(
+                                width: 44,
+                                height: 44,
+                                decoration: BoxDecoration(
+                                  color: _filtersExpanded
+                                      ? AppColors.primary.withValues(alpha: 0.15)
+                                      : AppColors.surface2,
+                                  borderRadius: BorderRadius.circular(12),
+                                  border: Border.all(
+                                    color: _filtersExpanded
+                                        ? AppColors.primary.withValues(alpha: 0.5)
+                                        : AppColors.surface3,
+                                  ),
+                                ),
+                                alignment: Alignment.center,
+                                child: Icon(
+                                  _filtersExpanded
+                                      ? Icons.filter_list_off
+                                      : Icons.filter_list,
+                                  color: _filtersExpanded
+                                      ? AppColors.primary
+                                      : AppColors.textSecondary,
+                                  size: 20,
+                                ),
+                              ),
+                            ),
+                          ],
                         ),
                       ],
                     ),
                   ),
-                  if (isCoach)
-                    GestureDetector(
-                      onTap: () {
-                        final filtered = ref.read(filteredChildrenProvider);
-                        ExportService.exportAthletes(context, filtered);
-                      },
-                      child: Container(
-                        width: 44,
-                        height: 44,
-                        decoration: BoxDecoration(
-                          color: AppColors.surface2,
-                          borderRadius: BorderRadius.circular(12),
-                          border: Border.all(color: AppColors.surface3),
-                        ),
-                        alignment: Alignment.center,
-                        child: const Icon(Icons.download_outlined,
-                            color: AppColors.textSecondary, size: 20),
-                      ),
-                    ),
-                  const SizedBox(width: 8),
-                  GestureDetector(
-                    onTap: () =>
-                        setState(() => _filtersExpanded = !_filtersExpanded),
-                    child: Container(
-                      width: 44,
-                      height: 44,
-                      decoration: BoxDecoration(
-                        color: _filtersExpanded
-                            ? AppColors.primary.withValues(alpha: 0.15)
-                            : AppColors.surface2,
-                        borderRadius: BorderRadius.circular(12),
-                        border: Border.all(
-                          color: _filtersExpanded
-                              ? AppColors.primary.withValues(alpha: 0.5)
-                              : AppColors.surface3,
-                        ),
-                      ),
-                      alignment: Alignment.center,
-                      child: Icon(
-                        _filtersExpanded
-                            ? Icons.filter_list_off
-                            : Icons.filter_list,
-                        color: _filtersExpanded
-                            ? AppColors.primary
-                            : AppColors.textSecondary,
-                        size: 20,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          // ── Quick filter tabs — coaches only ─────────────────────────
-          if (isCoach)
-          Container(
-            color: AppColors.surface,
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-            child: Row(
-              children: [
-                _QuickFilterChip(
-                    label: 'Всі',
-                    active: _quickFilter == _TeamFilter.all,
-                    onTap: () => setState(() => _quickFilter = _TeamFilter.all)),
-                const SizedBox(width: 8),
-                _QuickFilterChip(
-                    label: 'Юнаки',
-                    active: _quickFilter == _TeamFilter.boys,
-                    onTap: () => setState(() => _quickFilter = _TeamFilter.boys)),
-                const SizedBox(width: 8),
-                _QuickFilterChip(
-                    label: 'Дівчата',
-                    active: _quickFilter == _TeamFilter.girls,
-                    onTap: () => setState(() => _quickFilter = _TeamFilter.girls)),
-              ],
-            ),
-          ),
-
-          // Search bar — coaches only
-          if (isCoach)
-          Padding(
-            padding:
-                const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-            child: TextField(
-              controller: _searchCtrl,
-              keyboardType: TextInputType.text,
-              decoration: InputDecoration(
-                hintText: 'Пошук за прізвищем...',
-                prefixIcon: const Icon(Icons.search),
-                suffixIcon: IconButton(
-                  icon: Icon(
-                    Icons.clear,
-                    color: filter.lastName.isNotEmpty
-                        ? null
-                        : Colors.transparent,
-                  ),
-                  onPressed: filter.lastName.isNotEmpty
-                      ? () {
-                          _searchCtrl.clear();
-                          ref
-                              .read(childrenFilterProvider.notifier)
-                              .update((s) => s.copyWith(lastName: ''));
-                        }
-                      : null,
                 ),
               ),
             ),
           ),
 
-          // Filter chips
-          if (_filtersExpanded) ...[
-            const Divider(height: 1),
-            SingleChildScrollView(
-              scrollDirection: Axis.horizontal,
-              padding:
-                  const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-              child: Row(
-                children: [
-                  // Belt filter
-                  _FilterChip(
-                    label: filter.belt?.displayName ?? 'Пояс',
-                    selected: filter.belt != null,
-                    onTap: () => _showBeltPicker(context, filter),
-                    onClear: filter.belt != null
-                        ? () => ref
-                            .read(childrenFilterProvider.notifier)
-                            .state = filter.copyWith(clearBelt: true)
-                        : null,
-                  ),
-                  const SizedBox(width: 8),
-                  // Year filter
-                  _FilterChip(
-                    label: filter.birthYear?.toString() ?? 'Рік н.',
-                    selected: filter.birthYear != null,
-                    onTap: () => _showYearPicker(context, filter, birthYears, birthYearCounts),
-                    onClear: filter.birthYear != null
-                        ? () => ref
-                            .read(childrenFilterProvider.notifier)
-                            .state =
-                            filter.copyWith(clearBirthYear: true)
-                        : null,
-                  ),
-                  const SizedBox(width: 8),
-                  // Coach filter
-                  if (coaches.isNotEmpty) ...[
-                    _FilterChip(
-                      label: coaches
-                              .where((c) => c.id == filter.coachId)
-                              .firstOrNull
-                              ?.name ??
-                          'Тренер',
-                      selected: filter.coachId != null,
-                      onTap: () =>
-                          _showCoachPicker(context, filter, coaches),
-                      onClear: filter.coachId != null
-                          ? () => ref
-                              .read(childrenFilterProvider.notifier)
-                              .state =
-                              filter.copyWith(clearCoachId: true)
-                          : null,
-                    ),
-                    const SizedBox(width: 8),
-                  ],
-                  // Weight filter
-                  if (weightCategories.isNotEmpty) ...[
-                    _FilterChip(
-                      label: filter.weightCategory != null
-                          ? displayWeight(filter.weightCategory!)
-                          : 'Вага',
-                      selected: filter.weightCategory != null,
-                      onTap: () => _showWeightPicker(context, filter, weightCategories),
-                      onClear: filter.weightCategory != null
-                          ? () => ref
-                              .read(childrenFilterProvider.notifier)
-                              .state = filter.copyWith(clearWeightCategory: true)
-                          : null,
-                    ),
-                    const SizedBox(width: 8),
-                  ],
-                  // Gender filter
-                  _FilterChip(
-                    label: filter.gender?.displayName ?? 'Стать',
-                    selected: filter.gender != null,
-                    onTap: () => _showGenderPicker(context, filter),
-                    onClear: filter.gender != null
-                        ? () => ref
-                            .read(childrenFilterProvider.notifier)
-                            .update((s) => s.copyWith(clearGender: true))
-                        : null,
-                  ),
-                  const SizedBox(width: 8),
-                  // Belt ready filter
-                  _FilterChip(
-                    label: 'Допущені до пояса',
-                    selected: filter.beltReady,
-                    onTap: () => ref
-                        .read(childrenFilterProvider.notifier)
-                        .update((s) => s.copyWith(beltReady: !s.beltReady)),
-                    onClear: filter.beltReady
-                        ? () => ref
-                            .read(childrenFilterProvider.notifier)
-                            .update((s) => s.copyWith(beltReady: false))
-                        : null,
-                  ),
-                  const SizedBox(width: 8),
-                  // Membership status filter
-                  _FilterChip(
-                    label: filter.membershipStatus != null
-                        ? _membershipStatusLabel(filter.membershipStatus!)
-                        : 'Абонемент',
-                    selected: filter.membershipStatus != null,
-                    onTap: () => _showMembershipPicker(context, filter),
-                    onClear: filter.membershipStatus != null
-                        ? () => ref
-                            .read(childrenFilterProvider.notifier)
-                            .update((s) => s.copyWith(clearMembershipStatus: true))
-                        : null,
-                  ),
-                ],
+          // ── Sticky filter bar ──────────────────────────────────────────
+          SliverToBoxAdapter(
+            child: Material(
+              color: AppColors.background,
+              child: AnimatedSize(
+                duration: const Duration(milliseconds: 200),
+                curve: Curves.easeInOut,
+                alignment: Alignment.topCenter,
+                child: filterWidget,
               ),
             ),
-            const Divider(height: 1),
-          ],
-
-          // Children list
-          Expanded(
-            child: allChildren.isLoading
-                ? const Center(child: CircularProgressIndicator())
-                : children.isEmpty
-                    ? EmptyState(
-                        tIcon: TIcon.team,
-                        message: isCoach
-                            ? 'Команда порожня\nДодайте першого спортсмена або\nімпортуйте список з CSV у Налаштуваннях'
-                            : 'Список порожній',
-                        action: isCoach
-                            ? () => context.push('/team/add')
-                            : null,
-                        actionLabel: 'Додати спортсмена',
-                      )
-                    : Builder(builder: (_) {
-                        // Apply quick filter
-                        final quickFiltered = children.where((c) {
-                          switch (_quickFilter) {
-                            case _TeamFilter.all:   return true;
-                            case _TeamFilter.boys:  return c.gender == Gender.male;
-                            case _TeamFilter.girls: return c.gender == Gender.female;
-                          }
-                        }).toList();
-
-                        // Peer ranks computed from the same set that drives rank: i+1
-                        final quickSorted = [...quickFiltered]..sort((a, b) {
-                          final cmp = b.totalPoints.compareTo(a.totalPoints);
-                          if (cmp != 0) return cmp;
-                          return a.lastName.compareTo(b.lastName);
-                        });
-                        final yearTotals = <int, int>{};
-                        final yearCounters = <int, int>{};
-                        final sameYearRanks = <String, int>{};
-                        final weightTotals = <String, int>{};
-                        final weightCounters = <String, int>{};
-                        final sameWeightRanks = <String, int>{};
-                        for (final c in quickSorted) {
-                          yearTotals[c.birthYear] =
-                              (yearTotals[c.birthYear] ?? 0) + 1;
-                          yearCounters[c.birthYear] =
-                              (yearCounters[c.birthYear] ?? 0) + 1;
-                          sameYearRanks[c.id] = yearCounters[c.birthYear]!;
-                          final wKey = '${c.birthYear}/${c.weightCategory}';
-                          weightTotals[wKey] = (weightTotals[wKey] ?? 0) + 1;
-                          weightCounters[wKey] = (weightCounters[wKey] ?? 0) + 1;
-                          sameWeightRanks[c.id] = weightCounters[wKey]!;
-                        }
-                        return ListView.builder(
-                          padding:
-                              const EdgeInsets.only(top: 4, bottom: 80),
-                          itemCount: quickFiltered.length,
-                          itemBuilder: (context, i) {
-                            final child = quickFiltered[i];
-                            final isOwn = user?.ownsChild(child.id) ?? false;
-                            return ChildCard(
-                              child: child,
-                              rank: i + 1,
-                              sameYearRank: sameYearRanks[child.id],
-                              sameYearTotal: yearTotals[child.birthYear],
-                              sameWeightRank: sameWeightRanks[child.id],
-                              sameWeightTotal: weightTotals['${child.birthYear}/${child.weightCategory}'],
-                              isOwn: !isCoach && isOwn,
-                              membershipStatus: isCoach
-                                  ? membershipMap[child.id]
-                                  : null,
-                              membershipEndDate: isCoach
-                                  ? membershipEndDateMap[child.id]
-                                  : null,
-                              showAttendance: isCoach,
-                              onTap: () => context.push('/team/${child.id}'),
-                            );
-                          },
-                        );
-                      }),
           ),
+
+          // ── Main list ─────────────────────────────────────────────────
+          if (allChildren.isLoading)
+            const SliverFillRemaining(
+              child: Center(child: CircularProgressIndicator()),
+            )
+          else if (quickFiltered.isEmpty)
+            SliverFillRemaining(
+              child: EmptyState(
+                tIcon: TIcon.team,
+                message: isCoach
+                    ? 'Команда порожня\nДодайте першого спортсмена або\nімпортуйте список з CSV у Налаштуваннях'
+                    : 'Список порожній',
+                action: isCoach ? () => context.push('/team/add') : null,
+                actionLabel: 'Додати спортсмена',
+              ),
+            )
+          else
+            SliverPadding(
+              padding: const EdgeInsets.fromLTRB(12, 8, 12, 100),
+              sliver: SliverList(
+                delegate: SliverChildBuilderDelegate(
+                  (ctx, i) {
+                    final child = quickFiltered[i];
+                    final isOwn = user?.ownsChild(child.id) ?? false;
+                    return ChildCard(
+                      child: child,
+                      rank: i + 1,
+                      sameYearRank: sameYearRanks[child.id],
+                      sameYearTotal: yearTotals[child.birthYear],
+                      sameWeightRank: sameWeightRanks[child.id],
+                      sameWeightTotal: weightTotals['${child.birthYear}/${child.weightCategory}'],
+                      isOwn: !isCoach && isOwn,
+                      membershipStatus: isCoach ? membershipMap[child.id] : null,
+                      membershipEndDate: isCoach ? membershipEndDateMap[child.id] : null,
+                      showAttendance: isCoach,
+                      onTap: () => ctx.push('/team/${child.id}'),
+                    );
+                  },
+                  childCount: quickFiltered.length,
+                ),
+              ),
+            ),
         ],
-        ),
       ),
       floatingActionButton: isCoach
           ? FloatingActionButton(
@@ -545,8 +427,7 @@ class _TeamListScreenState extends ConsumerState<TeamListScreen> {
             padding: EdgeInsets.all(16),
             child: Text(
               'Тренер',
-              style:
-                  TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+              style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
             ),
           ),
           ...coaches.map(
@@ -628,18 +509,22 @@ class _TeamListScreenState extends ConsumerState<TeamListScreen> {
           children: [
             const Padding(
               padding: EdgeInsets.all(16),
-              child: Text('Стать', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+              child: Text('Стать',
+                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
             ),
             ...Gender.values.map((g) {
               final selected = filter.gender == g;
               return ListTile(
                 leading: Text(g.icon, style: const TextStyle(fontSize: 22)),
                 title: Text(g.displayName),
-                trailing: selected ? const Icon(Icons.check, color: AppColors.primary) : null,
+                trailing: selected
+                    ? const Icon(Icons.check, color: AppColors.primary)
+                    : null,
                 selected: selected,
                 selectedColor: AppColors.primary,
                 onTap: () {
-                  ref.read(childrenFilterProvider.notifier)
+                  ref
+                      .read(childrenFilterProvider.notifier)
                       .update((s) => s.copyWith(gender: g));
                   Navigator.pop(context);
                 },
@@ -700,24 +585,251 @@ class _TeamListScreenState extends ConsumerState<TeamListScreen> {
       ),
     );
   }
-
 }
+
+// ── Filter section widget ─────────────────────────────────────────────────────
+
+class _FilterSection extends StatelessWidget {
+  const _FilterSection({
+    required this.isCoach,
+    required this.filter,
+    required this.quickFilter,
+    required this.filtersExpanded,
+    required this.searchCtrl,
+    required this.coaches,
+    required this.birthYears,
+    required this.birthYearCounts,
+    required this.weightCategories,
+    required this.onQuickFilterChanged,
+    required this.onToggleFilters,
+    required this.onShowBeltPicker,
+    required this.onShowYearPicker,
+    required this.onShowCoachPicker,
+    required this.onShowWeightPicker,
+    required this.onShowGenderPicker,
+    required this.onShowMembershipPicker,
+    required this.ref,
+  });
+
+  final bool isCoach;
+  final ChildrenFilter filter;
+  final _TeamFilter quickFilter;
+  final bool filtersExpanded;
+  final TextEditingController searchCtrl;
+  final List<({String id, String name})> coaches;
+  final List<int> birthYears;
+  final Map<int, int> birthYearCounts;
+  final List<String> weightCategories;
+  final ValueChanged<_TeamFilter> onQuickFilterChanged;
+  final VoidCallback onToggleFilters;
+  final VoidCallback onShowBeltPicker;
+  final VoidCallback onShowYearPicker;
+  final VoidCallback onShowCoachPicker;
+  final VoidCallback onShowWeightPicker;
+  final VoidCallback onShowGenderPicker;
+  final VoidCallback onShowMembershipPicker;
+  final WidgetRef ref;
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        // ── Quick filter tabs — coaches only ──────────────────────────
+        if (isCoach)
+          Container(
+            color: AppColors.surface,
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+            child: Row(
+              children: [
+                _QuickFilterChip(
+                  label: 'Всі',
+                  active: quickFilter == _TeamFilter.all,
+                  onTap: () => onQuickFilterChanged(_TeamFilter.all),
+                ),
+                const SizedBox(width: 8),
+                _QuickFilterChip(
+                  label: 'Юнаки',
+                  active: quickFilter == _TeamFilter.boys,
+                  onTap: () => onQuickFilterChanged(_TeamFilter.boys),
+                ),
+                const SizedBox(width: 8),
+                _QuickFilterChip(
+                  label: 'Дівчата',
+                  active: quickFilter == _TeamFilter.girls,
+                  onTap: () => onQuickFilterChanged(_TeamFilter.girls),
+                ),
+              ],
+            ),
+          ),
+
+        // ── Search bar — coaches only ──────────────────────────────────
+        if (isCoach)
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+            child: TextField(
+              controller: searchCtrl,
+              keyboardType: TextInputType.text,
+              decoration: InputDecoration(
+                hintText: 'Пошук за прізвищем...',
+                prefixIcon: const Icon(Icons.search),
+                suffixIcon: IconButton(
+                  icon: Icon(
+                    Icons.clear,
+                    color: filter.lastName.isNotEmpty
+                        ? null
+                        : Colors.transparent,
+                  ),
+                  onPressed: filter.lastName.isNotEmpty
+                      ? () {
+                          searchCtrl.clear();
+                          ref
+                              .read(childrenFilterProvider.notifier)
+                              .update((s) => s.copyWith(lastName: ''));
+                        }
+                      : null,
+                ),
+              ),
+            ),
+          ),
+
+        // ── Advanced filter chips ──────────────────────────────────────
+        if (filtersExpanded) ...[
+          const Divider(height: 1),
+          SingleChildScrollView(
+            scrollDirection: Axis.horizontal,
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+            child: Row(
+              children: [
+                // Belt filter
+                _FilterChip(
+                  label: filter.belt?.displayName ?? 'Пояс',
+                  selected: filter.belt != null,
+                  onTap: onShowBeltPicker,
+                  onClear: filter.belt != null
+                      ? () => ref
+                          .read(childrenFilterProvider.notifier)
+                          .state = filter.copyWith(clearBelt: true)
+                      : null,
+                ),
+                const SizedBox(width: 8),
+                // Year filter
+                _FilterChip(
+                  label: filter.birthYear?.toString() ?? 'Рік н.',
+                  selected: filter.birthYear != null,
+                  onTap: onShowYearPicker,
+                  onClear: filter.birthYear != null
+                      ? () => ref
+                          .read(childrenFilterProvider.notifier)
+                          .state = filter.copyWith(clearBirthYear: true)
+                      : null,
+                ),
+                const SizedBox(width: 8),
+                // Coach filter
+                if (coaches.isNotEmpty) ...[
+                  _FilterChip(
+                    label: coaches
+                            .where((c) => c.id == filter.coachId)
+                            .firstOrNull
+                            ?.name ??
+                        'Тренер',
+                    selected: filter.coachId != null,
+                    onTap: onShowCoachPicker,
+                    onClear: filter.coachId != null
+                        ? () => ref
+                            .read(childrenFilterProvider.notifier)
+                            .state = filter.copyWith(clearCoachId: true)
+                        : null,
+                  ),
+                  const SizedBox(width: 8),
+                ],
+                // Weight filter
+                if (weightCategories.isNotEmpty) ...[
+                  _FilterChip(
+                    label: filter.weightCategory != null
+                        ? displayWeight(filter.weightCategory!)
+                        : 'Вага',
+                    selected: filter.weightCategory != null,
+                    onTap: onShowWeightPicker,
+                    onClear: filter.weightCategory != null
+                        ? () => ref
+                            .read(childrenFilterProvider.notifier)
+                            .state =
+                            filter.copyWith(clearWeightCategory: true)
+                        : null,
+                  ),
+                  const SizedBox(width: 8),
+                ],
+                // Gender filter
+                _FilterChip(
+                  label: filter.gender?.displayName ?? 'Стать',
+                  selected: filter.gender != null,
+                  onTap: onShowGenderPicker,
+                  onClear: filter.gender != null
+                      ? () => ref
+                          .read(childrenFilterProvider.notifier)
+                          .update((s) => s.copyWith(clearGender: true))
+                      : null,
+                ),
+                const SizedBox(width: 8),
+                // Belt ready filter
+                _FilterChip(
+                  label: 'Допущені до пояса',
+                  selected: filter.beltReady,
+                  onTap: () => ref
+                      .read(childrenFilterProvider.notifier)
+                      .update((s) => s.copyWith(beltReady: !s.beltReady)),
+                  onClear: filter.beltReady
+                      ? () => ref
+                          .read(childrenFilterProvider.notifier)
+                          .update((s) => s.copyWith(beltReady: false))
+                      : null,
+                ),
+                const SizedBox(width: 8),
+                // Membership status filter
+                _FilterChip(
+                  label: filter.membershipStatus != null
+                      ? _membershipStatusLabel(filter.membershipStatus!)
+                      : 'Абонемент',
+                  selected: filter.membershipStatus != null,
+                  onTap: onShowMembershipPicker,
+                  onClear: filter.membershipStatus != null
+                      ? () => ref
+                          .read(childrenFilterProvider.notifier)
+                          .update(
+                              (s) => s.copyWith(clearMembershipStatus: true))
+                      : null,
+                ),
+              ],
+            ),
+          ),
+          const Divider(height: 1),
+        ],
+      ],
+    );
+  }
+}
+
+// ── Helpers ───────────────────────────────────────────────────────────────────
 
 String _membershipStatusLabel(MembershipStatus s) {
   switch (s) {
-    case MembershipStatus.active:      return 'Активний';
+    case MembershipStatus.active:       return 'Активний';
     case MembershipStatus.expiringSoon: return 'Закінчується';
-    case MembershipStatus.expired:     return 'Прострочений';
+    case MembershipStatus.expired:      return 'Прострочений';
   }
 }
 
 Color _membershipStatusColor(MembershipStatus s) {
   switch (s) {
-    case MembershipStatus.active:      return const Color(0xFF27AE60);
+    case MembershipStatus.active:       return const Color(0xFF27AE60);
     case MembershipStatus.expiringSoon: return const Color(0xFFFF8A00);
-    case MembershipStatus.expired:     return const Color(0xFFD50000);
+    case MembershipStatus.expired:      return const Color(0xFFD50000);
   }
 }
+
+// ── Filter chip ───────────────────────────────────────────────────────────────
 
 class _FilterChip extends StatelessWidget {
   const _FilterChip({
@@ -744,9 +856,7 @@ class _FilterChip extends StatelessWidget {
           gradient: selected ? AppColors.redGoldGradient : null,
           borderRadius: BorderRadius.circular(20),
           border: Border.all(
-            color: selected
-                ? Colors.transparent
-                : AppColors.surface3,
+            color: selected ? Colors.transparent : AppColors.surface3,
             width: 1,
           ),
           boxShadow: selected

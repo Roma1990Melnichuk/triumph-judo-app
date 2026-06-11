@@ -1,3 +1,4 @@
+import 'dart:math' as math;
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:uuid/uuid.dart';
@@ -49,6 +50,13 @@ final exerciseLogsProvider =
       .where((l) => l.exerciseId == key.exerciseId)
       .toList()
     ..sort((a, b) => a.date.compareTo(b.date));
+});
+
+// ── Peak (personal best) value for a specific exercise ───────────────────────
+final peakValueProvider = Provider.family<double?, ExerciseKey>((ref, key) {
+  final logs = ref.watch(exerciseLogsProvider(key));
+  if (logs.isEmpty) return null;
+  return logs.map((l) => l.value).reduce(math.max);
 });
 
 // ── Goal for a specific exercise ──────────────────────────────────────────────

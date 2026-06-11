@@ -244,6 +244,53 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                       ),
                       const SizedBox(height: 20),
 
+                      // Social divider — VIS-02 Fix: stylised
+                      Row(
+                        children: [
+                          const Expanded(child: Divider(color: AppColors.surface3)),
+                          Padding(
+                            padding: const EdgeInsets.symmetric(horizontal: 12),
+                            child: Text(
+                              'або продовжити з',
+                              style: TextStyle(
+                                  color: AppColors.textSecondary.withValues(alpha: 0.7),
+                                  fontSize: 12),
+                            ),
+                          ),
+                          const Expanded(child: Divider(color: AppColors.surface3)),
+                        ],
+                      ),
+                      const SizedBox(height: 16),
+
+                      // Social buttons — VIS-03 Fix: Circular
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          _SocialBtn(
+                            icon: 'G',
+                            color: const Color(0xFFEA4335),
+                            onTap: () => _showSocialToast(),
+                          ),
+                          const SizedBox(width: 20),
+                          _SocialBtn(
+                            icon: '',
+                            iconWidget: const Icon(Icons.apple,
+                                color: Colors.white, size: 24),
+                            color: const Color(0xFF1C1C1E),
+                            onTap: () => _showSocialToast(),
+                          ),
+                          const SizedBox(width: 20),
+                          _SocialBtn(
+                            icon: '',
+                            iconWidget: const Icon(Icons.phone_outlined,
+                                color: Colors.white, size: 22),
+                            color: const Color(0xFF25D366),
+                            onTap: () => _showSocialToast(),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 24),
+
                       // Sign up link
                       Row(
                         mainAxisAlignment: MainAxisAlignment.center,
@@ -279,4 +326,51 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     );
   }
 
+  void _showSocialToast() {
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('Скоро буде доступно')),
+    );
+  }
+}
+
+// ── Social button ──────────────────────────────────────────────────────────────
+
+class _SocialBtn extends StatelessWidget {
+  const _SocialBtn({
+    required this.icon,
+    required this.color,
+    required this.onTap,
+    this.iconWidget,
+  });
+
+  final String icon;
+  final Color color;
+  final VoidCallback onTap;
+  final Widget? iconWidget;
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        width: 52, height: 52,
+        decoration: BoxDecoration(
+          color: AppColors.surface,
+          shape: BoxShape.circle, // VIS-03 Fix: Circular buttons
+          border: Border.all(color: AppColors.surface3),
+        ),
+        child: Center(
+          child: iconWidget ??
+              Text(
+                icon,
+                style: TextStyle(
+                  color: color,
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+        ),
+      ),
+    );
+  }
 }
