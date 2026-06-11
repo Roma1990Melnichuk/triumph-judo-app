@@ -33,7 +33,7 @@ class FitnessExerciseDetailScreen extends ConsumerWidget {
     final key = (childId: childId, exerciseId: exerciseId);
     final logs = ref.watch(exerciseLogsProvider(key)); // asc by date
     final goalAsync = ref.watch(exerciseGoalProvider(key));
-    final goal = goalAsync.value;
+    final goal = goalAsync.asData?.value;
 
     final best = logs.isEmpty
         ? null

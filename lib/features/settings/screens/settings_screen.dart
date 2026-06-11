@@ -25,7 +25,7 @@ class SettingsScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final user = ref.watch(currentUserModelProvider).value;
+    final user = ref.watch(currentUserModelProvider).asData?.value;
     final isCoach = user?.isCoach ?? false;
     final unreadCount = ref.watch(unreadNotificationsCountProvider);
 
@@ -293,8 +293,8 @@ class SettingsScreen extends ConsumerWidget {
   }
 
   void _showExportMenu(BuildContext context, WidgetRef ref) {
-    final allChildren = ref.read(allChildrenProvider).value ?? [];
-    final allResults = ref.read(allResultsProvider).value ?? [];
+    final allChildren = ref.read(allChildrenProvider).asData?.value ?? [];
+    final allResults = ref.read(allResultsProvider).asData?.value ?? [];
 
     showModalBottomSheet(
       context: context,
@@ -699,7 +699,7 @@ class _CompetitionTypesSheetState
   @override
   Widget build(BuildContext context) {
     final typesAsync = ref.watch(competitionTypesProvider);
-    final types = typesAsync.value ?? [];
+    final types = typesAsync.asData?.value ?? [];
 
     return Padding(
       padding: const EdgeInsets.fromLTRB(24, 24, 24, 24),
@@ -1031,7 +1031,7 @@ class _LinkChildSheet extends ConsumerStatefulWidget {
 class _LinkChildSheetState extends ConsumerState<_LinkChildSheet> {
   @override
   Widget build(BuildContext context) {
-    final children = ref.watch(allChildrenProvider).value ?? [];
+    final children = ref.watch(allChildrenProvider).asData?.value ?? [];
     final myChild = children
         .where((c) => widget.user.ownsChild(c.id))
         .firstOrNull;
@@ -1201,7 +1201,7 @@ class _DevSectionState extends ConsumerState<_DevSection> {
 
   // ── 1. Seed 1000 athletes ─────────────────────────────────────────────────
   Future<void> _seedAthletes() => _run(() async {
-    final user = ref.read(currentUserModelProvider).value;
+    final user = ref.read(currentUserModelProvider).asData?.value;
     if (user == null) return 'Не авторизовано';
     await ref.read(childrenNotifierProvider.notifier)
         .seedTestData(user.uid, user.name);
@@ -1210,7 +1210,7 @@ class _DevSectionState extends ConsumerState<_DevSection> {
 
   // ── 2. Seed memberships ───────────────────────────────────────────────────
   Future<void> _seedMemberships() => _run(() async {
-    final children = ref.read(allChildrenProvider).value ?? [];
+    final children = ref.read(allChildrenProvider).asData?.value ?? [];
     if (children.isEmpty) return 'Спортсменів не знайдено';
 
     final db = ref.read(firestoreProvider);
@@ -1277,7 +1277,7 @@ class _DevSectionState extends ConsumerState<_DevSection> {
 
   // ── 3. Seed achievements ──────────────────────────────────────────────────
   Future<void> _seedAchievements() => _run(() async {
-    final children = ref.read(allChildrenProvider).value ?? [];
+    final children = ref.read(allChildrenProvider).asData?.value ?? [];
     if (children.isEmpty) return 'Спортсменів не знайдено';
 
     const beltAchIds = [
@@ -1287,7 +1287,7 @@ class _DevSectionState extends ConsumerState<_DevSection> {
     ];
 
     final db = ref.read(firestoreProvider);
-    final coachId = ref.read(currentUserModelProvider).value?.uid ?? '';
+    final coachId = ref.read(currentUserModelProvider).asData?.value?.uid ?? '';
     final now = DateTime.now();
     var batch = db.batch();
     var count = 0;
@@ -1377,7 +1377,7 @@ class _DevSectionState extends ConsumerState<_DevSection> {
 
   // ── 4. Seed competition results ───────────────────────────────────────────
   Future<void> _seedCompetitionResults() => _run(() async {
-    final children = ref.read(allChildrenProvider).value ?? [];
+    final children = ref.read(allChildrenProvider).asData?.value ?? [];
     if (children.isEmpty) return 'Спортсменів не знайдено';
 
     // Points awarded per place index [0=1st, 1=2nd, 2=3rd, 3=4–6th]
@@ -1418,7 +1418,7 @@ class _DevSectionState extends ConsumerState<_DevSection> {
     }
 
     final db = ref.read(firestoreProvider);
-    final coachId = ref.read(currentUserModelProvider).value?.uid ?? '';
+    final coachId = ref.read(currentUserModelProvider).asData?.value?.uid ?? '';
     final now = DateTime.now();
     var batch = db.batch();
     var count = 0;
@@ -1577,7 +1577,7 @@ class _DevSectionState extends ConsumerState<_DevSection> {
 // ─────────────────────────────────────────────────────────────────────────────
 
 void _showTariffEditor(BuildContext context, WidgetRef ref) {
-  final plans = ref.read(tariffPlansProvider).value ?? TariffPlan.defaults;
+  final plans = ref.read(tariffPlansProvider).asData?.value ?? TariffPlan.defaults;
   showModalBottomSheet<void>(
     context: context,
     isScrollControlled: true,

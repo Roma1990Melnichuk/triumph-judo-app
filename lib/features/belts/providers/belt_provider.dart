@@ -100,7 +100,7 @@ final beltRequirementsProvider =
 // ── Requirements for a specific belt ─────────────────────────────────────────
 final beltRequirementProvider =
     Provider.family<BeltRequirementModel?, BeltLevel>((ref, belt) {
-  final all = ref.watch(beltRequirementsProvider).value;
+  final all = ref.watch(beltRequirementsProvider).asData?.value;
   return all?[belt];
 });
 

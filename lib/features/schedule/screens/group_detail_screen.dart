@@ -37,7 +37,7 @@ class _GroupDetailScreenState extends ConsumerState<GroupDetailScreen> {
   @override
   Widget build(BuildContext context) {
     final groupsAsync = ref.watch(groupsProvider);
-    final user = ref.watch(currentUserModelProvider).value;
+    final user = ref.watch(currentUserModelProvider).asData?.value;
     final coachId = user?.uid ?? '';
 
     return groupsAsync.when(
@@ -389,7 +389,7 @@ class _AthletesSectionState extends ConsumerState<_AthletesSection> {
   @override
   Widget build(BuildContext context) {
     final allChildrenAsync = ref.watch(allChildrenProvider);
-    final allChildren = allChildrenAsync.value ?? [];
+    final allChildren = allChildrenAsync.asData?.value ?? [];
     final groupChildren = allChildren
         .where((c) => widget.group.childIds.contains(c.id))
         .toList();
@@ -581,7 +581,7 @@ class _AttendanceSection extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final allChildrenAsync = ref.watch(allChildrenProvider);
-    final allChildren = allChildrenAsync.value ?? [];
+    final allChildren = allChildrenAsync.asData?.value ?? [];
     final groupChildren = allChildren
         .where((c) => group.childIds.contains(c.id))
         .toList();

@@ -73,7 +73,7 @@ class _EventsScreenState extends ConsumerState<EventsScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final user = ref.watch(currentUserModelProvider).value;
+    final user = ref.watch(currentUserModelProvider).asData?.value;
     final isCoach = user?.isCoach ?? false;
     final filter = ref.watch(eventsFilterProvider);
     final allFiltered = ref.watch(filteredEventsProvider);
@@ -801,7 +801,7 @@ class _EventCard extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final allChildren = ref.watch(allChildrenProvider).value ?? [];
+    final allChildren = ref.watch(allChildrenProvider).asData?.value ?? [];
     final isGoing = currentChildId != null &&
         event.participantIds.contains(currentChildId);
     final participantCount = event.participantIds.length;

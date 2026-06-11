@@ -72,7 +72,7 @@ class _MainScaffoldState extends ConsumerState<MainScaffold>
   @override
   Widget build(BuildContext context) {
     final userAsync = ref.watch(currentUserModelProvider);
-    final isCoach   = userAsync.value?.isCoach ?? false;
+    final isCoach   = userAsync.asData?.value?.isCoach ?? false;
     final location  = GoRouterState.of(context).matchedLocation;
 
     final routes = isCoach ? _coachRoutes  : _parentRoutes;

@@ -16,7 +16,7 @@ class AchievementCatalogScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final user = ref.watch(currentUserModelProvider).value;
+    final user = ref.watch(currentUserModelProvider).asData?.value;
     final effectiveChildId =
         childId ?? user?.childIds.firstOrNull ?? user?.childId ?? '';
 

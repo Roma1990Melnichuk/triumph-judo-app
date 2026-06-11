@@ -38,7 +38,7 @@ class _IndividualTrainingScreenState
 
   @override
   Widget build(BuildContext context) {
-    final user = ref.watch(currentUserModelProvider).value;
+    final user = ref.watch(currentUserModelProvider).asData?.value;
     final isCoach = user?.isCoach ?? false;
 
     if (isCoach) {
@@ -62,7 +62,7 @@ class _CoachView extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final slotsAsync = ref.watch(coachSlotsProvider(userId));
-    final slots = slotsAsync.value ?? [];
+    final slots = slotsAsync.asData?.value ?? [];
 
     final pending = slots.where((s) => s.status == SlotStatus.requested).toList();
     final upcoming = slots
@@ -259,13 +259,13 @@ class _ParentView extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final availableAsync = ref.watch(availableSlotsProvider);
-    final available = availableAsync.value ?? [];
+    final available = availableAsync.asData?.value ?? [];
 
     // Parent's linked child
     final childId = user?.childIds.firstOrNull;
     final myBookingsAsync =
         childId != null ? ref.watch(childSlotsProvider(childId)) : null;
-    final myBookings = myBookingsAsync?.value ?? [];
+    final myBookings = myBookingsAsync?.asData?.value ?? [];
 
     return DefaultTabController(
       length: 2,
@@ -359,7 +359,7 @@ class _ParentView extends ConsumerWidget {
 
   void _confirmBook(BuildContext context, WidgetRef ref,
       IndividualSlotModel slot, String childId) {
-    final allChildren = ref.read(allChildrenProvider).value ?? [];
+    final allChildren = ref.read(allChildrenProvider).asData?.value ?? [];
     final child = allChildren.firstWhere((c) => c.id == childId,
         orElse: () => allChildren.first);
 

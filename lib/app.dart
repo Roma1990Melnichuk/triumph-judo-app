@@ -165,7 +165,7 @@ final routerProvider = Provider<GoRouter>((ref) {
         parentNavigatorKey: _rootNavKey,
         redirect: (context, state) {
           final container = ProviderScope.containerOf(context);
-          final user = container.read(currentUserModelProvider).value;
+          final user = container.read(currentUserModelProvider).asData?.value;
           if (user == null || user.isCoach) return null;
           final childId = state.pathParameters['id']!;
           if (user.ownsChild(childId)) return null;
@@ -197,7 +197,7 @@ final routerProvider = Provider<GoRouter>((ref) {
         path: '/bulk-belt',
         parentNavigatorKey: _rootNavKey,
         redirect: (context, state) {
-          final user = ProviderScope.containerOf(context).read(currentUserModelProvider).value;
+          final user = ProviderScope.containerOf(context).read(currentUserModelProvider).asData?.value;
           if (user == null || !user.isCoach) return '/home';
           return null;
         },
@@ -207,7 +207,7 @@ final routerProvider = Provider<GoRouter>((ref) {
         path: '/bulk-fitness-goals',
         parentNavigatorKey: _rootNavKey,
         redirect: (context, state) {
-          final user = ProviderScope.containerOf(context).read(currentUserModelProvider).value;
+          final user = ProviderScope.containerOf(context).read(currentUserModelProvider).asData?.value;
           if (user == null || !user.isCoach) return '/home';
           return null;
         },
@@ -218,7 +218,7 @@ final routerProvider = Provider<GoRouter>((ref) {
         parentNavigatorKey: _rootNavKey,
         redirect: (context, state) {
           final container = ProviderScope.containerOf(context);
-          final user = container.read(currentUserModelProvider).value;
+          final user = container.read(currentUserModelProvider).asData?.value;
           if (user == null || user.isCoach) return null;
           final childId = state.pathParameters['childId']!;
           if (user.ownsChild(childId)) return null;
@@ -230,7 +230,7 @@ final routerProvider = Provider<GoRouter>((ref) {
         path: '/belts/edit',
         parentNavigatorKey: _rootNavKey,
         redirect: (context, state) {
-          final user = ProviderScope.containerOf(context).read(currentUserModelProvider).value;
+          final user = ProviderScope.containerOf(context).read(currentUserModelProvider).asData?.value;
           if (user == null || !user.isCoach) return '/home';
           return null;
         },
@@ -240,7 +240,7 @@ final routerProvider = Provider<GoRouter>((ref) {
         path: '/achievements',
         parentNavigatorKey: _rootNavKey,
         redirect: (context, state) {
-          final user = ProviderScope.containerOf(context).read(currentUserModelProvider).value;
+          final user = ProviderScope.containerOf(context).read(currentUserModelProvider).asData?.value;
           if (user == null || !user.isCoach) return '/home';
           return null;
         },
@@ -250,7 +250,7 @@ final routerProvider = Provider<GoRouter>((ref) {
         path: '/bulk-achievements',
         parentNavigatorKey: _rootNavKey,
         redirect: (context, state) {
-          final user = ProviderScope.containerOf(context).read(currentUserModelProvider).value;
+          final user = ProviderScope.containerOf(context).read(currentUserModelProvider).asData?.value;
           if (user == null || !user.isCoach) return '/home';
           return null;
         },
@@ -260,7 +260,7 @@ final routerProvider = Provider<GoRouter>((ref) {
         path: '/achievement-stats',
         parentNavigatorKey: _rootNavKey,
         redirect: (context, state) {
-          final user = ProviderScope.containerOf(context).read(currentUserModelProvider).value;
+          final user = ProviderScope.containerOf(context).read(currentUserModelProvider).asData?.value;
           if (user == null || !user.isCoach) return '/home';
           return null;
         },
@@ -294,7 +294,7 @@ final routerProvider = Provider<GoRouter>((ref) {
         parentNavigatorKey: _rootNavKey,
         redirect: (context, state) {
           final container = ProviderScope.containerOf(context);
-          final user = container.read(currentUserModelProvider).value;
+          final user = container.read(currentUserModelProvider).asData?.value;
           if (user == null || user.isCoach) return null;
           final childId = state.pathParameters['childId']!;
           if (user.ownsChild(childId)) return null;
@@ -313,7 +313,7 @@ final routerProvider = Provider<GoRouter>((ref) {
         parentNavigatorKey: _rootNavKey,
         redirect: (context, state) {
           final container = ProviderScope.containerOf(context);
-          final user = container.read(currentUserModelProvider).value;
+          final user = container.read(currentUserModelProvider).asData?.value;
           if (user == null || user.isCoach) return null;
           final childId = state.pathParameters['childId']!;
           if (user.ownsChild(childId)) return null;
@@ -389,7 +389,7 @@ final routerProvider = Provider<GoRouter>((ref) {
         path: '/membership-management',
         parentNavigatorKey: _rootNavKey,
         redirect: (context, state) {
-          final user = ProviderScope.containerOf(context).read(currentUserModelProvider).value;
+          final user = ProviderScope.containerOf(context).read(currentUserModelProvider).asData?.value;
           if (user == null || !user.isCoach) return '/home';
           return null;
         },
@@ -719,12 +719,12 @@ class JudoApp extends ConsumerWidget {
 extension RouterContextX on BuildContext {
   bool get isCoach {
     final container = ProviderScope.containerOf(this);
-    final user = container.read(currentUserModelProvider).value;
+    final user = container.read(currentUserModelProvider).asData?.value;
     return user?.isCoach ?? false;
   }
 
   UserModel? get currentUser {
     final container = ProviderScope.containerOf(this);
-    return container.read(currentUserModelProvider).value;
+    return container.read(currentUserModelProvider).asData?.value;
   }
 }

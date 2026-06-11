@@ -80,7 +80,7 @@ final childrenFilterProvider =
 
 // ── Filtered list ───────────────────────────────────────────────────────────
 final filteredChildrenProvider = Provider<List<ChildModel>>((ref) {
-  final children = ref.watch(allChildrenProvider).value ?? [];
+  final children = ref.watch(allChildrenProvider).asData?.value ?? [];
   final f = ref.watch(childrenFilterProvider);
   final membershipMap = ref.watch(membershipStatusMapProvider);
 
@@ -115,7 +115,7 @@ final filteredChildrenProvider = Provider<List<ChildModel>>((ref) {
 
 // ── Distinct coach list (grouped by coachName) ──────────────────────────────
 final coachListProvider = Provider<List<({String id, String name})>>((ref) {
-  final children = ref.watch(allChildrenProvider).value ?? [];
+  final children = ref.watch(allChildrenProvider).asData?.value ?? [];
   final seen = <String>{};
   final result = <({String id, String name})>[];
   for (final c in children) {
@@ -130,13 +130,13 @@ final coachListProvider = Provider<List<({String id, String name})>>((ref) {
 
 // ── Distinct birth years ────────────────────────────────────────────────────
 final birthYearsProvider = Provider<List<int>>((ref) {
-  final children = ref.watch(allChildrenProvider).value ?? [];
+  final children = ref.watch(allChildrenProvider).asData?.value ?? [];
   return children.map((c) => c.birthYear).toSet().toList()..sort();
 });
 
 // ── Count of children per birth year ────────────────────────────────────────
 final birthYearCountsProvider = Provider<Map<int, int>>((ref) {
-  final children = ref.watch(allChildrenProvider).value ?? [];
+  final children = ref.watch(allChildrenProvider).asData?.value ?? [];
   final counts = <int, int>{};
   for (final c in children) {
     counts[c.birthYear] = (counts[c.birthYear] ?? 0) + 1;
@@ -146,7 +146,7 @@ final birthYearCountsProvider = Provider<Map<int, int>>((ref) {
 
 // ── Distinct weight categories present in DB ────────────────────────────────
 final weightCategoriesProvider = Provider<List<String>>((ref) {
-  final children = ref.watch(allChildrenProvider).value ?? [];
+  final children = ref.watch(allChildrenProvider).asData?.value ?? [];
   final seen = <String>{};
   final result = <String>[];
   for (final c in children) {
@@ -163,7 +163,7 @@ final weightCategoriesProvider = Provider<List<String>>((ref) {
 
 // ── O(1) child lookup map ───────────────────────────────────────────────────
 final childByIdMapProvider = Provider<Map<String, ChildModel>>((ref) {
-  final children = ref.watch(allChildrenProvider).value ?? [];
+  final children = ref.watch(allChildrenProvider).asData?.value ?? [];
   return {for (final c in children) c.id: c};
 });
 

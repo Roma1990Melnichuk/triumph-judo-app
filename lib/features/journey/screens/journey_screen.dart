@@ -82,7 +82,7 @@ class _JourneyScreenState extends ConsumerState<JourneyScreen>
 
   @override
   Widget build(BuildContext context) {
-    final user = ref.watch(currentUserModelProvider).value;
+    final user = ref.watch(currentUserModelProvider).asData?.value;
 
     // Coaches have no streak — redirect gracefully
     if (user != null && user.isCoach) {

@@ -18,7 +18,7 @@ class _GroupsScreenState extends ConsumerState<GroupsScreen> {
   @override
   Widget build(BuildContext context) {
     final groupsAsync = ref.watch(groupsProvider);
-    final user = ref.watch(currentUserModelProvider).value;
+    final user = ref.watch(currentUserModelProvider).asData?.value;
     final coachId = user?.uid ?? '';
 
     return Scaffold(

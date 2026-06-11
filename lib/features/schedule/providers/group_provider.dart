@@ -23,8 +23,9 @@ final childGroupsProvider =
     Provider.family<List<GroupModel>, String>((ref, childId) {
   return ref
           .watch(groupsProvider)
-          .value
-          ?.where((g) => g.childIds.contains(childId))
+          .asData
+          ?.value
+          .where((g) => g.childIds.contains(childId))
           .toList() ??
       [];
 });

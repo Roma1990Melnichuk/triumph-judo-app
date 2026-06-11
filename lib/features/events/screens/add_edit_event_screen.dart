@@ -83,7 +83,7 @@ class _AddEditEventScreenState extends ConsumerState<AddEditEventScreen> {
     if (!_form.currentState!.validate()) return;
     setState(() => _loading = true);
 
-    final user = ref.read(currentUserModelProvider).value!;
+    final user = ref.read(currentUserModelProvider).asData?.value;
     final notifier = ref.read(eventsNotifierProvider.notifier);
 
     if (_original != null) {
@@ -107,7 +107,7 @@ class _AddEditEventScreenState extends ConsumerState<AddEditEventScreen> {
         description: _descCtrl.text.trim().isEmpty
             ? null
             : _descCtrl.text.trim(),
-        coachId: user.uid,
+        coachId: user?.uid ?? '',
         beltLevels: _selectedBelts.map((b) => b.name).toList(),
         participantIds: [],
         year: _date.year,

@@ -36,7 +36,7 @@ final coachSlotsProvider =
 // ── Pending booking requests for coach ───────────────────────────────────────
 final pendingBookingsCountProvider =
     Provider.family<int, String>((ref, coachId) {
-  final slots = ref.watch(coachSlotsProvider(coachId)).value ?? [];
+  final slots = ref.watch(coachSlotsProvider(coachId)).asData?.value ?? [];
   return slots.where((s) => s.status == SlotStatus.requested).length;
 });
 

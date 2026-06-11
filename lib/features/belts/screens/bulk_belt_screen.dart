@@ -124,7 +124,7 @@ class _BulkBeltScreenState extends ConsumerState<BulkBeltScreen> {
   @override
   Widget build(BuildContext context) {
     final childrenAsync = ref.watch(allChildrenProvider);
-    final all = childrenAsync.value ?? [];
+    final all = childrenAsync.asData?.value ?? [];
     final eligible = _eligible(all);
 
     return Scaffold(

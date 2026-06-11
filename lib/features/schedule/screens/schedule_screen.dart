@@ -45,7 +45,7 @@ class _ScheduleScreenState extends ConsumerState<ScheduleScreen> {
   Widget build(BuildContext context) {
     final schedulesAsync = ref.watch(schedulesProvider);
     final childrenMap = ref.watch(childByIdMapProvider);
-    final user = ref.watch(currentUserModelProvider).value;
+    final user = ref.watch(currentUserModelProvider).asData?.value;
     final coachId = user?.uid ?? '';
 
     return Scaffold(

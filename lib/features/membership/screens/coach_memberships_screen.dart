@@ -63,7 +63,7 @@ class CoachMembershipsScreen extends ConsumerWidget {
         ),
         data: (children) {
           final membershipMap = <String, MembershipModel>{
-            for (final m in membershipsAsync.value ?? []) m.athleteId: m,
+            for (final m in membershipsAsync.asData?.value ?? []) m.athleteId: m,
           };
 
           final summary = (
@@ -361,7 +361,7 @@ class _CoachSetMembershipSheetState
 
   @override
   Widget build(BuildContext context) {
-    final plans = ref.watch(tariffPlansProvider).value ?? TariffPlan.defaults;
+    final plans = ref.watch(tariffPlansProvider).asData?.value ?? TariffPlan.defaults;
     final planIdx = _planIdx.clamp(0, plans.length - 1);
     final plan = plans[planIdx];
     final endDate = _start.add(Duration(days: plan.days));
@@ -494,7 +494,7 @@ class _CoachSetMembershipSheetState
   Future<void> _save() async {
     setState(() => _saving = true);
     try {
-      final plans = ref.read(tariffPlansProvider).value ?? TariffPlan.defaults;
+      final plans = ref.read(tariffPlansProvider).asData?.value ?? TariffPlan.defaults;
       final planIdx = _planIdx.clamp(0, plans.length - 1);
       final plan = plans[planIdx];
       final endDate = _start.add(Duration(days: plan.days));

@@ -101,7 +101,7 @@ class _AddAssignmentResultScreenState
   Widget build(BuildContext context) {
     final assignment = ref.watch(assignmentByIdProvider(widget.assignmentId));
     final logsAsync = ref.watch(childFitnessLogsProvider(widget.childId));
-    final logs = logsAsync.value ?? [];
+    final logs = logsAsync.asData?.value ?? [];
 
     final currentProgress = assignment != null
         ? assignmentProgress(logs, assignment, widget.childId)

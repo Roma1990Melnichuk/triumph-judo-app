@@ -22,7 +22,7 @@ final allAssignmentsProvider = StreamProvider<List<FitnessAssignment>>((ref) {
 
 // ── Filtered views for coach tabs ─────────────────────────────────────────────
 final activeAssignmentsProvider = Provider<List<FitnessAssignment>>((ref) {
-  final all = ref.watch(allAssignmentsProvider).value ?? [];
+  final all = ref.watch(allAssignmentsProvider).asData?.value ?? [];
   final now = DateTime.now();
   return all
       .where((a) =>
@@ -31,12 +31,12 @@ final activeAssignmentsProvider = Provider<List<FitnessAssignment>>((ref) {
 });
 
 final draftAssignmentsProvider = Provider<List<FitnessAssignment>>((ref) {
-  final all = ref.watch(allAssignmentsProvider).value ?? [];
+  final all = ref.watch(allAssignmentsProvider).asData?.value ?? [];
   return all.where((a) => a.status == AssignmentStatus.draft).toList();
 });
 
 final completedAssignmentsProvider = Provider<List<FitnessAssignment>>((ref) {
-  final all = ref.watch(allAssignmentsProvider).value ?? [];
+  final all = ref.watch(allAssignmentsProvider).asData?.value ?? [];
   final now = DateTime.now();
   return all
       .where((a) =>
@@ -48,7 +48,7 @@ final completedAssignmentsProvider = Provider<List<FitnessAssignment>>((ref) {
 // ── Single assignment by id ────────────────────────────────────────────────────
 final assignmentByIdProvider =
     Provider.family<FitnessAssignment?, String>((ref, id) {
-  final all = ref.watch(allAssignmentsProvider).value ?? [];
+  final all = ref.watch(allAssignmentsProvider).asData?.value ?? [];
   try {
     return all.firstWhere((a) => a.id == id);
   } catch (_) {
@@ -85,7 +85,7 @@ final assignmentLogsProvider =
 // ── Assignments for a specific child (active = deadline not yet passed) ───────
 final activeChildAssignmentsProvider =
     Provider.family<List<FitnessAssignment>, String>((ref, childId) {
-  final all = ref.watch(allAssignmentsProvider).value ?? [];
+  final all = ref.watch(allAssignmentsProvider).asData?.value ?? [];
   final now = DateTime.now();
   return all
       .where((a) =>

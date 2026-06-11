@@ -18,8 +18,8 @@ final allNotificationsProvider = StreamProvider<List<NotificationModel>>((ref) {
 /// Filters notifications relevant to the current parent/guardian's children.
 final myNotificationsProvider =
     Provider<AsyncValue<List<NotificationModel>>>((ref) {
-  final user = ref.watch(currentUserModelProvider).value;
-  final children = ref.watch(allChildrenProvider).value ?? [];
+  final user = ref.watch(currentUserModelProvider).asData?.value;
+  final children = ref.watch(allChildrenProvider).asData?.value ?? [];
   final notificationsAsync = ref.watch(allNotificationsProvider);
 
   if (user == null) return const AsyncValue.data([]);
@@ -67,11 +67,11 @@ final myNotificationsProvider =
 });
 
 final unreadNotificationsCountProvider = Provider<int>((ref) {
-  final user = ref.watch(currentUserModelProvider).value;
+  final user = ref.watch(currentUserModelProvider).asData?.value;
   if (user == null || user.isCoach) return 0;
   final notifs = ref.watch(myNotificationsProvider);
-  return notifs.value
-          ?.where((n) => !n.readByUserIds.contains(user.uid))
+  return notifs.asData?.value
+          .where((n) => !n.readByUserIds.contains(user.uid))
           .length ??
       0;
 });

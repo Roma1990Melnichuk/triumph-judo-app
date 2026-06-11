@@ -48,7 +48,7 @@ class _TeamListScreenState extends ConsumerState<TeamListScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final user = ref.watch(currentUserModelProvider).value;
+    final user = ref.watch(currentUserModelProvider).asData?.value;
     final isCoach = user?.isCoach ?? false;
     final allChildren = ref.watch(allChildrenProvider);
     // Parents see only their own children

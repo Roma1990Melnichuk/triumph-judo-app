@@ -119,7 +119,7 @@ class _CreateAssignmentWizardScreenState
   Future<void> _create({bool draft = false}) async {
     final v =
         double.tryParse(_valueCtrl.text.trim().replaceAll(',', '.')) ?? 0;
-    final coachId = ref.read(currentUserModelProvider).value?.uid ?? '';
+    final coachId = ref.read(currentUserModelProvider).asData?.value?.uid ?? '';
     setState(() => _savingDraft = true);
     try {
       await ref.read(assignmentNotifierProvider.notifier).createAssignment(
@@ -155,9 +155,9 @@ class _CreateAssignmentWizardScreenState
 
   @override
   Widget build(BuildContext context) {
-    final exercises = ref.watch(fitnessExercisesProvider).value ?? [];
-    final children = ref.watch(allChildrenProvider).value ?? [];
-    final groups = ref.watch(groupsProvider).value ?? [];
+    final exercises = ref.watch(fitnessExercisesProvider).asData?.value ?? [];
+    final children = ref.watch(allChildrenProvider).asData?.value ?? [];
+    final groups = ref.watch(groupsProvider).asData?.value ?? [];
 
     _step2Children = _computeSelected(children, groups);
 

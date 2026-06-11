@@ -66,7 +66,7 @@ class _ChildProfileScreenState extends ConsumerState<ChildProfileScreen>
     final ref = this.ref;
     final childAsync = ref.watch(childByIdProvider(childId));
     final resultsAsync = ref.watch(childResultsProvider(childId));
-    final user = ref.watch(currentUserModelProvider).value;
+    final user = ref.watch(currentUserModelProvider).asData?.value;
     final isCoach = user?.isCoach ?? false;
     final isOwnProfile = !isCoach && (user?.ownsChild(childId) ?? false);
 
@@ -93,10 +93,10 @@ class _ChildProfileScreenState extends ConsumerState<ChildProfileScreen>
             : null;
 
         final membershipAsync = ref.watch(membershipByAthleteProvider(childId));
-        final membership = membershipAsync.value;
+        final membership = membershipAsync.asData?.value;
 
-        final results = resultsAsync.value ?? [];
-        final passedCount = beltProgressAsync?.value?.passedCount ?? 0;
+        final results = resultsAsync.asData?.value ?? [];
+        final passedCount = beltProgressAsync?.asData?.value?.passedCount ?? 0;
         final totalExercises = beltReqAsync?.exercises.length ?? 0;
         final beltPct = totalExercises > 0
             ? (passedCount / totalExercises * 100).round()
@@ -104,12 +104,12 @@ class _ChildProfileScreenState extends ConsumerState<ChildProfileScreen>
         final medalCount = results.where((r) => r.place <= 3).length;
 
         final attendanceStats =
-            ref.watch(childAttendanceStatsProvider(childId)).value;
+            ref.watch(childAttendanceStatsProvider(childId)).asData?.value;
         final indivCount =
             ref.watch(childConfirmedTrainingCountProvider(childId));
         final coachUser = ref.watch(coachByIdProvider(child.coachId));
         final parents =
-            ref.watch(parentsByChildIdProvider(childId)).value ?? [];
+            ref.watch(parentsByChildIdProvider(childId)).asData?.value ?? [];
 
         return Scaffold(
           backgroundColor: AppColors.background,
@@ -574,7 +574,7 @@ class _ChildProfileScreenState extends ConsumerState<ChildProfileScreen>
   }
 
   void _changeCoach(BuildContext context, WidgetRef ref, ChildModel child) {
-    final coaches = ref.read(allCoachesProvider).value ?? [];
+    final coaches = ref.read(allCoachesProvider).asData?.value ?? [];
     showModalBottomSheet(
       context: context,
       shape: const RoundedRectangleBorder(
@@ -1378,7 +1378,7 @@ class _CoachSetMembershipSheetState
 
   @override
   Widget build(BuildContext context) {
-    final plans = ref.watch(tariffPlansProvider).value ?? TariffPlan.defaults;
+    final plans = ref.watch(tariffPlansProvider).asData?.value ?? TariffPlan.defaults;
     final planIdx = _planIdx.clamp(0, plans.length - 1);
     final plan = plans[planIdx];
     final endDate = _start.add(Duration(days: plan.days));
@@ -1516,7 +1516,7 @@ class _CoachSetMembershipSheetState
   Future<void> _save() async {
     setState(() => _saving = true);
     try {
-      final plans = ref.read(tariffPlansProvider).value ?? TariffPlan.defaults;
+      final plans = ref.read(tariffPlansProvider).asData?.value ?? TariffPlan.defaults;
       final planIdx = _planIdx.clamp(0, plans.length - 1);
       final plan = plans[planIdx];
       final endDate = _start.add(Duration(days: plan.days));
@@ -1554,7 +1554,7 @@ class _AchievementsSection extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final earned = ref.watch(childAchievementsProvider(childId)).value ?? [];
+    final earned = ref.watch(childAchievementsProvider(childId)).asData?.value ?? [];
     final progressMap =
         ref.watch(achievementProgressProvider(childId));
 
@@ -1927,7 +1927,7 @@ class _ResultatyTab extends ConsumerWidget {
         _BeltProgressCard(
           childId: childId,
           beltReq: beltReqAsync,
-          beltProgress: beltProgressAsync?.value,
+          beltProgress: beltProgressAsync?.asData?.value,
           isCoach: isCoach,
         ),
         const SizedBox(height: 40),

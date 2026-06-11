@@ -13,13 +13,13 @@ final childTrainingStatsProvider =
     Provider.family<({int total, int streak}), String>((ref, childId) {
   const empty = (total: 0, streak: 0);
 
-  final allChildren = ref.watch(allChildrenProvider).value ?? [];
+  final allChildren = ref.watch(allChildrenProvider).asData?.value ?? [];
   final child = allChildren.where((c) => c.id == childId).firstOrNull;
   if (child == null) return empty;
 
   // sessions sorted DESC (most-recent first) — same as streakDataProvider
   final sessions =
-      ref.watch(coachSessionsProvider(child.coachId)).value ?? [];
+      ref.watch(coachSessionsProvider(child.coachId)).asData?.value ?? [];
 
   int total = 0;
   int streak = 0;
@@ -47,7 +47,7 @@ final achievementProgressProvider =
     Provider.family<AchProgressMap, String>((ref, childId) {
   final stats = ref.watch(childTrainingStatsProvider(childId));
   final results =
-      ref.watch(childResultsProvider(childId)).value ?? <CompetitionResultModel>[];
+      ref.watch(childResultsProvider(childId)).asData?.value ?? <CompetitionResultModel>[];
 
   final total = stats.total;
   final streak = stats.streak;

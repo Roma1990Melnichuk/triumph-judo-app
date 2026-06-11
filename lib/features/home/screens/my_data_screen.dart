@@ -21,7 +21,7 @@ class MyDataScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final user = ref.watch(currentUserModelProvider).value;
+    final user = ref.watch(currentUserModelProvider).asData?.value;
     final childId = user?.childIds.firstOrNull;
 
     if (childId == null) {
@@ -76,12 +76,12 @@ class _MyDataBody extends ConsumerWidget {
         nextBelt != null ? ref.watch(beltRequirementProvider(nextBelt)) : null;
 
     final attendanceAsync = ref.watch(childAttendanceStatsProvider(childId));
-    final attendanceStats = attendanceAsync.value;
+    final attendanceStats = attendanceAsync.asData?.value;
 
     final resultsAsync = ref.watch(childResultsProvider(childId));
-    final results = resultsAsync.value ?? [];
+    final results = resultsAsync.asData?.value ?? [];
 
-    final passedCount = beltProgressAsync?.value?.passedCount ?? 0;
+    final passedCount = beltProgressAsync?.asData?.value?.passedCount ?? 0;
     final totalExercises = beltReqAsync?.exercises.length ?? 0;
     final techniquePct = totalExercises > 0
         ? (passedCount / totalExercises * 100).round()

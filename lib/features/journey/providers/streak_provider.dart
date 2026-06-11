@@ -25,13 +25,13 @@ typedef StreakData = ({int current, int best, int total});
 /// Returns (childId, coachId) or null if the current user is a coach or
 /// has no linked child.
 ({String childId, String coachId})? _resolveChild(Ref ref) {
-  final user = ref.watch(currentUserModelProvider).value;
+  final user = ref.watch(currentUserModelProvider).asData?.value;
   if (user == null || user.isCoach) return null;
 
   final childId = user.childIds.firstOrNull ?? user.childId;
   if (childId == null || childId.isEmpty) return null;
 
-  final allChildren = ref.watch(allChildrenProvider).value ?? [];
+  final allChildren = ref.watch(allChildrenProvider).asData?.value ?? [];
   final child = allChildren.where((c) => c.id == childId).firstOrNull;
   if (child == null) return null;
 
@@ -52,7 +52,7 @@ final streakDataProvider = Provider<StreakData>((ref) {
   final coachId = resolved.coachId;
 
   final sessionsAsync = ref.watch(coachSessionsProvider(coachId));
-  final sessions = sessionsAsync.value;
+  final sessions = sessionsAsync.asData?.value;
   if (sessions == null) return empty;
 
   // sessions are already sorted date DESC (most recent first)
@@ -98,7 +98,7 @@ final weekActivityProvider = Provider<List<bool>>((ref) {
   final childId = resolved.childId;
   final coachId = resolved.coachId;
 
-  final sessions = ref.watch(coachSessionsProvider(coachId)).value ?? [];
+  final sessions = ref.watch(coachSessionsProvider(coachId)).asData?.value ?? [];
 
   // Build Mon-Sun range for the current week.
   final now = DateTime.now();
@@ -130,7 +130,7 @@ final fourWeekActivityProvider =
 
   final sessions = coachId.isEmpty
       ? <TrainingSessionModel>[]
-      : (ref.watch(coachSessionsProvider(coachId)).value ?? []);
+      : (ref.watch(coachSessionsProvider(coachId)).asData?.value ?? []);
 
   final now = DateTime.now();
   final today = DateTime(now.year, now.month, now.day);

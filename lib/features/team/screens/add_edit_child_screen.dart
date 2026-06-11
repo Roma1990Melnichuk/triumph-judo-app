@@ -158,7 +158,7 @@ class _AddEditChildScreenState extends ConsumerState<AddEditChildScreen> {
     if (!_formKey.currentState!.validate()) return;
     setState(() => _loading = true);
 
-    final user = ref.read(currentUserModelProvider).value;
+    final user = ref.read(currentUserModelProvider).asData?.value;
     if (user == null) { setState(() => _loading = false); return; }
 
     // Generate ID up front so we can use it for photo upload path
@@ -240,13 +240,13 @@ class _AddEditChildScreenState extends ConsumerState<AddEditChildScreen> {
         ? ref.watch(childByIdProvider(widget.childId!))
         : null;
 
-    if (isEdit && childAsync?.value != null) {
-      _initFromChild(childAsync!.value!);
+    if (isEdit && childAsync?.asData?.value != null) {
+      _initFromChild(childAsync!.asData!.value!);
     }
 
-    final user = ref.watch(currentUserModelProvider).value;
+    final user = ref.watch(currentUserModelProvider).asData?.value;
     final coachesAsync = ref.watch(allCoachesProvider);
-    final coaches = coachesAsync.value ?? [];
+    final coaches = coachesAsync.asData?.value ?? [];
 
     return Scaffold(
       backgroundColor: AppColors.background,

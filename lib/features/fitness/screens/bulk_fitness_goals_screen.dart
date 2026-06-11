@@ -226,9 +226,9 @@ class _GoalsTabState extends ConsumerState<_GoalsTab>
   @override
   Widget build(BuildContext context) {
     super.build(context);
-    final children = ref.watch(allChildrenProvider).value ?? [];
-    final groups = ref.watch(groupsProvider).value ?? [];
-    final exercises = ref.watch(fitnessExercisesProvider).value ?? [];
+    final children = ref.watch(allChildrenProvider).asData?.value ?? [];
+    final groups = ref.watch(groupsProvider).asData?.value ?? [];
+    final exercises = ref.watch(fitnessExercisesProvider).asData?.value ?? [];
     final birthYears = children.map((c) => c.birthYear).toSet().toList()..sort();
     final matched = _matched(children, groups);
 
@@ -369,7 +369,7 @@ class _AssignmentsTabState extends ConsumerState<_AssignmentsTab>
     setState(() => _saving = true);
     try {
       final coachId =
-          ref.read(currentUserModelProvider).value?.uid ?? '';
+          ref.read(currentUserModelProvider).asData?.value?.uid ?? '';
       await ref.read(assignmentNotifierProvider.notifier).createAssignment(
             coachId: coachId,
             title: title,
@@ -435,11 +435,11 @@ class _AssignmentsTabState extends ConsumerState<_AssignmentsTab>
   @override
   Widget build(BuildContext context) {
     super.build(context);
-    final children = ref.watch(allChildrenProvider).value ?? [];
-    final groups = ref.watch(groupsProvider).value ?? [];
-    final exercises = ref.watch(fitnessExercisesProvider).value ?? [];
+    final children = ref.watch(allChildrenProvider).asData?.value ?? [];
+    final groups = ref.watch(groupsProvider).asData?.value ?? [];
+    final exercises = ref.watch(fitnessExercisesProvider).asData?.value ?? [];
     final assignmentsAsync = ref.watch(allAssignmentsProvider);
-    final assignments = assignmentsAsync.value ?? [];
+    final assignments = assignmentsAsync.asData?.value ?? [];
     final birthYears = children.map((c) => c.birthYear).toSet().toList()..sort();
     final matched = _matched(children, groups);
 

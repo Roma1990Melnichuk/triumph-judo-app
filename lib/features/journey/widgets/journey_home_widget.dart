@@ -15,7 +15,7 @@ class JourneyHomeWidget extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final user = ref.watch(currentUserModelProvider).value;
+    final user = ref.watch(currentUserModelProvider).asData?.value;
     if (user == null || user.isCoach) return const SizedBox.shrink();
 
     final streakAsync = ref.watch(streakDataProvider);
@@ -52,11 +52,11 @@ class JourneyHomeWidget extends ConsumerWidget {
   }
 
   String? _coachIdFrom(WidgetRef ref) {
-    final user = ref.watch(currentUserModelProvider).value;
+    final user = ref.watch(currentUserModelProvider).asData?.value;
     if (user == null || user.isCoach) return null;
     final childId = user.childIds.firstOrNull ?? user.childId;
     if (childId == null) return null;
-    final allChildren = ref.watch(allChildrenProvider).value ?? [];
+    final allChildren = ref.watch(allChildrenProvider).asData?.value ?? [];
     return allChildren.where((c) => c.id == childId).firstOrNull?.coachId;
   }
 

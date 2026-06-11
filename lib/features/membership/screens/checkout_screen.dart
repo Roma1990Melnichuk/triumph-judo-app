@@ -85,7 +85,7 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen>
     final now = DateTime.now();
     // FIN-01: if the child already has an active membership, extend from its
     // endDate so existing days are not lost.
-    final currentMembership = ref.read(membershipByAthleteProvider(widget.childId)).value;
+    final currentMembership = ref.read(membershipByAthleteProvider(widget.childId)).asData?.value;
     final startDate = resolveSubscriptionStart(
       now: now,
       isCurrentlyActive: currentMembership?.isActive ?? false,

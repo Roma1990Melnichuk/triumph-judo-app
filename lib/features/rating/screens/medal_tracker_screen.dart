@@ -59,7 +59,7 @@ class _MedalTrackerScreenState extends ConsumerState<MedalTrackerScreen> {
       loading: () => const Center(child: CircularProgressIndicator()),
       error: (e, _) => Center(child: Text('Помилка: $e')),
       data: (all) {
-        final children = childrenAsync.value ?? [];
+        final children = childrenAsync.asData?.value ?? [];
         final results = _season == null
             ? all
             : all.where((r) => r.seasonYear == _season).toList();

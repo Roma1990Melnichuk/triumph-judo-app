@@ -34,12 +34,12 @@ class _FitnessScreenState extends ConsumerState<FitnessScreen> {
   @override
   Widget build(BuildContext context) {
     final isCoach =
-        ref.watch(currentUserModelProvider).value?.isCoach ?? false;
+        ref.watch(currentUserModelProvider).asData?.value?.isCoach ?? false;
     final exercisesAsync = ref.watch(fitnessExercisesProvider);
     final logsAsync = ref.watch(childFitnessLogsProvider(widget.childId));
 
-    final exercises = exercisesAsync.value ?? [];
-    final logs = logsAsync.value ?? [];
+    final exercises = exercisesAsync.asData?.value ?? [];
+    final logs = logsAsync.asData?.value ?? [];
 
     // Build stats per exercise: latestLog, previousLog, total count
     final statsMap = <String, _ExStat>{};

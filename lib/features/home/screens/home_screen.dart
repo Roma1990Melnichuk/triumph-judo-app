@@ -73,14 +73,14 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
 
   @override
   Widget build(BuildContext context) {
-    final user        = ref.watch(currentUserModelProvider).value;
+    final user        = ref.watch(currentUserModelProvider).asData?.value;
     final isCoach     = user?.isCoach ?? false;
     final allAsync    = ref.watch(allChildrenProvider);
 
     // Auto-seed 1000 demo athletes the first time a coach opens an empty club.
     ref.listen<AsyncValue<List<ChildModel>>>(allChildrenProvider, (prev, next) {
       if ((prev?.hasValue != true) && next.hasValue &&
-          isCoach && (next.value?.isEmpty ?? false)) {
+          isCoach && (next.asData?.value.isEmpty ?? false)) {
         ref.read(childrenNotifierProvider.notifier)
             .seedTestData(user!.uid, user.name);
       }
@@ -89,13 +89,13 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
     final recentAsync = ref.watch(recentResultsProvider);
     final medAsync    = ref.watch(totalResultsCountProvider);
 
-    final children   = allAsync.value ?? [];
+    final children   = allAsync.asData?.value ?? [];
     final total      = children.length;
     final beltReady  = children.where((c) => c.beltReady).toList();
-    final recent     = recentAsync.value ?? [];
-    final medals     = medAsync.value ?? 0;
+    final recent     = recentAsync.asData?.value ?? [];
+    final medals     = medAsync.asData?.value ?? 0;
     final todayWday  = DateTime.now().weekday;
-    final todaySched = (schedAsync.value ?? [])
+    final todaySched = (schedAsync.asData?.value ?? [])
         .where((s) => s.daysOfWeek.contains(todayWday))
         .toList();
     final activePct  =

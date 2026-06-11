@@ -18,7 +18,7 @@ class NotificationsScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final user = ref.watch(currentUserModelProvider).value;
+    final user = ref.watch(currentUserModelProvider).asData?.value;
     final isCoach = user?.isCoach ?? false;
 
     return Scaffold(
@@ -192,7 +192,7 @@ class _ParentBody extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final user = ref.watch(currentUserModelProvider).value;
+    final user = ref.watch(currentUserModelProvider).asData?.value;
     final notificationsValue = ref.watch(myNotificationsProvider);
 
     return notificationsValue.when(
@@ -517,7 +517,7 @@ class _ComposeDialogState extends ConsumerState<_ComposeDialog> {
 
   @override
   Widget build(BuildContext context) {
-    final children = ref.watch(allChildrenProvider).value ?? [];
+    final children = ref.watch(allChildrenProvider).asData?.value ?? [];
     _availableYears = children
         .map((c) => c.birthYear)
         .toSet()

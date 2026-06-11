@@ -31,7 +31,7 @@ class _BeltRequirementsScreenState
     super.initState();
     _tabController = TabController(length: BeltLevel.values.length - 1, vsync: this);
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      final user = ref.read(currentUserModelProvider).value;
+      final user = ref.read(currentUserModelProvider).asData?.value;
       if (user?.isCoach == true) {
         ref.read(beltNotifierProvider.notifier).seedDefaultsIfEmpty(user!.uid);
       }
@@ -46,7 +46,7 @@ class _BeltRequirementsScreenState
 
   @override
   Widget build(BuildContext context) {
-    final user = ref.watch(currentUserModelProvider).value;
+    final user = ref.watch(currentUserModelProvider).asData?.value;
     final isCoach = user?.isCoach ?? false;
     final allReqs = ref.watch(beltRequirementsProvider);
 

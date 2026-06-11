@@ -65,7 +65,7 @@ class _RatingScreenState extends ConsumerState<RatingScreen> {
     final filter = ref.watch(ratingFilterProvider);
     final birthYears = ref.watch(birthYearsProvider);
     final birthYearCounts = ref.watch(birthYearCountsProvider);
-    final user = ref.watch(currentUserModelProvider).value;
+    final user = ref.watch(currentUserModelProvider).asData?.value;
     final isCoach = user?.isCoach ?? false;
     final allAsync = ref.watch(allChildrenProvider);
     final coachRankings = ref.watch(coachRankingProvider);

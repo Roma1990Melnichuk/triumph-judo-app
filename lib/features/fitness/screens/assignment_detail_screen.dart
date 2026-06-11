@@ -28,7 +28,7 @@ class AssignmentDetailScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final assignment = ref.watch(assignmentByIdProvider(assignmentId));
     final logsAsync = ref.watch(childFitnessLogsProvider(childId));
-    final logs = logsAsync.value ?? [];
+    final logs = logsAsync.asData?.value ?? [];
 
     if (assignment == null) {
       return Scaffold(
@@ -399,7 +399,7 @@ class AssignmentDetailScreen extends ConsumerWidget {
   }
 
   double assignmentLogs(WidgetRef ref, FitnessAssignment assignment) {
-    final logs = ref.read(childFitnessLogsProvider(childId)).value ?? [];
+    final logs = ref.read(childFitnessLogsProvider(childId)).asData?.value ?? [];
     final relevant = logs
         .where((l) =>
             l.exerciseId == assignment.exerciseId &&

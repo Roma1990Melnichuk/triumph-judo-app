@@ -62,13 +62,13 @@ final eventsFilterProvider =
 
 // ── Filtered events (applies year / type / belt / top-20) ────────────────────
 final filteredEventsProvider = Provider<List<EventModel>>((ref) {
-  final events = ref.watch(allEventsProvider).value ?? [];
+  final events = ref.watch(allEventsProvider).asData?.value ?? [];
   final filter = ref.watch(eventsFilterProvider);
 
   // Top-20 child IDs by points (needed for both top20Only and exceptTop20)
   Set<String> top20Ids = {};
   if (filter.top20Only || filter.exceptTop20) {
-    final all = ref.watch(allChildrenProvider).value ?? [];
+    final all = ref.watch(allChildrenProvider).asData?.value ?? [];
     final sorted = [...all]..sort((a, b) => b.totalPoints.compareTo(a.totalPoints));
     top20Ids = sorted.take(20).map((c) => c.id).toSet();
   }
@@ -92,7 +92,7 @@ final filteredEventsProvider = Provider<List<EventModel>>((ref) {
 
 // ── Available years ───────────────────────────────────────────────────────────
 final eventYearsProvider = Provider<List<int>>((ref) {
-  final events = ref.watch(allEventsProvider).value ?? [];
+  final events = ref.watch(allEventsProvider).asData?.value ?? [];
   final years = events.map((e) => e.year).toSet().toList()..sort((a, b) => b.compareTo(a));
   if (years.isEmpty) {
     final now = DateTime.now().year;

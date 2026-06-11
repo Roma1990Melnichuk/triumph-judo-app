@@ -44,7 +44,7 @@ final childFitnessLogsProvider =
 final exerciseLogsProvider =
     Provider.family<List<FitnessLog>, ExerciseKey>((ref, key) {
   final allLogs =
-      ref.watch(childFitnessLogsProvider(key.childId)).value ?? [];
+      ref.watch(childFitnessLogsProvider(key.childId)).asData?.value ?? [];
   return allLogs
       .where((l) => l.exerciseId == key.exerciseId)
       .toList()

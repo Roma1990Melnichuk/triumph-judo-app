@@ -199,7 +199,7 @@ class _CoachAssignmentCard extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final logsAsync = ref.watch(assignmentLogsProvider(assignment.id));
-    final logs = logsAsync.value ?? [];
+    final logs = logsAsync.asData?.value ?? [];
 
     final totalProgress = logs.fold<double>(0.0, (acc, l) => acc + l.value);
     final pct = assignment.targetValue > 0

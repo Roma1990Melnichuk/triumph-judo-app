@@ -99,8 +99,8 @@ class AssignmentGroupProgressScreen extends ConsumerWidget {
       );
     }
 
-    final logs = logsAsync.value ?? [];
-    final children = childrenAsync.value ?? [];
+    final logs = logsAsync.asData?.value ?? [];
+    final children = childrenAsync.asData?.value ?? [];
     final assignedChildren = children
         .where((c) => assignment.assignedChildIds.contains(c.id))
         .toList();

@@ -38,9 +38,9 @@ class _MyAssignmentsScreenState extends ConsumerState<MyAssignmentsScreen> {
     final logsAsync = ref.watch(childFitnessLogsProvider(widget.childId));
     final exercisesAsync = ref.watch(fitnessExercisesProvider);
 
-    final assignments = assignmentsAsync.value ?? [];
-    final logs = logsAsync.value ?? [];
-    final exercises = exercisesAsync.value ?? [];
+    final assignments = assignmentsAsync.asData?.value ?? [];
+    final logs = logsAsync.asData?.value ?? [];
+    final exercises = exercisesAsync.asData?.value ?? [];
 
     final now = DateTime.now();
     final active = assignments

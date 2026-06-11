@@ -51,15 +51,15 @@ class _BeltOverviewScreenState extends ConsumerState<BeltOverviewScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final user      = ref.watch(currentUserModelProvider).value;
+    final user      = ref.watch(currentUserModelProvider).asData?.value;
     final isCoach   = user?.isCoach ?? false;
     final allReqs   = ref.watch(beltRequirementsProvider);
-    final req       = allReqs.value?[_selected];
+    final req       = allReqs.asData?.value[_selected];
     final belts     = BeltLevel.values.where((b) => b != BeltLevel.white).toList();
 
     String? childId;
     if (user?.isParent == true) {
-      final children = ref.watch(allChildrenProvider).value ?? [];
+      final children = ref.watch(allChildrenProvider).asData?.value ?? [];
       final myChild  = children
           .where((c) => user?.ownsChild(c.id) ?? false)
           .firstOrNull;
@@ -69,7 +69,7 @@ class _BeltOverviewScreenState extends ConsumerState<BeltOverviewScreen> {
     final progressAsync = childId != null
         ? ref.watch(beltProgressProvider((childId: childId, belt: _selected)))
         : null;
-    final progress = progressAsync?.value;
+    final progress = progressAsync?.asData?.value;
 
     return Scaffold(
       backgroundColor: AppColors.background,

@@ -138,8 +138,8 @@ class _AddResultScreenState extends ConsumerState<AddResultScreen> {
     if (!_formKey.currentState!.validate()) return;
 
     setState(() => _loading = true);
-    final user = ref.read(currentUserModelProvider).value;
-    final child = ref.read(childByIdProvider(widget.childId)).value;
+    final user = ref.read(currentUserModelProvider).asData?.value;
+    final child = ref.read(childByIdProvider(widget.childId)).asData?.value;
 
     final result = CompetitionResultModel(
       id: '',
@@ -173,7 +173,7 @@ class _AddResultScreenState extends ConsumerState<AddResultScreen> {
   @override
   Widget build(BuildContext context) {
     final typesAsync = ref.watch(competitionTypesProvider);
-    final types = typesAsync.value ?? [];
+    final types = typesAsync.asData?.value ?? [];
 
     return Scaffold(
       backgroundColor: AppColors.background,

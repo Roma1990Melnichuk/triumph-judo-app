@@ -26,21 +26,21 @@ final allMembershipsProvider = StreamProvider<List<MembershipModel>>((ref) {
 // athleteId → MembershipStatus map for team list indicators
 final membershipStatusMapProvider =
     Provider<Map<String, MembershipStatus>>((ref) {
-  final all = ref.watch(allMembershipsProvider).value ?? [];
+  final all = ref.watch(allMembershipsProvider).asData?.value ?? [];
   return {for (final m in all) m.athleteId: m.status};
 });
 
 // athleteId → endDate map for team list cards
 final membershipEndDateMapProvider =
     Provider<Map<String, DateTime>>((ref) {
-  final all = ref.watch(allMembershipsProvider).value ?? [];
+  final all = ref.watch(allMembershipsProvider).asData?.value ?? [];
   return {for (final m in all) m.athleteId: m.endDate};
 });
 
 // Counts for coach home overview card
 final membershipSummaryProvider =
     Provider<({int active, int expiringSoon, int expired})>((ref) {
-  final all = ref.watch(allMembershipsProvider).value ?? [];
+  final all = ref.watch(allMembershipsProvider).asData?.value ?? [];
   return (
     active: all.where((m) => m.status == MembershipStatus.active).length,
     expiringSoon: all.where((m) => m.isExpiringSoon).length,
@@ -50,7 +50,7 @@ final membershipSummaryProvider =
 
 // Current parent user's child membership
 final myChildMembershipProvider = StreamProvider<MembershipModel?>((ref) {
-  final user = ref.watch(currentUserModelProvider).value;
+  final user = ref.watch(currentUserModelProvider).asData?.value;
   if (user == null || user.isCoach) return Stream.value(null);
   final childId =
       user.childIds.isNotEmpty ? user.childIds.first : user.childId;

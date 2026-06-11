@@ -27,8 +27,8 @@ class _AchievementStatsScreenState
 
   @override
   Widget build(BuildContext context) {
-    final allGranted = ref.watch(allGrantedAchievementsProvider).value ?? [];
-    final allChildren = ref.watch(allChildrenProvider).value ?? [];
+    final allGranted = ref.watch(allGrantedAchievementsProvider).asData?.value ?? [];
+    final allChildren = ref.watch(allChildrenProvider).asData?.value ?? [];
     final childMap = {for (final c in allChildren) c.id: c};
 
     final statsMap = <String, List<AchievementModel>>{};
@@ -513,8 +513,8 @@ class _BulkGrantSheetState extends ConsumerState<_BulkGrantSheet> {
 
   @override
   Widget build(BuildContext context) {
-    final allChildren = ref.watch(allChildrenProvider).value ?? [];
-    final coachId = ref.watch(currentUserModelProvider).value?.uid ?? '';
+    final allChildren = ref.watch(allChildrenProvider).asData?.value ?? [];
+    final coachId = ref.watch(currentUserModelProvider).asData?.value?.uid ?? '';
     final eligible = allChildren
         .where((c) => !widget.alreadyGranted.contains(c.id))
         .toList();

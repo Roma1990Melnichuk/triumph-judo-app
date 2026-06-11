@@ -45,7 +45,7 @@ class ChildCard extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final attendanceStats = showAttendance
-        ? ref.watch(childAttendanceStatsProvider(child.id)).value
+        ? ref.watch(childAttendanceStatsProvider(child.id)).asData?.value
         : null;
     final indivCount = showAttendance
         ? ref.watch(childConfirmedTrainingCountProvider(child.id))
@@ -55,7 +55,7 @@ class ChildCard extends ConsumerWidget {
     final nextBelt = child.currentBelt.next;
     double progressPct = 0.0;
     if (nextBelt != null) {
-      final progress = ref.watch(beltProgressProvider((childId: child.id, belt: nextBelt))).value;
+      final progress = ref.watch(beltProgressProvider((childId: child.id, belt: nextBelt))).asData?.value;
       final requirements = ref.watch(beltRequirementProvider(nextBelt));
       if (requirements != null && requirements.exercises.isNotEmpty) {
         final passedCount = progress?.passedCount ?? 0;

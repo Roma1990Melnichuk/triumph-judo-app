@@ -127,7 +127,7 @@ class _BulkGrantAchievementsScreenState
 
     setState(() { _saving = true; _grantDone = 0; _grantTotal = total; });
     try {
-      final coachId = ref.read(currentUserModelProvider).value?.uid ?? '';
+      final coachId = ref.read(currentUserModelProvider).asData?.value?.uid ?? '';
       final note = _noteCtrl.text.trim();
       await ref.read(achievementNotifierProvider.notifier).grantBulk(
         childIds: matched.map((c) => c.id).toList(),
@@ -171,8 +171,8 @@ class _BulkGrantAchievementsScreenState
 
   @override
   Widget build(BuildContext context) {
-    final children = ref.watch(allChildrenProvider).value ?? [];
-    final groups = ref.watch(groupsProvider).value ?? [];
+    final children = ref.watch(allChildrenProvider).asData?.value ?? [];
+    final groups = ref.watch(groupsProvider).asData?.value ?? [];
     final birthYears =
         children.map((c) => c.birthYear).toSet().toList()..sort();
     final matched = _matched(children, groups);

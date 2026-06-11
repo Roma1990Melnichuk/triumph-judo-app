@@ -27,7 +27,7 @@ class _GrantAchievementScreenState
 
   @override
   Widget build(BuildContext context) {
-    final children = ref.watch(allChildrenProvider).value ?? [];
+    final children = ref.watch(allChildrenProvider).asData?.value ?? [];
 
     return Scaffold(
       backgroundColor: AppColors.background,
@@ -177,9 +177,9 @@ class _GrantAchievementScreenState
   Widget _achievementList(ChildModel athlete) {
     final earnedAsync =
         ref.watch(childAchievementsProvider(athlete.id));
-    final earned = earnedAsync.value ?? [];
+    final earned = earnedAsync.asData?.value ?? [];
     final earnedIds = earned.map((a) => a.achievementId).toSet();
-    final user = ref.watch(currentUserModelProvider).value;
+    final user = ref.watch(currentUserModelProvider).asData?.value;
 
     final grouped = allAchievementsByCategory;
 

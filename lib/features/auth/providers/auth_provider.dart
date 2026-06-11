@@ -46,7 +46,7 @@ final allCoachesProvider = StreamProvider<List<UserModel>>((ref) {
 
 /// Returns the UserModel for a specific coach UID (derived from allCoachesProvider).
 final coachByIdProvider = Provider.family<UserModel?, String>((ref, coachId) {
-  final coaches = ref.watch(allCoachesProvider).value ?? [];
+  final coaches = ref.watch(allCoachesProvider).asData?.value ?? [];
   return coaches.where((c) => c.uid == coachId).firstOrNull;
 });
 

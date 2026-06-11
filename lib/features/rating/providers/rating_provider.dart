@@ -59,7 +59,7 @@ class CoachRanking {
 }
 
 final coachRankingProvider = Provider<List<CoachRanking>>((ref) {
-  final children = ref.watch(allChildrenProvider).value ?? [];
+  final children = ref.watch(allChildrenProvider).asData?.value ?? [];
   final map = <String, List<ChildModel>>{};
   for (final c in children) {
     if (c.coachId.isNotEmpty) (map[c.coachId] ??= []).add(c);
@@ -78,7 +78,7 @@ final coachRankingProvider = Provider<List<CoachRanking>>((ref) {
 final yearPointsProvider = Provider<Map<String, int>>((ref) {
   final f = ref.watch(ratingFilterProvider);
   if (f.competitionYear == null) return const {};
-  final results = ref.watch(allResultsProvider).value ?? [];
+  final results = ref.watch(allResultsProvider).asData?.value ?? [];
   final map = <String, int>{};
   for (final r in results.where((r) => r.seasonYear == f.competitionYear)) {
     map[r.childId] = (map[r.childId] ?? 0) + r.points;
@@ -88,7 +88,7 @@ final yearPointsProvider = Provider<Map<String, int>>((ref) {
 
 // Available competition season years from results data
 final competitionSeasonYearsProvider = Provider<List<int>>((ref) {
-  final results = ref.watch(allResultsProvider).value ?? [];
+  final results = ref.watch(allResultsProvider).asData?.value ?? [];
   final years = results.map((r) => r.seasonYear).toSet().toList()
     ..sort((a, b) => b.compareTo(a));
   if (years.isEmpty) return [DateTime.now().year];
@@ -98,7 +98,7 @@ final competitionSeasonYearsProvider = Provider<List<int>>((ref) {
 // Full sorted list without top-20 cap.
 // Used both by ratedChildrenProvider (which slices) and by the parent windowed view.
 final allRatedSortedProvider = Provider<List<ChildModel>>((ref) {
-  final children = ref.watch(allChildrenProvider).value ?? [];
+  final children = ref.watch(allChildrenProvider).asData?.value ?? [];
   final f = ref.watch(ratingFilterProvider);
   final yearPoints = ref.watch(yearPointsProvider);
 
