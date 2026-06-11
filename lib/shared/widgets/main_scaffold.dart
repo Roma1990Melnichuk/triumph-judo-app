@@ -27,7 +27,7 @@ class _MainScaffoldState extends ConsumerState<MainScaffold>
   // PNG icons with transparent backgrounds — no white-bg artifacts on dark navbar
   static const _coachIcons = [
     TIcon.home3d,      // Головна
-    TIcon.dojo3d,      // Команда
+    TIcon.family3d,    // Команда
     TIcon.rating3d,    // Рейтинг
     TIcon.calendar3d,  // Графік
     TIcon.belts3d,     // Пояси
@@ -35,7 +35,7 @@ class _MainScaffoldState extends ConsumerState<MainScaffold>
   ];
   static const _parentIcons = [
     TIcon.home3d,      // Головна
-    TIcon.dojo3d,      // Команда
+    TIcon.family3d,    // Команда
     TIcon.rating3d,    // Рейтинг
     TIcon.calendar3d,  // Графік
     TIcon.settings3d,  // Налаштування
@@ -185,10 +185,9 @@ class _NavItem extends StatelessWidget {
       mainAxisAlignment: MainAxisAlignment.center,
       mainAxisSize: MainAxisSize.min,
       children: [
-        // Icon — full opacity when active, dimmed when inactive
         Opacity(
-          opacity: active ? 1.0 : 0.4,
-          child: TriumphIcon(icon, size: 28),
+          opacity: active ? 1.0 : 0.7,
+          child: TriumphIcon(icon, size: 30),
         ),
         const SizedBox(height: 3),
         // Orange dot indicator below the icon

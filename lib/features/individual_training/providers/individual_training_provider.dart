@@ -84,8 +84,10 @@ final childSlotsProvider =
 // ── Confirmed individual training count for a child ──────────────────────────
 final childConfirmedTrainingCountProvider =
     Provider.family<int, String>((ref, childId) {
-  final slots = ref.watch(childSlotsProvider(childId)).value ?? [];
-  return slots.where((s) => s.status == SlotStatus.confirmed).length;
+  return ref.watch(childSlotsProvider(childId)).maybeWhen(
+    data: (slots) => slots.where((s) => s.status == SlotStatus.confirmed).length,
+    orElse: () => 0,
+  );
 });
 
 // ── CRUD notifier ─────────────────────────────────────────────────────────────
