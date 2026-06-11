@@ -3,9 +3,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../core/constants/app_colors.dart';
 import '../../features/auth/providers/auth_provider.dart';
-import '../animations/app_animations.dart';
 import 'offline_banner.dart';
 import 'premium_widgets.dart';
+import 'triumph_icon.dart';
 
 class MainScaffold extends ConsumerStatefulWidget {
   const MainScaffold({super.key, required this.child});
@@ -26,19 +26,19 @@ class _MainScaffoldState extends ConsumerState<MainScaffold>
 
   // Nav icon types
   static const _coachIcons = [
-    TriumphIconType.club,        // Головна
-    TriumphIconType.team,        // Команда
-    TriumphIconType.rating,      // Рейтинг
-    TriumphIconType.calendar,    // Графік
-    TriumphIconType.belt,        // Пояси
-    TriumphIconType.settings,    // Налашт.
+    TIcon.home3d,      // Головна
+    TIcon.team,        // Команда
+    TIcon.rating3d,    // Рейтинг
+    TIcon.calendar3d,  // Графік
+    TIcon.belts3d,     // Пояси
+    TIcon.settings3d,  // Налашт.
   ];
   static const _parentIcons = [
-    TriumphIconType.club,        // Головна
-    TriumphIconType.team,        // Команда
-    TriumphIconType.rating,      // Рейтинг
-    TriumphIconType.calendar,    // Графік
-    TriumphIconType.settings,    // Налашт.
+    TIcon.home3d,      // Головна
+    TIcon.team,        // Команда
+    TIcon.rating3d,    // Рейтинг
+    TIcon.calendar3d,  // Графік
+    TIcon.settings3d,  // Налашт.
   ];
 
   static const _coachLabels  = ['Головна', 'Команда', 'Рейтинг', 'Графік', 'Пояси', 'Налаштування'];
@@ -75,9 +75,9 @@ class _MainScaffoldState extends ConsumerState<MainScaffold>
     final isCoach   = userAsync.value?.isCoach ?? false;
     final location  = GoRouterState.of(context).matchedLocation;
 
-    final routes = isCoach ? _coachRoutes : _parentRoutes;
-    final icons  = isCoach ? _coachIcons  : _parentIcons;
-    final labels = isCoach ? _coachLabels : _parentLabels;
+    final routes = isCoach ? _coachRoutes  : _parentRoutes;
+    final icons  = isCoach ? _coachIcons   : _parentIcons;
+    final labels = isCoach ? _coachLabels  : _parentLabels;
 
     int currentIndex = 0;
     for (var i = 0; i < routes.length; i++) {
@@ -124,7 +124,7 @@ class _TriumphNavBar extends StatelessWidget {
   });
 
   final int currentIndex;
-  final List<TriumphIconType> icons;
+  final List<TIcon> icons;
   final List<String> labels;
   final List<Animation<double>> tapScales;
   final ValueChanged<int> onTap;
@@ -175,13 +175,13 @@ class _NavItem extends StatelessWidget {
     required this.active,
   });
 
-  final TriumphIconType icon;
+  final TIcon icon;
   final String label;
   final bool active;
 
   @override
   Widget build(BuildContext context) {
-    final (col, row) = icon.pos;
+    final iconWidget = TriumphIcon(icon, size: 26);
     return Column(
       mainAxisAlignment: MainAxisAlignment.center,
       mainAxisSize: MainAxisSize.min,
@@ -189,13 +189,9 @@ class _NavItem extends StatelessWidget {
         GlowIcon(
           isActive: active,
           color: AppColors.orange,
-          icon: ColorFiltered(
-            colorFilter: ColorFilter.mode(
-              active ? AppColors.orange : AppColors.textSecondary,
-              BlendMode.srcIn,
-            ),
-            child: TriumphNavIcon(col: col, row: row, size: 26),
-          ),
+          icon: active
+              ? iconWidget
+              : Opacity(opacity: 0.42, child: iconWidget),
         ),
         const SizedBox(height: 3),
         AnimatedDefaultTextStyle(

@@ -83,6 +83,10 @@ enum TIcon {
   trainer3d, family3d, premium3d,
   // 3D action icons (PNG)
   delete3d, edit3d, add3d, message3d,
+  // 3D nav icons (PNG)
+  settings3d,
+  home3d,
+  rating3d,
 }
 
 class TriumphIcon extends StatelessWidget {
@@ -107,6 +111,8 @@ class TriumphIcon extends StatelessWidget {
     TIcon.award3d, TIcon.bag3d, TIcon.emblem3d, TIcon.trainer3d,
     TIcon.family3d, TIcon.premium3d,
     TIcon.delete3d, TIcon.edit3d, TIcon.add3d, TIcon.message3d,
+    TIcon.settings3d, TIcon.home3d, TIcon.rating3d,
+    TIcon.calendar3d,
   };
 
   static String _assetPath(TIcon icon) {
@@ -214,6 +220,9 @@ class TriumphIcon extends StatelessWidget {
       TIcon.edit3d       => Icons.edit_outlined,
       TIcon.add3d        => Icons.add_circle_outline,
       TIcon.message3d    => Icons.chat_bubble_outline,
+      TIcon.settings3d   => Icons.settings_outlined,
+      TIcon.home3d       => Icons.home_outlined,
+      TIcon.rating3d     => Icons.leaderboard_outlined,
     };
   }
 
