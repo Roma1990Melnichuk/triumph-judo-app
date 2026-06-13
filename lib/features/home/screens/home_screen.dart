@@ -1,6 +1,8 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import '../../../core/constants/achievement_defs.dart';
 import '../../../core/constants/app_colors.dart';
 import '../../../core/constants/belt_levels.dart';
 import '../../../core/models/child_model.dart';
@@ -27,6 +29,7 @@ class HomeScreen extends ConsumerStatefulWidget {
 class _HomeScreenState extends ConsumerState<HomeScreen>
     with TickerProviderStateMixin {
   final List<AnimationController> _entryCtrl = [];
+  bool _achievementsSeeded = false;
 
   @override
   void initState() {
@@ -39,6 +42,93 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
         if (mounted) c.forward();
       });
     }
+    // Auto-seed achievements once for coaches after data loads
+    Future.delayed(const Duration(seconds: 4), () async {
+      if (!mounted || _achievementsSeeded) return;
+      final isCoach = ref.read(currentUserModelProvider).asData?.value?.isCoach ?? false;
+      if (!isCoach) return;
+      final athletes = ref.read(allChildrenProvider).asData?.value ?? [];
+      if (athletes.isEmpty) return;
+      _achievementsSeeded = true;
+      await _seedAchievements(athletes);
+    });
+  }
+
+  Future<void> _seedAchievements(List<ChildModel> children) async {
+    const beltAchIds = [
+      'belt_white', 'belt_whiteYellow', 'belt_yellow', 'belt_yellowOrange',
+      'belt_orange', 'belt_orangeGreen', 'belt_green', 'belt_greenBlue',
+      'belt_blue', 'belt_blueBrown', 'belt_brown', 'belt_black',
+    ];
+    final db = ref.read(firestoreProvider);
+    final coachId = ref.read(currentUserModelProvider).asData?.value?.uid ?? '';
+    final now = DateTime.now();
+    final validIds = kAchievements.map((a) => a.id).toSet();
+    var batch = db.batch();
+    var count = 0;
+
+    for (int idx = 0; idx < children.length; idx++) {
+      final child = children[idx];
+      final beltIdx = BeltLevel.values.indexOf(child.currentBelt);
+      final pts = child.totalPoints;
+      final achieved = <String>{};
+
+      for (int b = 0; b <= beltIdx; b++) achieved.add(beltAchIds[b]);
+      if (pts > 0)   achieved.add('first_tournament');
+      if (pts > 0  && idx % 4 < 3) { achieved.add('first_medal'); achieved.add('bronze_medalist'); }
+      if (pts > 20 && idx % 4 < 2) achieved.add('silver_medalist');
+      if (pts > 30)  achieved.add('champion');
+      if (pts > 50)  achieved.add('tournament_3_streak');
+      if (pts > 100) achieved.add('medals_10');
+      if (pts > 200) achieved.add('medals_20');
+      if (pts > 150 && idx % 3 == 0) achieved.add('podium_5_streak');
+      achieved.add('first_training');
+      achieved.add('trainings_10');
+      if (beltIdx >= 3) achieved.add('trainings_50');
+      if (beltIdx >= 5) achieved.add('trainings_100');
+      if (beltIdx >= 8) achieved.add('trainings_250');
+      if (beltIdx >= 10) achieved.add('trainings_500');
+      if (idx % 2 == 0) achieved.add('streak_7');
+      if (idx % 4 == 0) achieved.add('streak_14');
+      if (idx % 7 == 0) achieved.add('streak_30');
+      if (idx % 13 == 0) achieved.add('streak_100');
+      if (idx % 34 == 0) achieved.add('year_no_miss');
+      if (idx % 21 == 0) achieved.add('attendance_100_year');
+      if (idx % 17 == 1)  achieved.add('autumn_discipline');
+      if (idx % 17 == 5)  achieved.add('winter_discipline');
+      if (idx % 17 == 9)  achieved.add('spring_discipline');
+      if (idx % 17 == 13) achieved.add('summer_discipline');
+      if (idx % 3 == 0) achieved.add('fair_play');
+      if (idx % 5 == 0) achieved.add('friend_of_team');
+      if (idx % 7 == 1) achieved.add('respect');
+      if (idx % 9 == 2) achieved.add('team_support');
+      if (idx % 15 == 3) achieved.add('team_leader');
+      if (idx % 4 == 1) achieved.add('throw_master');
+      if (beltIdx >= 6 && idx % 5 == 2) achieved.add('hold_master');
+      if (beltIdx >= 7 && idx % 7 == 3) achieved.add('pain_master');
+      if (beltIdx >= 9 && idx % 9 == 4) achieved.add('counter_master');
+      achieved.retainAll(validIds);
+
+      final earnedAt = now.subtract(Duration(days: idx % 600 + 10));
+      for (final achId in achieved) {
+        batch.set(
+          db.collection('achievements').doc('${child.id}_$achId'),
+          {
+            'childId': child.id,
+            'achievementId': achId,
+            'earnedAt': Timestamp.fromDate(earnedAt),
+            if (coachId.isNotEmpty) 'grantedByCoachId': coachId,
+          },
+        );
+        count++;
+        if (count == 400) {
+          await batch.commit();
+          batch = db.batch();
+          count = 0;
+        }
+      }
+    }
+    if (count > 0) await batch.commit();
   }
 
   @override
@@ -77,14 +167,6 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
     final isCoach     = user?.isCoach ?? false;
     final allAsync    = ref.watch(allChildrenProvider);
 
-    // Auto-seed 1000 demo athletes the first time a coach opens an empty club.
-    ref.listen<AsyncValue<List<ChildModel>>>(allChildrenProvider, (prev, next) {
-      if ((prev?.hasValue != true) && next.hasValue &&
-          isCoach && (next.asData?.value.isEmpty ?? false)) {
-        ref.read(childrenNotifierProvider.notifier)
-            .seedTestData(user!.uid, user.name);
-      }
-    });
     final schedAsync  = ref.watch(schedulesProvider);
     final recentAsync = ref.watch(recentResultsProvider);
     final medAsync    = ref.watch(totalResultsCountProvider);
@@ -140,6 +222,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
                                 children: [
                                   Text(
                                     '${_greeting()}, ${user?.name.split(' ').first ?? (isCoach ? 'Тренер' : 'Батьку')}!',
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
                                     style: const TextStyle(
                                       fontSize: 22,
                                       fontWeight: FontWeight.bold,
@@ -253,12 +337,14 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
                           mainAxisAlignment:
                               MainAxisAlignment.spaceBetween,
                           children: [
-                            const Text(
-                              'Статистика команди',
-                              style: TextStyle(
-                                fontSize: 16,
-                                fontWeight: FontWeight.w500, // Inter Medium 16
-                                color: AppColors.textPrimary,
+                            const Flexible(
+                              child: Text(
+                                'Статистика команди',
+                                style: TextStyle(
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.w500, // Inter Medium 16
+                                  color: AppColors.textPrimary,
+                                ),
                               ),
                             ),
                             const Text(
@@ -392,9 +478,11 @@ class _HeroCardState extends State<_HeroCard>
             child: const Icon(Icons.calendar_today_outlined, size: 22),
           ),
           const SizedBox(width: 14),
-          const Text('Сьогодні тренувань немає',
-              style: TextStyle(
-                  color: AppColors.textSecondary, fontSize: 14)),
+          const Flexible(
+            child: Text('Сьогодні тренувань немає',
+                style: TextStyle(
+                    color: AppColors.textSecondary, fontSize: 14)),
+          ),
         ]),
       );
 

@@ -5,17 +5,18 @@ import '../../../core/models/group_model.dart';
 import '../../../core/models/attendance_model.dart';
 import '../../achievements/achievement_checker.dart';
 import '../../auth/providers/auth_provider.dart';
+import '../../../core/utils/stream_utils.dart';
 
 // All groups (all coaches)
 final groupsProvider = StreamProvider<List<GroupModel>>((ref) {
-  final auth = ref.watch(authStateProvider);
-  if (auth.value == null) return const Stream.empty();
+  final user = ref.watch(currentUserModelProvider);
+  if (user.value == null) return const Stream.empty();
   return ref
       .watch(firestoreProvider)
       .collection('groups')
       .snapshots()
       .map((s) => s.docs.map(GroupModel.fromFirestore).toList())
-      .handleError((_) {});
+      .fallbackOnError(const []);
 });
 
 // Groups that contain a specific child
@@ -34,8 +35,8 @@ final childGroupsProvider =
 // Returns Map<"YYYY-MM-DD", bool> where bool = isPresent
 final childAttendanceMapProvider = StreamProvider.family<Map<String, bool>,
     ({String childId, List<String> groupIds, int seasonYear})>((ref, args) async* {
-  final auth = ref.watch(authStateProvider);
-  if (auth.value == null || args.groupIds.isEmpty) {
+  final user = ref.watch(currentUserModelProvider);
+  if (user.value == null || args.groupIds.isEmpty) {
     yield {};
     return;
   }
@@ -292,13 +293,13 @@ final childAttendanceStatsProvider =
 // Stream attendance doc for one group+date (for real-time UI)
 final attendanceDocProvider =
     StreamProvider.family<AttendanceModel?, String>((ref, docId) {
-  final auth = ref.watch(authStateProvider);
-  if (auth.value == null) return const Stream.empty();
+  final user = ref.watch(currentUserModelProvider);
+  if (user.value == null) return const Stream.empty();
   return ref
       .watch(firestoreProvider)
       .collection('attendance')
       .doc(docId)
       .snapshots()
       .map((d) => d.exists ? AttendanceModel.fromFirestore(d) : null)
-      .handleError((_) {});
+      .fallbackOnError(null);
 });

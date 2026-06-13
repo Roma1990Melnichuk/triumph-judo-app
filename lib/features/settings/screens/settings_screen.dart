@@ -1,13 +1,11 @@
 import 'dart:io';
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import '../../../core/constants/achievement_defs.dart';
+import 'package:url_launcher/url_launcher.dart';
 import '../../../core/constants/app_colors.dart';
-import '../../../core/constants/belt_levels.dart';
 import '../../../core/models/user_model.dart';
 import '../../../features/auth/providers/auth_provider.dart';
 import '../../../features/notifications/providers/notification_provider.dart';
@@ -187,6 +185,18 @@ class SettingsScreen extends ConsumerWidget {
                   onTap: () => context.push('/bulk-fitness-goals'),
                 ),
                 _MenuItem(
+                  icon: Icons.quiz_outlined,
+                  color: const Color(0xFF5E5CE6),
+                  label: 'Опитування спортсменів',
+                  onTap: () => context.push('/questionnaires'),
+                ),
+                _MenuItem(
+                  icon: Icons.fitness_center_rounded,
+                  color: AppColors.orange,
+                  label: 'Бібліотека вправ',
+                  onTap: () => context.push('/exercise-library'),
+                ),
+                _MenuItem(
                   icon: Icons.history,
                   color: const Color(0xFF5AC8FA),
                   label: 'Експорт даних',
@@ -211,6 +221,12 @@ class SettingsScreen extends ConsumerWidget {
                   label: 'Моя дитина',
                   onTap: () => _showLinkChild(context, ref, user!),
                 ),
+                _MenuItem(
+                  icon: Icons.quiz_outlined,
+                  color: const Color(0xFF5E5CE6),
+                  label: 'Опитування',
+                  onTap: () => context.push('/questionnaires'),
+                ),
               ],
               _MenuItem(
                 icon: Icons.notifications_outlined,
@@ -229,10 +245,73 @@ class SettingsScreen extends ConsumerWidget {
           ),
           const SizedBox(height: 20),
 
-          if (isCoach) ...[
-            const _DevSection(),
-            const SizedBox(height: 20),
-          ],
+          // ── News section ──────────────────────────────────────────────────
+          const _SectionHeader(label: 'Новини клубу'),
+          const SizedBox(height: 8),
+          _MenuSection(
+            items: [
+              _MenuItem(
+                icon: Icons.newspaper_outlined,
+                color: const Color(0xFF1565C0),
+                label: 'Стрічка новин',
+                onTap: () => context.push('/news'),
+              ),
+              _MenuItem(
+                icon: Icons.emoji_events_outlined,
+                color: AppColors.accent,
+                label: 'Дошка пошани',
+                onTap: () => context.push('/news/honor-board'),
+              ),
+              if (isCoach)
+                _MenuItem(
+                  icon: Icons.add_circle_outline,
+                  color: AppColors.primary,
+                  label: 'Нова публікація',
+                  onTap: () => context.push('/news/create'),
+                ),
+            ],
+          ),
+          const SizedBox(height: 20),
+
+          // ── Shop section ──────────────────────────────────────────────────
+          const _SectionHeader(label: 'Магазин'),
+          const SizedBox(height: 8),
+          _MenuSection(
+            items: [
+              if (isCoach) ...[
+                _MenuItem(
+                  icon: Icons.shopping_bag_outlined,
+                  color: AppColors.accent,
+                  label: 'Клубний магазин',
+                  onTap: () => context.push('/shop'),
+                ),
+                _MenuItem(
+                  icon: Icons.receipt_long_outlined,
+                  label: 'Адмін: Замовлення',
+                  onTap: () => context.push('/shop/admin'),
+                ),
+              ],
+              if (!isCoach) ...[
+                _MenuItem(
+                  icon: Icons.shopping_bag_outlined,
+                  label: 'Клубний магазин',
+                  onTap: () => context.push('/shop'),
+                ),
+                _MenuItem(
+                  icon: Icons.local_shipping_outlined,
+                  label: 'Мої замовлення',
+                  onTap: () => context.push('/shop/orders'),
+                ),
+              ],
+            ],
+          ),
+          const SizedBox(height: 20),
+
+          // ── Social media ───────────────────────────────────────────────────
+          const _SectionHeader(label: 'Ми в соцмережах'),
+          const SizedBox(height: 8),
+          const _SocialMediaSection(),
+          const SizedBox(height: 20),
 
           // ── Sign out ───────────────────────────────────────────────────────
           GradientButton(
@@ -536,7 +615,9 @@ class _MenuItem extends StatelessWidget {
         child: iconWidget,
       );
     }
-    return ListTile(
+    return Material(
+      color: Colors.transparent,
+      child: ListTile(
       leading: leading,
       title: Text(
         label,
@@ -570,6 +651,7 @@ class _MenuItem extends StatelessWidget {
         ],
       ),
       onTap: onTap,
+      ),
     );
   }
 }
@@ -589,8 +671,26 @@ class _CsvImportSheet extends ConsumerStatefulWidget {
 class _CsvImportSheetState extends ConsumerState<_CsvImportSheet> {
   bool _loading = false;
   String? _result;
+  late final TextEditingController _coachNameCtrl;
+
+  @override
+  void initState() {
+    super.initState();
+    _coachNameCtrl = TextEditingController(text: widget.user.name);
+  }
+
+  @override
+  void dispose() {
+    _coachNameCtrl.dispose();
+    super.dispose();
+  }
 
   Future<void> _pickAndImport() async {
+    final coachName = _coachNameCtrl.text.trim();
+    if (coachName.isEmpty) {
+      setState(() => _result = 'Помилка: введіть ім\'я тренера');
+      return;
+    }
     final result = await FilePicker.platform.pickFiles(
       type: FileType.custom,
       allowedExtensions: ['csv'],
@@ -607,7 +707,7 @@ class _CsvImportSheetState extends ConsumerState<_CsvImportSheet> {
       }
       final count = await ref
           .read(childrenNotifierProvider.notifier)
-          .importFromCsv(parsed.valid, widget.user.uid, widget.user.name);
+          .importFromCsv(parsed.valid, widget.user.uid, coachName);
       setState(() { _result = 'Імпортовано $count спортсменів ✅'; });
     } catch (e) {
       setState(() { _result = 'Помилка: $e'; });
@@ -631,6 +731,15 @@ class _CsvImportSheetState extends ConsumerState<_CsvImportSheet> {
           const Text(
             'Файл має містити колонки: Прізвище, Ім\'я, Рік (обов\'язкові), Вага, Пояс (необов\'язкові). Кодування: UTF-8.',
             style: TextStyle(color: AppColors.textSecondary, fontSize: 13),
+          ),
+          const SizedBox(height: 16),
+          TextField(
+            controller: _coachNameCtrl,
+            decoration: const InputDecoration(
+              labelText: 'Ім\'я тренера',
+              prefixIcon: Icon(Icons.person_outline),
+              border: OutlineInputBorder(),
+            ),
           ),
           const SizedBox(height: 16),
           if (_result != null)
@@ -773,7 +882,10 @@ class _ProfileAvatar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final photoUrl = FirebaseAuth.instance.currentUser?.photoURL;
+    String? photoUrl;
+    try {
+      photoUrl = FirebaseAuth.instance.currentUser?.photoURL;
+    } catch (_) {}
     return Container(
       width: 64,
       height: 64,
@@ -818,6 +930,135 @@ class _InitialsCircle extends StatelessWidget {
           ),
         ),
       );
+}
+
+class _SectionHeader extends StatelessWidget {
+  const _SectionHeader({required this.label});
+  final String label;
+
+  @override
+  Widget build(BuildContext context) => Padding(
+        padding: const EdgeInsets.only(left: 4, bottom: 0),
+        child: Text(
+          label.toUpperCase(),
+          style: const TextStyle(
+            fontSize: 11,
+            fontWeight: FontWeight.w700,
+            color: AppColors.textSecondary,
+            letterSpacing: 0.8,
+          ),
+        ),
+      );
+}
+
+// ── Social Media ────────────────────────────────────────────────────────────
+
+const _kInstagramUrl = 'https://www.instagram.com/triumph_judo/';
+const _kViberUrl = 'viber://chat?number=%2B380XXXXXXXXX';
+const _kTelegramUrl = 'https://t.me/triumph_judo';
+const _kFacebookUrl = 'https://www.facebook.com/triumph.judo';
+
+class _SocialMediaSection extends StatelessWidget {
+  const _SocialMediaSection();
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      decoration: BoxDecoration(
+        color: const Color(0xFF1A1A1A),
+        borderRadius: BorderRadius.circular(16),
+      ),
+      padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 12),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceAround,
+        children: const [
+          _SocialButton(
+            iconLabel: '📷',
+            label: 'Instagram',
+            color: Color(0xFFE1306C),
+            url: _kInstagramUrl,
+          ),
+          _SocialButton(
+            iconLabel: 'V',
+            label: 'Viber',
+            color: Color(0xFF7360F2),
+            url: _kViberUrl,
+          ),
+          _SocialButton(
+            iconLabel: '✈',
+            label: 'Telegram',
+            color: Color(0xFF0088CC),
+            url: _kTelegramUrl,
+          ),
+          _SocialButton(
+            iconLabel: 'f',
+            label: 'Facebook',
+            color: Color(0xFF1877F2),
+            url: _kFacebookUrl,
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _SocialButton extends StatelessWidget {
+  const _SocialButton({
+    required this.iconLabel,
+    required this.label,
+    required this.color,
+    required this.url,
+  });
+
+  final String iconLabel;
+  final String label;
+  final Color color;
+  final String url;
+
+  Future<void> _open() async {
+    final uri = Uri.parse(url);
+    if (await canLaunchUrl(uri)) {
+      await launchUrl(uri, mode: LaunchMode.externalApplication);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: _open,
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Container(
+            width: 52,
+            height: 52,
+            decoration: BoxDecoration(
+              color: color,
+              shape: BoxShape.circle,
+            ),
+            child: Center(
+              child: Text(
+                iconLabel,
+                style: TextStyle(
+                  color: Colors.white,
+                  fontSize: iconLabel.length == 1 ? 22 : 18,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ),
+          ),
+          const SizedBox(height: 6),
+          Text(
+            label,
+            style: const TextStyle(
+              fontSize: 11,
+              color: AppColors.textSecondary,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
 }
 
 class _AddCompetitionTypeDialog extends StatefulWidget {
@@ -1171,410 +1412,6 @@ class _EditProfileDialogState extends ConsumerState<_EditProfileDialog> {
     );
   }
 }
-
-// ─────────────────────────────────────────────────────────────────────────────
-// Dev tools / seed section (coach only)
-// ─────────────────────────────────────────────────────────────────────────────
-
-class _DevSection extends ConsumerStatefulWidget {
-  const _DevSection();
-
-  @override
-  ConsumerState<_DevSection> createState() => _DevSectionState();
-}
-
-class _DevSectionState extends ConsumerState<_DevSection> {
-  bool _seeding = false;
-  String? _result;
-
-  Future<void> _run(Future<String> Function() fn) async {
-    setState(() { _seeding = true; _result = null; });
-    try {
-      final msg = await fn();
-      setState(() => _result = msg);
-    } catch (e) {
-      setState(() => _result = 'Помилка: $e');
-    } finally {
-      setState(() => _seeding = false);
-    }
-  }
-
-  // ── 1. Seed 1000 athletes ─────────────────────────────────────────────────
-  Future<void> _seedAthletes() => _run(() async {
-    final user = ref.read(currentUserModelProvider).asData?.value;
-    if (user == null) return 'Не авторизовано';
-    await ref.read(childrenNotifierProvider.notifier)
-        .seedTestData(user.uid, user.name);
-    return 'Засіяно 1000 спортсменів ✓';
-  });
-
-  // ── 2. Seed memberships ───────────────────────────────────────────────────
-  Future<void> _seedMemberships() => _run(() async {
-    final children = ref.read(allChildrenProvider).asData?.value ?? [];
-    if (children.isEmpty) return 'Спортсменів не знайдено';
-
-    final db = ref.read(firestoreProvider);
-    final now = DateTime.now();
-    final plans = [
-      'Безлімітний', '3 рази на тиждень', '2 рази на тиждень',
-      'Разові відвідування',
-    ];
-    // Session-based plan: 12 sessions total
-    const sessionPlan = 'Разові відвідування';
-    var batch = db.batch();
-    var count = 0;
-    var seeded = 0;
-
-    for (int i = 0; i < children.length; i++) {
-      final c = children[i];
-      final segment = i % 5;
-      if (segment == 4) continue; // 20% without membership
-
-      final DateTime startDate;
-      final DateTime endDate;
-      switch (segment) {
-        case 0: // active, ends in 40+ days
-          startDate = now.subtract(const Duration(days: 15));
-          endDate = now.add(Duration(days: 40 + (i % 20) * 3));
-        case 1: // active, ends in 15+ days
-          startDate = now.subtract(const Duration(days: 20));
-          endDate = now.add(Duration(days: 15 + (i % 10)));
-        case 2: // expiring soon (≤7 days)
-          startDate = now.subtract(const Duration(days: 25));
-          endDate = now.add(Duration(days: 1 + i % 6));
-        default: // expired
-          startDate = now.subtract(Duration(days: 40 + i % 30));
-          endDate = now.subtract(Duration(days: 3 + i % 25));
-      }
-
-      final isSession = plans[i % plans.length] == sessionPlan;
-      final Map<String, dynamic> data = {
-        'athleteId': c.id,
-        'planName': plans[i % plans.length],
-        'startDate': Timestamp.fromDate(startDate),
-        'endDate': Timestamp.fromDate(endDate),
-        'amount': (800 + (i % 5) * 200).toDouble(),
-        'currency': 'UAH',
-      };
-      if (isSession) {
-        data['totalSessions'] = 12;
-        data['sessionsUsed'] = 3 + i % 10;
-      }
-
-      batch.set(db.collection('memberships').doc(c.id), data);
-      count++;
-      seeded++;
-
-      if (count == 400) {
-        await batch.commit();
-        batch = db.batch();
-        count = 0;
-      }
-    }
-    if (count > 0) await batch.commit();
-    return 'Засіяно $seeded абонементів ✓';
-  });
-
-  // ── 3. Seed achievements ──────────────────────────────────────────────────
-  Future<void> _seedAchievements() => _run(() async {
-    final children = ref.read(allChildrenProvider).asData?.value ?? [];
-    if (children.isEmpty) return 'Спортсменів не знайдено';
-
-    const beltAchIds = [
-      'belt_white', 'belt_whiteYellow', 'belt_yellow', 'belt_yellowOrange',
-      'belt_orange', 'belt_orangeGreen', 'belt_green', 'belt_greenBlue',
-      'belt_blue', 'belt_blueBrown', 'belt_brown', 'belt_black',
-    ];
-
-    final db = ref.read(firestoreProvider);
-    final coachId = ref.read(currentUserModelProvider).asData?.value?.uid ?? '';
-    final now = DateTime.now();
-    var batch = db.batch();
-    var count = 0;
-    var seeded = 0;
-
-    for (int idx = 0; idx < children.length; idx++) {
-      final child = children[idx];
-      final beltIdx = BeltLevel.values.indexOf(child.currentBelt);
-      final pts = child.totalPoints;
-      final achieved = <String>{};
-
-      // Belt achievements: every belt earned up to current
-      for (int b = 0; b <= beltIdx; b++) {
-        achieved.add(beltAchIds[b]);
-      }
-
-      // Tournament achievements (based on total points tier)
-      if (pts > 0)   achieved.add('first_tournament');
-      if (pts > 0  && idx % 4 < 3) { achieved.add('first_medal'); achieved.add('bronze_medalist'); }
-      if (pts > 20 && idx % 4 < 2) achieved.add('silver_medalist');
-      if (pts > 30)  achieved.add('champion');
-      if (pts > 50)  achieved.add('tournament_3_streak');
-      if (pts > 100) achieved.add('medals_10');
-      if (pts > 200) achieved.add('medals_20');
-      if (pts > 150 && idx % 3 == 0) achieved.add('podium_5_streak');
-
-      // Training achievements (based on belt seniority)
-      achieved.add('first_training');
-      achieved.add('trainings_10');
-      if (beltIdx >= 3) achieved.add('trainings_50');
-      if (beltIdx >= 5) achieved.add('trainings_100');
-      if (beltIdx >= 8) achieved.add('trainings_250');
-      if (beltIdx >= 10) achieved.add('trainings_500');
-
-      // Discipline (attendance streaks — spread deterministically)
-      if (idx % 2 == 0) achieved.add('streak_7');
-      if (idx % 4 == 0) achieved.add('streak_14');
-      if (idx % 7 == 0) achieved.add('streak_30');
-      if (idx % 13 == 0) achieved.add('streak_100');
-      if (idx % 34 == 0) achieved.add('year_no_miss');
-      if (idx % 21 == 0) achieved.add('attendance_100_year');
-      // Seasonal samurais (~5% each, non-overlapping)
-      if (idx % 17 == 1)  achieved.add('autumn_discipline');
-      if (idx % 17 == 5)  achieved.add('winter_discipline');
-      if (idx % 17 == 9)  achieved.add('spring_discipline');
-      if (idx % 17 == 13) achieved.add('summer_discipline');
-
-      // Behavior / technique (manual, sparse)
-      if (idx % 3 == 0) achieved.add('fair_play');
-      if (idx % 5 == 0) achieved.add('friend_of_team');
-      if (idx % 7 == 1) achieved.add('respect');
-      if (idx % 9 == 2) achieved.add('team_support');
-      if (idx % 15 == 3) achieved.add('team_leader');
-      if (idx % 4 == 1) achieved.add('throw_master');
-      if (beltIdx >= 6 && idx % 5 == 2) achieved.add('hold_master');
-      if (beltIdx >= 7 && idx % 7 == 3) achieved.add('pain_master');
-      if (beltIdx >= 9 && idx % 9 == 4) achieved.add('counter_master');
-
-      // Validate: keep only IDs that exist in kAchievements
-      final validIds = kAchievements.map((a) => a.id).toSet();
-      achieved.retainAll(validIds);
-
-      final earnedAt = now.subtract(Duration(days: idx % 600 + 10));
-
-      for (final achId in achieved) {
-        batch.set(
-          db.collection('achievements').doc('${child.id}_$achId'),
-          {
-            'childId': child.id,
-            'achievementId': achId,
-            'earnedAt': Timestamp.fromDate(earnedAt),
-            if (coachId.isNotEmpty) 'grantedByCoachId': coachId,
-          },
-        );
-        count++;
-        seeded++;
-        if (count == 400) {
-          await batch.commit();
-          batch = db.batch();
-          count = 0;
-        }
-      }
-    }
-    if (count > 0) await batch.commit();
-    return 'Засіяно $seeded ачивок ✓';
-  });
-
-  // ── 4. Seed competition results ───────────────────────────────────────────
-  Future<void> _seedCompetitionResults() => _run(() async {
-    final children = ref.read(allChildrenProvider).asData?.value ?? [];
-    if (children.isEmpty) return 'Спортсменів не знайдено';
-
-    // Points awarded per place index [0=1st, 1=2nd, 2=3rd, 3=4–6th]
-    const levelPts = {
-      'club':          [5, 3, 2, 1],
-      'local':         [8, 5, 3, 1],
-      'district':      [12, 8, 5, 2],
-      'regional':      [20, 13, 8, 3],
-      'national':      [40, 25, 15, 5],
-      'international': [60, 40, 25, 8],
-      'european':      [80, 50, 30, 10],
-      'world':         [120, 80, 50, 15],
-    };
-    const compNames = [
-      'Кубок міста', 'Міська першість', 'Відкрита першість',
-      'Першість клубу', 'Регіональний чемпіонат', 'Всеукраїнська першість',
-      'Кубок України', 'Чемпіонат України', 'Міжнародний турнір',
-      'Меморіал Сагайдачного', 'Кубок Гетьмана', 'Призи весни',
-      'Осінній турнір', 'Різдвяний кубок', 'Турнір дружби',
-      'Відкритий чемпіонат', 'Першість федерації', 'Кубок регіону',
-    ];
-
-    List<String> levelsFor(int pts) {
-      if (pts < 20)  return ['club'];
-      if (pts < 60)  return ['club', 'local'];
-      if (pts < 150) return ['club', 'local', 'district'];
-      if (pts < 300) return ['local', 'district', 'regional'];
-      return ['regional', 'national', 'international'];
-    }
-
-    int resultCount(int pts) {
-      if (pts == 0) return 0;
-      if (pts < 15)  return 1;
-      if (pts < 40)  return 2 + pts ~/ 15;
-      if (pts < 100) return 4 + pts ~/ 20;
-      if (pts < 250) return 7 + pts ~/ 30;
-      return (12 + pts ~/ 50).clamp(0, 20);
-    }
-
-    final db = ref.read(firestoreProvider);
-    final coachId = ref.read(currentUserModelProvider).asData?.value?.uid ?? '';
-    final now = DateTime.now();
-    var batch = db.batch();
-    var count = 0;
-    var seeded = 0;
-
-    for (int idx = 0; idx < children.length; idx++) {
-      final child = children[idx];
-      final pts = child.totalPoints;
-      final n = resultCount(pts);
-      final levels = levelsFor(pts);
-
-      for (int j = 0; j < n; j++) {
-        final levelName = levels[(idx + j) % levels.length];
-        final ptsTable = levelPts[levelName]!;
-
-        // Place distribution: better athletes place higher
-        final roll = (idx * 7 + j * 13) % 10;
-        final int place;
-        if (pts > 300) {
-          place = [1, 1, 2, 1, 2, 3, 1, 2, 3, 1][roll];
-        } else if (pts > 100) {
-          place = [1, 2, 3, 3, 4, 2, 3, 1, 5, 4][roll];
-        } else if (pts > 30) {
-          place = [3, 4, 5, 4, 3, 5, 6, 4, 3, 6][roll];
-        } else {
-          place = [4, 5, 6, 5, 4, 6, 5, 6, 4, 5][roll];
-        }
-
-        final resultPts = place <= 3 ? ptsTable[place - 1] : ptsTable[3];
-        final daysAgo = 20 + j * 45 + (idx % 30);
-        final date = now.subtract(Duration(days: daysAgo));
-        final seasonYear = date.month >= 9 ? date.year : date.year - 1;
-
-        batch.set(
-          db.collection('competition_results').doc(),
-          {
-            'childId': child.id,
-            'childName': child.fullName,
-            'competitionName': compNames[(idx + j * 3) % compNames.length],
-            'competitionType': '',
-            'level': levelName,
-            'place': place,
-            'points': resultPts,
-            'date': Timestamp.fromDate(date),
-            'seasonYear': seasonYear,
-            'addedByCoachId': coachId,
-          },
-        );
-        count++;
-        seeded++;
-        if (count == 400) {
-          await batch.commit();
-          batch = db.batch();
-          count = 0;
-        }
-      }
-    }
-    if (count > 0) await batch.commit();
-    return 'Засіяно $seeded турнірних результатів ✓';
-  });
-
-  // ── UI ────────────────────────────────────────────────────────────────────
-  Widget _btn({
-    required IconData icon,
-    required String label,
-    required VoidCallback onPressed,
-  }) =>
-      SizedBox(
-        width: double.infinity,
-        child: OutlinedButton.icon(
-          icon: _seeding
-              ? const SizedBox(
-                  width: 14,
-                  height: 14,
-                  child: CircularProgressIndicator(strokeWidth: 2),
-                )
-              : Icon(icon, size: 16),
-          label: Text(label),
-          style: OutlinedButton.styleFrom(
-            foregroundColor: Colors.orange,
-            side: const BorderSide(color: Colors.orange),
-            padding: const EdgeInsets.symmetric(vertical: 10),
-          ),
-          onPressed: _seeding ? null : onPressed,
-        ),
-      );
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: AppColors.surface,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: Colors.orange.withValues(alpha: 0.4)),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          const Row(
-            children: [
-              Icon(Icons.bug_report_outlined, color: Colors.orange, size: 16),
-              SizedBox(width: 6),
-              Text(
-                'Тестові дані',
-                style: TextStyle(
-                  fontWeight: FontWeight.bold,
-                  color: Colors.orange,
-                  fontSize: 13,
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 12),
-          _btn(
-            icon: Icons.people_outline,
-            label: 'Засіяти 1000 спортсменів',
-            onPressed: _seedAthletes,
-          ),
-          const SizedBox(height: 8),
-          _btn(
-            icon: Icons.credit_card,
-            label: 'Засіяти абонементи',
-            onPressed: _seedMemberships,
-          ),
-          const SizedBox(height: 8),
-          _btn(
-            icon: Icons.emoji_events_outlined,
-            label: 'Засіяти турнірні результати',
-            onPressed: _seedCompetitionResults,
-          ),
-          const SizedBox(height: 8),
-          _btn(
-            icon: Icons.military_tech_outlined,
-            label: 'Засіяти ачивки',
-            onPressed: _seedAchievements,
-          ),
-          if (_result != null) ...[
-            const SizedBox(height: 10),
-            Text(
-              _result!,
-              style: TextStyle(
-                fontSize: 12,
-                color: _result!.startsWith('Помилка')
-                    ? AppColors.error
-                    : AppColors.success,
-              ),
-            ),
-          ],
-        ],
-      ),
-    );
-  }
-}
-
-// ─────────────────────────────────────────────────────────────────────────────
 
 void _showTariffEditor(BuildContext context, WidgetRef ref) {
   final plans = ref.read(tariffPlansProvider).asData?.value ?? TariffPlan.defaults;

@@ -26,6 +26,7 @@ class _TeamListScreenState extends ConsumerState<TeamListScreen> {
   final _searchCtrl = TextEditingController();
   bool _filtersExpanded = true;
   _TeamFilter _quickFilter = _TeamFilter.all;
+  bool _coachFilterInitialized = false;
 
   @override
   void initState() {
@@ -58,6 +59,19 @@ class _TeamListScreenState extends ConsumerState<TeamListScreen> {
     final membershipMap = ref.watch(membershipStatusMapProvider);
     final membershipEndDateMap = isCoach ? ref.watch(membershipEndDateMapProvider) : <String, DateTime>{};
     final filter = ref.watch(childrenFilterProvider);
+
+    if (!_coachFilterInitialized && isCoach && user != null) {
+      _coachFilterInitialized = true;
+      if (filter.coachId == null) {
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (!mounted) return;
+          ref.read(childrenFilterProvider.notifier).update(
+            (s) => s.copyWith(coachId: user.name),
+          );
+        });
+      }
+    }
+
     final birthYears = ref.watch(birthYearsProvider);
     final birthYearCounts = ref.watch(birthYearCountsProvider);
     final coaches = ref.watch(coachListProvider);
@@ -417,31 +431,43 @@ class _TeamListScreenState extends ConsumerState<TeamListScreen> {
       List<({String id, String name})> coaches) {
     showModalBottomSheet(
       context: context,
+      isScrollControlled: true,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
-      builder: (_) => Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          const Padding(
-            padding: EdgeInsets.all(16),
-            child: Text(
-              'Тренер',
-              style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+      builder: (_) => SafeArea(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Padding(
+              padding: EdgeInsets.all(16),
+              child: Text(
+                'Тренер',
+                style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+              ),
             ),
-          ),
-          ...coaches.map(
-            (c) => ListTile(
-              title: Text(c.name),
-              onTap: () {
-                ref.read(childrenFilterProvider.notifier).state =
-                    filter.copyWith(coachId: c.id);
-                Navigator.pop(context);
-              },
+            Flexible(
+              child: SingleChildScrollView(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: coaches
+                      .map(
+                        (c) => ListTile(
+                          title: Text(c.name),
+                          onTap: () {
+                            ref.read(childrenFilterProvider.notifier).state =
+                                filter.copyWith(coachId: c.id);
+                            Navigator.pop(context);
+                          },
+                        ),
+                      )
+                      .toList(),
+                ),
+              ),
             ),
-          ),
-          const SizedBox(height: 16),
-        ],
+            const SizedBox(height: 16),
+          ],
+        ),
       ),
     );
   }

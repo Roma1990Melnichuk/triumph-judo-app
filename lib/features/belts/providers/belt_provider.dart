@@ -6,6 +6,7 @@ import '../../../core/constants/belt_levels.dart';
 import '../../../core/models/belt_requirement_model.dart';
 import '../../../core/models/belt_progress_model.dart';
 import '../../auth/providers/auth_provider.dart';
+import '../../../core/utils/stream_utils.dart';
 
 // ── Default exercises seeded on first load ───────────────────────────────────
 final _defaultExercises = <BeltLevel, List<Map<String, String>>>{
@@ -94,7 +95,7 @@ final beltRequirementsProvider =
       map[req.belt] = req;
     }
     return map;
-  }).handleError((_) {});
+  }).fallbackOnError({});
 });
 
 // ── Requirements for a specific belt ─────────────────────────────────────────
@@ -117,7 +118,7 @@ final beltProgressProvider =
       .doc(docId)
       .snapshots()
       .map((doc) => doc.exists ? BeltProgressModel.fromFirestore(doc) : null)
-      .handleError((_) {});
+      .fallbackOnError(null);
 });
 
 class BeltNotifier extends StateNotifier<AsyncValue<void>> {

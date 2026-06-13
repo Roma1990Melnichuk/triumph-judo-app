@@ -70,9 +70,11 @@ class _AchievementStatsScreenState
                     ),
                   ),
                   const SizedBox(width: 12),
-                  const Text(
-                    'Статистика нагород',
-                    style: TextStyle(fontSize: 20, fontWeight: FontWeight.w800),
+                  const Expanded(
+                    child: Text(
+                      'Статистика нагород',
+                      style: TextStyle(fontSize: 20, fontWeight: FontWeight.w800),
+                    ),
                   ),
                 ],
               ),
@@ -109,14 +111,15 @@ class _AchievementStatsScreenState
           // ── Filter ────────────────────────────────────────────────────────
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-            child: Row(
+            child: Wrap(
+              spacing: 8,
+              runSpacing: 4,
               children: [
                 ChoiceChip(
                   label: const Text('Всі'),
                   selected: !_onlyUngranted,
                   onSelected: (_) => setState(() => _onlyUngranted = false),
                 ),
-                const SizedBox(width: 8),
                 ChoiceChip(
                   label: Text('Не видавались ($neverCount)'),
                   selected: _onlyUngranted,

@@ -4,28 +4,29 @@ import 'package:uuid/uuid.dart';
 import '../../../core/models/training_schedule_model.dart';
 import '../../../core/models/training_session_model.dart';
 import '../../auth/providers/auth_provider.dart';
+import '../../../core/utils/stream_utils.dart';
 
 final schedulesProvider = StreamProvider<List<TrainingScheduleModel>>((ref) {
-  final auth = ref.watch(authStateProvider);
-  if (auth.value == null) return const Stream.empty();
+  final user = ref.watch(currentUserModelProvider);
+  if (user.value == null) return const Stream.empty();
   return ref.watch(firestoreProvider)
       .collection('training_schedules')
       .orderBy('label')
       .snapshots()
       .map((s) => s.docs.map(TrainingScheduleModel.fromFirestore).toList())
-      .handleError((_) {});
+      .fallbackOnError(const []);
 });
 
 final sessionProvider = StreamProvider.family<TrainingSessionModel?, String>(
     (ref, sessionId) {
-  final auth = ref.watch(authStateProvider);
-  if (auth.value == null) return const Stream.empty();
+  final user = ref.watch(currentUserModelProvider);
+  if (user.value == null) return const Stream.empty();
   return ref.watch(firestoreProvider)
       .collection('training_sessions')
       .doc(sessionId)
       .snapshots()
       .map((d) => d.exists ? TrainingSessionModel.fromFirestore(d) : null)
-      .handleError((_) {});
+      .fallbackOnError(null);
 });
 
 /// Recent sessions for a coach — used to build per-child attendance history.
@@ -33,8 +34,8 @@ final sessionProvider = StreamProvider.family<TrainingSessionModel?, String>(
 final coachSessionsProvider =
     StreamProvider.family<List<TrainingSessionModel>, String>(
         (ref, coachId) {
-  final auth = ref.watch(authStateProvider);
-  if (auth.value == null || coachId.isEmpty) return const Stream.empty();
+  final user = ref.watch(currentUserModelProvider);
+  if (user.value == null || coachId.isEmpty) return const Stream.empty();
   final since = DateTime.now().subtract(const Duration(days: 60));
   return ref.watch(firestoreProvider)
       .collection('training_sessions')
@@ -44,7 +45,7 @@ final coachSessionsProvider =
       .limit(30)
       .snapshots()
       .map((s) => s.docs.map(TrainingSessionModel.fromFirestore).toList())
-      .handleError((_) {});
+      .fallbackOnError(const []);
 });
 
 class ScheduleNotifier extends StateNotifier<AsyncValue<void>> {

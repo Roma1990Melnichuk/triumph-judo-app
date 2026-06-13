@@ -1,5 +1,4 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:uuid/uuid.dart';
 import '../../../core/models/competition_result_model.dart';
@@ -7,6 +6,7 @@ import '../../../core/models/competition_type_model.dart';
 import '../../auth/providers/auth_provider.dart';
 import '../../team/providers/children_provider.dart';
 import '../../achievements/achievement_checker.dart';
+import '../../../core/utils/stream_utils.dart';
 
 // ── Results for a specific child ─────────────────────────────────────────────
 final childResultsProvider =
@@ -20,10 +20,7 @@ final childResultsProvider =
       .orderBy('date', descending: true)
       .snapshots()
       .map((s) => s.docs.map(CompetitionResultModel.fromFirestore).toList())
-      .handleError((e) {
-        debugPrint('Error in childResultsProvider: $e');
-        return <CompetitionResultModel>[];
-      });
+      .fallbackOnError(const []);
 });
 
 // ── Total competition results count (for medals stat on dashboard) ────────────
@@ -35,7 +32,7 @@ final totalResultsCountProvider = StreamProvider<int>((ref) {
       .collection('competition_results')
       .snapshots()
       .map((s) => s.size)
-      .handleError((_) {});
+      .fallbackOnError(0);
 });
 
 // ── Recent results across all children (for dashboard) ───────────────────────
@@ -50,7 +47,7 @@ final recentResultsProvider =
       .limit(10)
       .snapshots()
       .map((s) => s.docs.map(CompetitionResultModel.fromFirestore).toList())
-      .handleError((_) {});
+      .fallbackOnError(const []);
 });
 
 // ── All results stream (for medal tracker) ───────────────────────────────────
@@ -64,7 +61,7 @@ final allResultsProvider =
       .orderBy('date', descending: true)
       .snapshots()
       .map((s) => s.docs.map(CompetitionResultModel.fromFirestore).toList())
-      .handleError((_) {});
+      .fallbackOnError(const []);
 });
 
 // ── Competition types ────────────────────────────────────────────────────────
@@ -78,7 +75,7 @@ final competitionTypesProvider =
       .orderBy('name')
       .snapshots()
       .map((s) => s.docs.map(CompetitionTypeModel.fromFirestore).toList())
-      .handleError((_) {});
+      .fallbackOnError(const []);
 });
 
 class CompetitionsNotifier extends StateNotifier<AsyncValue<void>> {

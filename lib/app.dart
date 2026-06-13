@@ -49,6 +49,35 @@ import 'features/achievements/screens/bulk_grant_achievements_screen.dart';
 import 'features/achievements/screens/grant_achievement_screen.dart';
 import 'features/team/screens/child_profile_screen.dart';
 import 'features/team/screens/team_list_screen.dart';
+import 'features/nutrition/screens/nutrition_screen.dart';
+import 'features/nutrition/screens/add_meal_screen.dart';
+import 'features/nutrition/screens/water_screen.dart';
+import 'features/nutrition/screens/my_plate_screen.dart';
+import 'features/nutrition/screens/meal_diary_screen.dart';
+import 'features/nutrition/screens/nutrition_stats_screen.dart';
+import 'features/nutrition/screens/food_products_screen.dart';
+import 'features/nutrition/screens/nutrition_tips_screen.dart';
+import 'features/questionnaires/screens/questionnaires_screen.dart';
+import 'features/questionnaires/screens/create_questionnaire_screen.dart';
+import 'features/questionnaires/screens/answer_questionnaire_screen.dart';
+import 'features/questionnaires/screens/questionnaire_results_screen.dart';
+import 'features/belts/screens/exercise_library_screen.dart';
+import 'features/team/screens/body_measurements_screen.dart';
+import 'features/shop/screens/shop_home_screen.dart';
+import 'features/shop/screens/shop_catalog_screen.dart';
+import 'features/shop/screens/shop_product_screen.dart';
+import 'features/shop/screens/shop_cart_screen.dart';
+import 'features/shop/screens/shop_checkout_screen.dart';
+import 'features/shop/screens/shop_my_orders_screen.dart';
+import 'features/shop/screens/shop_order_detail_screen.dart';
+import 'features/shop/screens/shop_admin_screen.dart';
+import 'features/shop/screens/shop_add_edit_product_screen.dart';
+import 'core/models/shop_product_model.dart' show ShopCategoryX;
+import 'features/news/screens/news_feed_screen.dart';
+import 'features/news/screens/news_post_screen.dart';
+import 'features/news/screens/honor_board_screen.dart';
+import 'features/news/screens/news_comments_screen.dart';
+import 'features/news/screens/news_create_post_screen.dart';
 import 'shared/widgets/main_scaffold.dart';
 
 final _rootNavKey = GlobalKey<NavigatorState>();
@@ -455,16 +484,173 @@ final routerProvider = Provider<GoRouter>((ref) {
           exerciseUnit: (s.extra as Map?)?['exerciseUnit'] as String? ?? 'рази',
         )),
       ),
+      // ── Nutrition standalone routes ──────────────────────────────────────
+      GoRoute(
+        path: '/nutrition/child/:childId',
+        parentNavigatorKey: _rootNavKey,
+        pageBuilder: (_, s) {
+          final extra = s.extra as Map<String, dynamic>? ?? {};
+          return _fadeSlide(s, NutritionDashboard(
+            childId:        s.pathParameters['childId']!,
+            childName:      extra['name']  as String?,
+            showBackButton: true,
+          ));
+        },
+      ),
+      GoRoute(
+        path: '/nutrition/child/:childId/add-meal',
+        parentNavigatorKey: _rootNavKey,
+        pageBuilder: (_, s) {
+          final extra = s.extra as Map<String, dynamic>? ?? {};
+          return _fadeSlide(s, AddMealScreen(
+            childId: s.pathParameters['childId']!,
+            dateKey: extra['date'] as String?,
+            meal:    extra['meal'],
+          ));
+        },
+      ),
+      GoRoute(
+        path: '/nutrition/child/:childId/water',
+        parentNavigatorKey: _rootNavKey,
+        pageBuilder: (_, s) => _fadeSlide(s,
+            WaterScreen(childId: s.pathParameters['childId']!)),
+      ),
+      GoRoute(
+        path: '/nutrition/child/:childId/plate',
+        parentNavigatorKey: _rootNavKey,
+        pageBuilder: (_, s) {
+          final extra = s.extra as Map<String, dynamic>? ?? {};
+          return _fadeSlide(s, MyPlateScreen(
+            childId: s.pathParameters['childId']!,
+            dateKey: extra['date'] as String?,
+          ));
+        },
+      ),
+      GoRoute(
+        path: '/nutrition/child/:childId/diary',
+        parentNavigatorKey: _rootNavKey,
+        pageBuilder: (_, s) {
+          final extra = s.extra as Map<String, dynamic>? ?? {};
+          return _fadeSlide(s, MealDiaryScreen(
+            childId:        s.pathParameters['childId']!,
+            initialDateKey: extra['date'] as String?,
+          ));
+        },
+      ),
+      GoRoute(
+        path: '/nutrition/child/:childId/stats',
+        parentNavigatorKey: _rootNavKey,
+        pageBuilder: (_, s) => _fadeSlide(s,
+            NutritionStatsScreen(childId: s.pathParameters['childId']!)),
+      ),
+      GoRoute(
+        path: '/nutrition/products',
+        parentNavigatorKey: _rootNavKey,
+        pageBuilder: (_, s) => _fadeSlide(s, const FoodProductsScreen()),
+      ),
+      GoRoute(
+        path: '/nutrition/tips',
+        parentNavigatorKey: _rootNavKey,
+        pageBuilder: (_, s) {
+          final extra = s.extra as Map<String, dynamic>? ?? {};
+          return _fadeSlide(s, NutritionTipsScreen(
+            childId: extra['childId'] as String?,
+          ));
+        },
+      ),
+      // ── Questionnaires ───────────────────────────────────────────────────────
+      GoRoute(
+        path: '/questionnaires',
+        parentNavigatorKey: _rootNavKey,
+        pageBuilder: (_, s) => _fadeSlide(s, const QuestionnairesScreen()),
+      ),
+      GoRoute(
+        path: '/questionnaires/create',
+        parentNavigatorKey: _rootNavKey,
+        redirect: (context, state) {
+          final user = ProviderScope.containerOf(context).read(currentUserModelProvider).asData?.value;
+          if (user == null || !user.isCoach) return '/home';
+          return null;
+        },
+        pageBuilder: (_, s) => _fadeSlide(s, const CreateQuestionnaireScreen()),
+      ),
+      GoRoute(
+        path: '/questionnaires/:id/results',
+        parentNavigatorKey: _rootNavKey,
+        redirect: (context, state) {
+          final user = ProviderScope.containerOf(context).read(currentUserModelProvider).asData?.value;
+          if (user == null || !user.isCoach) return '/home';
+          return null;
+        },
+        pageBuilder: (_, s) => _fadeSlide(s,
+            QuestionnaireResultsScreen(questionnaireId: s.pathParameters['id']!)),
+      ),
+      GoRoute(
+        path: '/questionnaires/:id/answer',
+        parentNavigatorKey: _rootNavKey,
+        pageBuilder: (_, s) {
+          final extra = s.extra as Map<String, dynamic>? ?? {};
+          return _fadeSlide(s, AnswerQuestionnaireScreen(
+            questionnaireId: s.pathParameters['id']!,
+            childId:         extra['childId'] as String? ?? '',
+          ));
+        },
+      ),
+      // ── Exercise library ─────────────────────────────────────────────────────
+      GoRoute(
+        path: '/exercise-library',
+        parentNavigatorKey: _rootNavKey,
+        pageBuilder: (_, s) => _fadeSlide(s, const ExerciseLibraryScreen()),
+      ),
+      // ── Body measurements ────────────────────────────────────────────────────
+      GoRoute(
+        path: '/team/:id/measurements',
+        parentNavigatorKey: _rootNavKey,
+        pageBuilder: (_, s) => _fadeSlide(s,
+            BodyMeasurementsScreen(childId: s.pathParameters['id']!)),
+      ),
+      // ── Shop ─────────────────────────────────────────────────────────────────
+      GoRoute(path: '/shop', parentNavigatorKey: _rootNavKey, pageBuilder: (_, s) => _fadeSlide(s, const ShopHomeScreen())),
+      GoRoute(path: '/shop/catalog', parentNavigatorKey: _rootNavKey, pageBuilder: (_, s) {
+        final cat = s.uri.queryParameters['category'];
+        final category = cat == null ? null : ShopCategoryX.fromString(cat);
+        return _fadeSlide(s, ShopCatalogScreen(initialCategory: category));
+      }),
+      GoRoute(path: '/shop/product/:id', parentNavigatorKey: _rootNavKey, pageBuilder: (_, s) => _fadeSlide(s, ShopProductScreen(productId: s.pathParameters['id']!))),
+      GoRoute(path: '/shop/cart', parentNavigatorKey: _rootNavKey, pageBuilder: (_, s) => _fadeSlide(s, const ShopCartScreen())),
+      GoRoute(path: '/shop/checkout', parentNavigatorKey: _rootNavKey, pageBuilder: (_, s) => _fadeSlide(s, const ShopCheckoutScreen())),
+      GoRoute(path: '/shop/orders', parentNavigatorKey: _rootNavKey, pageBuilder: (_, s) => _fadeSlide(s, const ShopMyOrdersScreen())),
+      GoRoute(path: '/shop/orders/:id', parentNavigatorKey: _rootNavKey, pageBuilder: (_, s) => _fadeSlide(s, ShopOrderDetailScreen(orderId: s.pathParameters['id']!))),
+      GoRoute(
+        path: '/shop/admin',
+        parentNavigatorKey: _rootNavKey,
+        redirect: (context, state) {
+          final user = ProviderScope.containerOf(context).read(currentUserModelProvider).asData?.value;
+          if (user == null || !user.isCoach) return '/shop';
+          return null;
+        },
+        pageBuilder: (_, s) => _fadeSlide(s, const ShopAdminScreen()),
+      ),
+      GoRoute(path: '/shop/admin/add-product', parentNavigatorKey: _rootNavKey, pageBuilder: (_, s) => _fadeSlide(s, const ShopAddEditProductScreen())),
+      GoRoute(path: '/shop/admin/product/:id/edit', parentNavigatorKey: _rootNavKey, pageBuilder: (_, s) => _fadeSlide(s, ShopAddEditProductScreen(productId: s.pathParameters['id']))),
+      // ── News ─────────────────────────────────────────────────────────────────
+      GoRoute(path: '/news', parentNavigatorKey: _rootNavKey, pageBuilder: (_, s) => _fadeSlide(s, const NewsFeedScreen())),
+      GoRoute(path: '/news/honor-board', parentNavigatorKey: _rootNavKey, pageBuilder: (_, s) => _fadeSlide(s, const HonorBoardScreen())),
+      GoRoute(path: '/news/create', parentNavigatorKey: _rootNavKey, pageBuilder: (_, s) => _fadeSlide(s, const NewsCreatePostScreen())),
+      GoRoute(path: '/news/:id', parentNavigatorKey: _rootNavKey, pageBuilder: (_, s) => _fadeSlide(s, NewsPostScreen(postId: s.pathParameters['id']!))),
+      GoRoute(path: '/news/:id/edit', parentNavigatorKey: _rootNavKey, pageBuilder: (_, s) => _fadeSlide(s, NewsCreatePostScreen(postId: s.pathParameters['id']))),
+      GoRoute(path: '/news/:id/comments', parentNavigatorKey: _rootNavKey, pageBuilder: (_, s) => _fadeSlide(s, NewsCommentsScreen(postId: s.pathParameters['id']!))),
       ShellRoute(
         navigatorKey: _shellNavKey,
         builder: (context, state, child) => MainScaffold(child: child),
         routes: [
-          GoRoute(path: '/home',     builder: (_, __) => const HomeScreen()),
-          GoRoute(path: '/team',     builder: (_, __) => const TeamListScreen()),
-          GoRoute(path: '/rating',   builder: (_, __) => const RatingScreen()),
-          GoRoute(path: '/events',   builder: (_, __) => const EventsScreen()),
-          GoRoute(path: '/belts',    builder: (_, __) => const BeltOverviewScreen()),
-          GoRoute(path: '/settings', builder: (_, __) => const SettingsScreen()),
+          GoRoute(path: '/home',      builder: (_, __) => const HomeScreen()),
+          GoRoute(path: '/team',      builder: (_, __) => const TeamListScreen()),
+          GoRoute(path: '/rating',    builder: (_, __) => const RatingScreen()),
+          GoRoute(path: '/events',    builder: (_, __) => const EventsScreen()),
+          GoRoute(path: '/nutrition', builder: (_, __) => const NutritionScreen()),
+          GoRoute(path: '/belts',     builder: (_, __) => const BeltOverviewScreen()),
+          GoRoute(path: '/settings',  builder: (_, __) => const SettingsScreen()),
         ],
       ),
     ],

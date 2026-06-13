@@ -33,6 +33,9 @@ import '../../../shared/widgets/triumph_icon.dart';
 import '../../../features/individual_training/providers/individual_training_provider.dart';
 import '../../../features/membership/models/tariff_plan.dart';
 import '../../../features/membership/providers/tariff_provider.dart';
+import '../../../features/nutrition/providers/nutrition_provider.dart';
+import '../../../features/nutrition/widgets/nutrition_widgets.dart';
+import '../../../core/models/meal_model.dart' show MealStatus;
 
 class ChildProfileScreen extends ConsumerStatefulWidget {
   const ChildProfileScreen({super.key, required this.childId});
@@ -50,7 +53,7 @@ class _ChildProfileScreenState extends ConsumerState<ChildProfileScreen>
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: 4, vsync: this);
+    _tabController = TabController(length: 5, vsync: this);
   }
 
   @override
@@ -421,6 +424,11 @@ class _ChildProfileScreenState extends ConsumerState<ChildProfileScreen>
                             : null,
                       ),
                       _ProfileInfoChip(
+                        icon: Icons.monitor_weight_outlined,
+                        label: 'Вага/Ріст',
+                        onTap: () => context.push('/team/$childId/measurements'),
+                      ),
+                      _ProfileInfoChip(
                         tIcon: TIcon.coach,
                         label: 'Тренер: ${child.coachName.isNotEmpty ? child.coachName : '—'}',
                         onTap: isCoach
@@ -487,6 +495,7 @@ class _ChildProfileScreenState extends ConsumerState<ChildProfileScreen>
                       Tab(text: 'Досягнення'),
                       Tab(text: 'Відвідування'),
                       Tab(text: 'Нагороди клубу'),
+                      Tab(text: 'Харчування'),
                     ],
                   ),
                 ),
@@ -519,6 +528,8 @@ class _ChildProfileScreenState extends ConsumerState<ChildProfileScreen>
                 ),
                 // ── Tab 3: Нагороди клубу ────────────────────────────────
                 _NagorodyKlubuTab(childId: childId),
+                // ── Tab 4: Харчування ─────────────────────────────────────
+                _NutritionTab(childId: childId),
               ],
             ),
           ),
@@ -2175,6 +2186,225 @@ class _AwardCard extends StatelessWidget {
             textAlign: TextAlign.center,
             style: const TextStyle(
                 fontSize: 10, color: AppColors.textSecondary),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Tab 4: Харчування
+// ─────────────────────────────────────────────────────────────────────────────
+
+class _NutritionTab extends ConsumerWidget {
+  const _NutritionTab({required this.childId});
+  final String childId;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final dk    = todayNutritionKey;
+    final nKey  = (childId: childId, dateKey: dk);
+    final score = ref.watch(nutritionScoreProvider(nKey));
+    final meals = ref.watch(dayMealsProvider(nKey));
+    final waterMl   = ref.watch(dayWaterMlProvider(nKey));
+    final waterGoal = ref.watch(waterGoalMlProvider);
+    final doneMeals = meals.where((m) => m.status == MealStatus.done).length;
+
+    return ListView(
+      padding: const EdgeInsets.fromLTRB(16, 16, 16, 40),
+      children: [
+        // ── Score gauge row ─────────────────────────────────────────────────
+        Container(
+          padding: const EdgeInsets.all(20),
+          decoration: BoxDecoration(
+            color: AppColors.surface,
+            borderRadius: BorderRadius.circular(20),
+            border: Border.all(color: const Color(0xFF222222)),
+          ),
+          child: Row(
+            children: [
+              NutritionScoreGauge(
+                score: score,
+                size: 88,
+                strokeWidth: 8,
+                child: Text(
+                  score.round().toString(),
+                  style: const TextStyle(
+                      fontSize: 20,
+                      fontWeight: FontWeight.w800,
+                      color: AppColors.textPrimary),
+                ),
+              ),
+              const SizedBox(width: 20),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text('Харчування сьогодні',
+                        style: TextStyle(
+                            fontSize: 12, color: AppColors.textSecondary)),
+                    const SizedBox(height: 4),
+                    Text(
+                      _scoreLabel(score),
+                      style: TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.w800,
+                        color: _scoreColor(score),
+                      ),
+                    ),
+                    const SizedBox(height: 6),
+                    Text(
+                      '${score.round()} / 100 балів',
+                      style: const TextStyle(
+                          fontSize: 12, color: AppColors.textSecondary),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+        const SizedBox(height: 12),
+
+        // ── Quick stats ─────────────────────────────────────────────────────
+        Row(
+          children: [
+            Expanded(
+              child: _QuickStat(
+                icon: Icons.restaurant_rounded,
+                color: AppColors.orange,
+                label: 'Прийомів',
+                value: '$doneMeals',
+              ),
+            ),
+            const SizedBox(width: 10),
+            Expanded(
+              child: _QuickStat(
+                icon: Icons.water_drop_rounded,
+                color: const Color(0xFF4FC3F7),
+                label: 'Вода',
+                value: '${(waterMl / 1000).toStringAsFixed(1)} л',
+                subValue: '/ ${(waterGoal / 1000).toStringAsFixed(1)} л',
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 12),
+
+        // ── Open full dashboard ──────────────────────────────────────────────
+        GestureDetector(
+          onTap: () => context.push('/nutrition/child/$childId'),
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                colors: [
+                  AppColors.orange.withValues(alpha: 0.15),
+                  AppColors.orange.withValues(alpha: 0.04),
+                ],
+              ),
+              borderRadius: BorderRadius.circular(16),
+              border:
+                  Border.all(color: AppColors.orange.withValues(alpha: 0.3)),
+            ),
+            child: const Row(
+              children: [
+                Icon(Icons.restaurant_menu_rounded,
+                    color: AppColors.orange, size: 22),
+                SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text('Відкрити щоденник харчування',
+                          style: TextStyle(
+                              fontSize: 14,
+                              fontWeight: FontWeight.w700,
+                              color: AppColors.textPrimary)),
+                      Text('Страви, вода, поради, статистика',
+                          style: TextStyle(
+                              fontSize: 11, color: AppColors.textSecondary)),
+                    ],
+                  ),
+                ),
+                Icon(Icons.arrow_forward_ios_rounded,
+                    size: 14, color: AppColors.orange),
+              ],
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  String _scoreLabel(double s) {
+    if (s >= 80) return 'Відмінно';
+    if (s >= 60) return 'Добре';
+    if (s >= 40) return 'Задовільно';
+    return 'Треба краще';
+  }
+
+  Color _scoreColor(double s) {
+    if (s >= 80) return AppColors.success;
+    if (s >= 60) return AppColors.orange;
+    if (s >= 40) return const Color(0xFFFFCC00);
+    return AppColors.error;
+  }
+}
+
+class _QuickStat extends StatelessWidget {
+  const _QuickStat({
+    required this.icon,
+    required this.color,
+    required this.label,
+    required this.value,
+    this.subValue,
+  });
+
+  final IconData icon;
+  final Color    color;
+  final String   label;
+  final String   value;
+  final String?  subValue;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+      decoration: BoxDecoration(
+        color: AppColors.surface,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: const Color(0xFF222222)),
+      ),
+      child: Row(
+        children: [
+          Icon(icon, color: color, size: 22),
+          const SizedBox(width: 10),
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(label,
+                  style: const TextStyle(
+                      fontSize: 11, color: AppColors.textSecondary)),
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.baseline,
+                textBaseline: TextBaseline.alphabetic,
+                children: [
+                  Text(value,
+                      style: TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.w800,
+                          color: color)),
+                  if (subValue != null) ...[
+                    const SizedBox(width: 3),
+                    Text(subValue!,
+                        style: const TextStyle(
+                            fontSize: 11, color: AppColors.textSecondary)),
+                  ],
+                ],
+              ),
+            ],
           ),
         ],
       ),

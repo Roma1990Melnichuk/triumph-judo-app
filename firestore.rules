@@ -56,5 +56,173 @@ service cloud.firestore {
       allow read:  if isAuth();
       allow write: if isCoach();
     }
+
+    // ── Training schedules (recurring weekly templates) ───────────────────────
+    match /training_schedules/{scheduleId} {
+      allow read:  if isAuth();
+      allow write: if isCoach();
+    }
+
+    // ── Training sessions (per-date attendance records) ───────────────────────
+    match /training_sessions/{sessionId} {
+      allow read:  if isAuth();
+      allow write: if isCoach();
+    }
+
+    // ── Groups ────────────────────────────────────────────────────────────────
+    match /groups/{groupId} {
+      allow read:  if isAuth();
+      allow write: if isCoach();
+    }
+
+    // ── Attendance (group-based) ──────────────────────────────────────────────
+    match /attendance/{attendanceId} {
+      allow read:  if isAuth();
+      allow write: if isCoach();
+    }
+
+    // ── Memberships ───────────────────────────────────────────────────────────
+    match /memberships/{membershipId} {
+      allow read:  if isAuth();
+      allow write: if isCoach();
+    }
+
+    // ── Events / Competitions ─────────────────────────────────────────────────
+    match /events/{eventId} {
+      allow read:  if isAuth();
+      allow write: if isCoach();
+    }
+
+    // ── Achievements ──────────────────────────────────────────────────────────
+    match /achievements/{achievementId} {
+      allow read:  if isAuth();
+      allow write: if isCoach();
+    }
+
+    // ── Club posts (news feed) ────────────────────────────────────────────────
+    match /club_posts/{postId} {
+      allow read:  if isAuth();
+      allow write: if isCoach();
+    }
+
+    // ── Club settings ─────────────────────────────────────────────────────────
+    match /club_settings/{settingId} {
+      allow read:  if isAuth();
+      allow write: if isCoach();
+    }
+
+    // ── Honor board ───────────────────────────────────────────────────────────
+    match /honor_board/{entryId} {
+      allow read:  if isAuth();
+      allow write: if isCoach();
+    }
+
+    // ── Notifications ─────────────────────────────────────────────────────────
+    // Coaches write, each user reads their own.
+    match /notifications/{notifId} {
+      allow read:  if isAuth();
+      allow write: if isCoach();
+    }
+
+    // ── Individual slots (personal coaching sessions) ─────────────────────────
+    match /individual_slots/{slotId} {
+      allow read:  if isAuth();
+      allow write: if isCoach();
+    }
+
+    // ── Shop: products ────────────────────────────────────────────────────────
+    match /shop_products/{productId} {
+      allow read:  if isAuth();
+      allow write: if isCoach();
+    }
+
+    // ── Shop: carts (each user owns their cart) ───────────────────────────────
+    match /shop_carts/{userId} {
+      allow read:  if isAuth() && (uid() == userId || isCoach());
+      allow write: if isAuth() && (uid() == userId || isCoach());
+    }
+
+    // ── Shop: orders ──────────────────────────────────────────────────────────
+    match /shop_orders/{orderId} {
+      allow read:  if isAuth();
+      allow write: if isAuth();
+    }
+
+    // ── Belt exercises (global reference data) ────────────────────────────────
+    match /belt_exercises/{exerciseId} {
+      allow read:  if isAuth();
+      allow write: if isCoach();
+    }
+
+    // ── Fitness exercises (global library) ────────────────────────────────────
+    match /fitness_exercises/{exerciseId} {
+      allow read:  if isAuth();
+      allow write: if isCoach();
+    }
+
+    // ── Fitness assignments (coach → athlete) ─────────────────────────────────
+    match /fitness_assignments/{assignmentId} {
+      allow read:  if isAuth();
+      allow write: if isCoach();
+    }
+
+    // ── Fitness logs (athlete records workouts) ───────────────────────────────
+    match /fitness_logs/{logId} {
+      allow read:  if isAuth();
+      allow write: if isAuth();
+    }
+
+    // ── Fitness goals ─────────────────────────────────────────────────────────
+    match /fitness_goals/{goalId} {
+      allow read:  if isAuth();
+      allow write: if isAuth();
+    }
+
+    // ── Body measurements ─────────────────────────────────────────────────────
+    match /body_measurements/{measureId} {
+      allow read:  if isAuth();
+      allow write: if isAuth();
+    }
+
+    // ── Nutrition: food products (global catalogue) ───────────────────────────
+    match /food_products/{productId} {
+      allow read:  if isAuth();
+      allow write: if isCoach();
+    }
+
+    // ── Nutrition: meals (per user) ───────────────────────────────────────────
+    match /meals/{mealId} {
+      allow read:  if isAuth();
+      allow write: if isAuth();
+    }
+
+    // ── Nutrition: water logs ─────────────────────────────────────────────────
+    match /water_logs/{logId} {
+      allow read:  if isAuth();
+      allow write: if isAuth();
+    }
+
+    // ── Nutrition tips (coach content) ────────────────────────────────────────
+    match /nutrition_tips/{tipId} {
+      allow read:  if isAuth();
+      allow write: if isCoach();
+    }
+
+    // ── Questionnaires ────────────────────────────────────────────────────────
+    match /questionnaires/{questionnaireId} {
+      allow read:  if isAuth();
+      allow write: if isCoach();
+    }
+
+    match /questionnaire_responses/{responseId} {
+      allow read:  if isAuth();
+      allow write: if isAuth();
+    }
+
+    // ── Comments ──────────────────────────────────────────────────────────────
+    match /comments/{commentId} {
+      allow read:  if isAuth();
+      allow write: if isAuth();
+    }
   }
 }

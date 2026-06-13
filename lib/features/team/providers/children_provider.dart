@@ -10,6 +10,7 @@ import '../../auth/providers/auth_provider.dart';
 import '../../achievements/achievement_checker.dart';
 import '../../membership/providers/membership_provider.dart';
 import '../services/csv_import_service.dart';
+import '../../../core/utils/stream_utils.dart';
 
 // ── Raw stream of all children sorted by lastName ──────────────────────────
 final allChildrenProvider = StreamProvider<List<ChildModel>>((ref) {
@@ -22,7 +23,7 @@ final allChildrenProvider = StreamProvider<List<ChildModel>>((ref) {
       .limit(500)
       .snapshots()
       .map((s) => s.docs.map(ChildModel.fromFirestore).toList())
-      .handleError((_) {});
+      .fallbackOnError(const []);
 });
 
 // ── Filter state ────────────────────────────────────────────────────────────
@@ -178,7 +179,7 @@ final childByIdProvider =
       .doc(childId)
       .snapshots()
       .map((doc) => doc.exists ? ChildModel.fromFirestore(doc) : null)
-      .handleError((_) {});
+      .fallbackOnError(null);
 });
 
 // ── CRUD notifier ───────────────────────────────────────────────────────────
@@ -269,118 +270,6 @@ class ChildrenNotifier extends StateNotifier<AsyncValue<void>> {
           await batch.commit();
         } while (snap.docs.length == 400);
       }
-    });
-  }
-
-  Future<void> seedTestData(String currentCoachId, String currentCoachName) async {
-    state = const AsyncValue.loading();
-    state = await AsyncValue.guard(() async {
-      // 20 coaches × 50 athletes = 1000 total.
-      // All use the real coachId (auth uid), varied coachName for filter testing.
-      const coachNames = [
-        'Мартін',   'Ростислав', 'Юлія',     'Ганна',
-        'Олексій',  'Микола',    'Ірина',    'Тетяна',
-        'Богдан',   'Сергій',    'Наталія',  'Оксана',
-        'Василь',   'Андрій',    'Людмила',  'Катерина',
-        'Дмитро',   'Павло',     'Вікторія', 'Яна',
-      ];
-
-      const maleNames = [
-        'Олексій','Іван','Дмитро','Максим','Артем','Богдан','Владислав',
-        'Андрій','Михайло','Тарас','Назар','Євген','Сергій','Юрій','Олег',
-        'Василь','Павло','Роман','Степан','Ярослав','Кирило','Данило',
-        'Ілля','Антон','Руслан',
-      ];
-      const femaleNames = [
-        'Марія','Анна','Катерина','Олена','Юлія','Оксана','Тетяна',
-        'Надія','Ірина','Людмила','Наталія','Вікторія','Аліна','Дарина',
-        'Соломія','Христина','Уляна','Ніна','Галина','Лариса',
-        'Лілія','Яна','Ольга','Поліна','Валерія',
-      ];
-      const lastNames = [
-        'Коваленко','Петренко','Шевченко','Бондаренко','Мороз',
-        'Лисенко','Кравченко','Тимошенко','Гриценко','Василенко',
-        'Захаренко','Савченко','Іваненко','Романенко','Олексієнко',
-        'Яценко','Ковальчук','Мельник','Дорошенко','Паращук',
-        'Ільченко','Назаренко','Марченко','Горбань','Науменко',
-        'Степаненко','Поліщук','Кириченко','Литвиненко','Власенко',
-        'Мусієнко','Рибаченко','Тесленко','Даниленко','Харченко',
-        'Бондар','Гавриленко','Нечипоренко','Пилипенко','Руденко',
-        'Семенченко','Терещенко','Федоренко','Хоменко','Чорновіл',
-        'Шульга','Сидоренко','Ляшенко','Коваль','Гнатенко',
-      ];
-      const maleWeights   = ['-30 кг','-32 кг','-36 кг','-40 кг','-44 кг','-50 кг','-55 кг','-60 кг','+60 кг'];
-      const femaleWeights = ['-28 кг','-30 кг','-32 кг','-36 кг','-40 кг','-44 кг','-48 кг','+48 кг'];
-      // Weighted pool: lower belts are more common (realistic club distribution).
-      final belts = [
-        BeltLevel.white, BeltLevel.white, BeltLevel.white,
-        BeltLevel.whiteYellow, BeltLevel.whiteYellow,
-        BeltLevel.yellow, BeltLevel.yellow,
-        BeltLevel.yellowOrange,
-        BeltLevel.orange, BeltLevel.orange,
-        BeltLevel.orangeGreen,
-        BeltLevel.green, BeltLevel.green,
-        BeltLevel.greenBlue,
-        BeltLevel.blue,
-        BeltLevel.blueBrown,
-        BeltLevel.brown,
-        BeltLevel.black,
-      ];
-      const years   = [2006,2007,2008,2009,2010,2011,2012,2013,2014,2015,2016,2017,2018];
-
-      var batch = _db.batch();
-      var count = 0;
-
-      for (var ci = 0; ci < coachNames.length; ci++) {
-        final cName = coachNames[ci];
-
-        for (var i = 0; i < 50; i++) {
-          final isMale  = i < 25;
-          final gender  = isMale ? Gender.male : Gender.female;
-          final fIdx    = i % (isMale ? maleNames.length : femaleNames.length);
-          final lIdx    = (ci * 50 + i) % lastNames.length;
-          final firstName = isMale ? maleNames[fIdx] : femaleNames[fIdx];
-          final lastName  = lastNames[lIdx];
-          final year      = years[(ci * 50 + i) % years.length];
-          final weight    = isMale
-              ? maleWeights[(ci * 50 + i) % maleWeights.length]
-              : femaleWeights[(ci * 50 + i) % femaleWeights.length];
-          final belt      = belts[(ci * 50 + i) % belts.length];
-          // Realistic distribution: ~50% beginners (0–19), ~17% casual (20–65),
-          // ~14% active (70–194), ~8% competitive (200–398), ~3% elite (450–675).
-          final seed = ci * 50 + i;
-          final points = seed % 33 == 0
-              ? 450 + (seed ~/ 33) % 10 * 25
-              : seed % 9 == 0
-                  ? 200 + (seed ~/ 9)  % 12 * 18
-                  : seed % 4 == 0
-                      ? 70  + (seed ~/ 4)  % 18 * 7
-                      : seed % 2 == 0
-                          ? 20  + (seed ~/ 2)  % 16 * 3
-                          : seed % 20;
-
-          final id = _uuid.v4();
-          batch.set(_db.collection('children').doc(id), {
-            'firstName':    firstName,
-            'lastName':     lastName,
-            'birthYear':    year,
-            'weightCategory': weight,
-            'currentBelt':  belt.name,
-            'gender':       gender.name,
-            'coachId':      currentCoachId,   // реальний uid тренера
-            'coachName':    cName,
-            'totalPoints':  points,
-            'createdAt':    FieldValue.serverTimestamp(),
-          });
-          count++;
-
-          if (count % 400 == 0) {
-            await batch.commit();
-            batch = _db.batch();
-          }
-        }
-      }
-      if (count % 400 != 0) await batch.commit();
     });
   }
 

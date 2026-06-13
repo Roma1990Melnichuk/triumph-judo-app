@@ -2,6 +2,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/models/user_model.dart';
+import '../../../core/utils/stream_utils.dart';
 
 final firebaseAuthProvider = Provider<FirebaseAuth>((ref) {
   return FirebaseAuth.instance;
@@ -25,7 +26,8 @@ final currentUserModelProvider = StreamProvider<UserModel?>((ref) {
           .collection('users')
           .doc(user.uid)
           .snapshots()
-          .map((doc) => doc.exists ? UserModel.fromFirestore(doc) : null);
+          .map((doc) => doc.exists ? UserModel.fromFirestore(doc) : null)
+          .fallbackOnError(null);
     },
     loading: () => Stream.value(null),
     error: (_, __) => Stream.value(null),
@@ -41,7 +43,7 @@ final allCoachesProvider = StreamProvider<List<UserModel>>((ref) {
       .where('role', isEqualTo: 'coach')
       .snapshots()
       .map((snap) => snap.docs.map(UserModel.fromFirestore).toList())
-      .handleError((_) {});
+      .fallbackOnError(const []);
 });
 
 /// Returns the UserModel for a specific coach UID (derived from allCoachesProvider).
@@ -61,7 +63,7 @@ final parentsByChildIdProvider =
       .where('childIds', arrayContains: childId)
       .snapshots()
       .map((snap) => snap.docs.map(UserModel.fromFirestore).toList())
-      .handleError((_) {});
+      .fallbackOnError(const []);
 });
 
 class AuthNotifier extends StateNotifier<AsyncValue<void>> {

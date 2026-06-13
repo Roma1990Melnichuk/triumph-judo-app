@@ -6,7 +6,6 @@ import '../../../core/constants/app_colors.dart';
 import '../../../core/utils/form_validators.dart';
 import '../../../shared/widgets/gradient_button.dart';
 import '../../../shared/widgets/triumph_emblem.dart';
-import '../../../shared/widgets/triumph_icon.dart';
 import '../providers/auth_provider.dart';
 
 class LoginScreen extends ConsumerStatefulWidget {
@@ -44,31 +43,13 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     }
   }
 
-  Future<void> _forgotPassword() async {
-    final email = _emailCtrl.text.trim();
-    if (email.isEmpty || !email.contains('@')) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Введіть email для скидання паролю')),
-      );
-      return;
-    }
-    await ref.read(authNotifierProvider.notifier).sendPasswordReset(email);
-    if (mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Row(
-            children: [
-              const ColorFiltered(
-                colorFilter: ColorFilter.mode(Colors.white, BlendMode.srcIn),
-                child: TriumphIcon(TIcon.success, size: 18),
-              ),
-              const SizedBox(width: 8),
-              const Text('Лист відправлено на вашу пошту'),
-            ],
-          ),
-        ),
-      );
-    }
+  void _forgotPassword() {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (_) => _RecoveryModal(emailHint: _emailCtrl.text.trim()),
+    );
   }
 
   String _mapError(String e) {
@@ -329,6 +310,320 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
   void _showSocialToast() {
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(content: Text('Скоро буде доступно')),
+    );
+  }
+}
+
+// ── Social button ──────────────────────────────────────────────────────────────
+
+// ── Recovery modal ────────────────────────────────────────────────────────────
+
+class _RecoveryModal extends ConsumerStatefulWidget {
+  const _RecoveryModal({this.emailHint});
+  final String? emailHint;
+
+  @override
+  ConsumerState<_RecoveryModal> createState() => _RecoveryModalState();
+}
+
+class _RecoveryModalState extends ConsumerState<_RecoveryModal> {
+  int  _tab     = 0; // 0 = email, 1 = phone
+  bool _loading = false;
+  bool _sent    = false;
+  late final TextEditingController _ctrl;
+
+  @override
+  void initState() {
+    super.initState();
+    _ctrl = TextEditingController(
+        text: _tab == 0 ? (widget.emailHint ?? '') : '');
+  }
+
+  @override
+  void dispose() {
+    _ctrl.dispose();
+    super.dispose();
+  }
+
+  Future<void> _send() async {
+    final val = _ctrl.text.trim();
+    if (_tab == 0) {
+      if (val.isEmpty || !val.contains('@')) return;
+      setState(() => _loading = true);
+      await ref.read(authNotifierProvider.notifier).sendPasswordReset(val);
+      if (mounted) setState(() { _loading = false; _sent = true; });
+    } else {
+      // SMS recovery — placeholder
+      setState(() => _sent = true);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final bottom = MediaQuery.of(context).viewInsets.bottom;
+
+    return Container(
+      decoration: const BoxDecoration(
+        color: Color(0xFF141210),
+        borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
+      ),
+      padding: EdgeInsets.fromLTRB(24, 8, 24, bottom + 32),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          // Drag handle
+          Center(
+            child: Container(
+              width: 40, height: 4,
+              margin: const EdgeInsets.only(bottom: 24),
+              decoration: BoxDecoration(
+                color: const Color(0xFF3A3A3A),
+                borderRadius: BorderRadius.circular(2),
+              ),
+            ),
+          ),
+
+          if (_sent)
+            _SuccessView(isEmail: _tab == 0, onDone: () => Navigator.pop(context))
+          else ...[
+            // Icon
+            Container(
+              width: 60, height: 60,
+              decoration: BoxDecoration(
+                color: AppColors.primary.withValues(alpha: 0.12),
+                shape: BoxShape.circle,
+              ),
+              child: const Icon(Icons.lock_reset_rounded,
+                  color: AppColors.primary, size: 30),
+            ),
+            const SizedBox(height: 16),
+
+            const Text(
+              'Відновлення пароля',
+              style: TextStyle(
+                  fontSize: 20,
+                  fontWeight: FontWeight.w800,
+                  color: Colors.white),
+            ),
+            const SizedBox(height: 6),
+            const Text(
+              'Виберіть спосіб відновлення доступу',
+              style: TextStyle(fontSize: 13, color: AppColors.textSecondary),
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 20),
+
+            // Tab toggle
+            Container(
+              height: 44,
+              decoration: BoxDecoration(
+                color: const Color(0xFF1E1C1A),
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Row(
+                children: [
+                  _TabBtn(
+                    label: 'Email',
+                    icon: Icons.email_outlined,
+                    active: _tab == 0,
+                    onTap: () {
+                      setState(() { _tab = 0; _ctrl.text = widget.emailHint ?? ''; });
+                    },
+                  ),
+                  _TabBtn(
+                    label: 'Телефон',
+                    icon: Icons.phone_outlined,
+                    active: _tab == 1,
+                    onTap: () {
+                      setState(() { _tab = 1; _ctrl.clear(); });
+                    },
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 16),
+
+            // Input
+            TextField(
+              controller: _ctrl,
+              keyboardType: _tab == 0
+                  ? TextInputType.emailAddress
+                  : TextInputType.phone,
+              style: const TextStyle(color: AppColors.textPrimary),
+              decoration: InputDecoration(
+                labelText: _tab == 0 ? 'Email адреса' : 'Номер телефону',
+                prefixIcon: Icon(
+                    _tab == 0 ? Icons.email_outlined : Icons.phone_outlined,
+                    color: AppColors.textSecondary),
+                filled: true,
+                fillColor: const Color(0xFF1A1816),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(14),
+                  borderSide: const BorderSide(color: Color(0xFF2C2A28)),
+                ),
+                enabledBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(14),
+                  borderSide: const BorderSide(color: Color(0xFF2C2A28)),
+                ),
+                focusedBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(14),
+                  borderSide: BorderSide(color: AppColors.primary),
+                ),
+              ),
+            ),
+            const SizedBox(height: 20),
+
+            // CTA
+            GradientButton(
+              onPressed: _loading ? null : _send,
+              isLoading: _loading,
+              child: const Text(
+                'Надіслати інструкції',
+                style: TextStyle(
+                    fontSize: 15,
+                    fontWeight: FontWeight.w700,
+                    color: Colors.white),
+              ),
+            ),
+            const SizedBox(height: 14),
+
+            // Remember link
+            GestureDetector(
+              onTap: () => Navigator.pop(context),
+              child: Text(
+                'Я згадав пароль',
+                style: TextStyle(
+                  fontSize: 13,
+                  color: AppColors.primary,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ),
+            const SizedBox(height: 16),
+
+            // Footer note
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                const Icon(Icons.lock_outline_rounded,
+                    size: 12, color: AppColors.textSecondary),
+                const SizedBox(width: 5),
+                const Text(
+                  'Ми ніколи не передаємо ваші дані третім особам',
+                  style: TextStyle(
+                      fontSize: 11, color: AppColors.textSecondary),
+                ),
+              ],
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+}
+
+class _TabBtn extends StatelessWidget {
+  const _TabBtn({
+    required this.label,
+    required this.icon,
+    required this.active,
+    required this.onTap,
+  });
+
+  final String       label;
+  final IconData     icon;
+  final bool         active;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return Expanded(
+      child: GestureDetector(
+        onTap: onTap,
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 200),
+          margin: const EdgeInsets.all(4),
+          decoration: BoxDecoration(
+            color: active ? AppColors.primary.withValues(alpha: 0.18) : Colors.transparent,
+            borderRadius: BorderRadius.circular(9),
+            border: active
+                ? Border.all(color: AppColors.primary.withValues(alpha: 0.6))
+                : null,
+          ),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(icon, size: 15,
+                  color: active ? AppColors.primary : AppColors.textSecondary),
+              const SizedBox(width: 5),
+              Text(
+                label,
+                style: TextStyle(
+                  fontSize: 13,
+                  fontWeight: active ? FontWeight.w700 : FontWeight.w400,
+                  color: active ? AppColors.primary : AppColors.textSecondary,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _SuccessView extends StatelessWidget {
+  const _SuccessView({required this.isEmail, required this.onDone});
+  final bool         isEmail;
+  final VoidCallback onDone;
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 24),
+      child: Column(
+        children: [
+          Container(
+            width: 72, height: 72,
+            decoration: const BoxDecoration(
+              color: Color(0xFF0D2A1A),
+              shape: BoxShape.circle,
+            ),
+            child: const Icon(Icons.check_rounded,
+                color: AppColors.success, size: 36),
+          ),
+          const SizedBox(height: 20),
+          const Text(
+            'Інструкції відправлено!',
+            style: TextStyle(
+                fontSize: 20,
+                fontWeight: FontWeight.w800,
+                color: Colors.white),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            isEmail
+                ? 'Перевірте вашу пошту та\nдотримуйтесь інструкцій у листі'
+                : 'Перевірте SMS на вашому телефоні',
+            style: const TextStyle(
+                fontSize: 13,
+                color: AppColors.textSecondary,
+                height: 1.5),
+            textAlign: TextAlign.center,
+          ),
+          const SizedBox(height: 28),
+          GradientButton(
+            onPressed: onDone,
+            child: const Text(
+              'Зрозуміло',
+              style: TextStyle(
+                  fontSize: 15,
+                  fontWeight: FontWeight.w700,
+                  color: Colors.white),
+            ),
+          ),
+        ],
+      ),
     );
   }
 }

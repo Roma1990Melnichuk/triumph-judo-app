@@ -6,6 +6,7 @@ import '../../../core/models/fitness_exercise_model.dart';
 import '../../../core/models/fitness_goal_model.dart';
 import '../../../core/models/fitness_log_model.dart';
 import '../../auth/providers/auth_provider.dart';
+import '../../../core/utils/stream_utils.dart';
 
 typedef ExerciseKey = ({String childId, String exerciseId});
 
@@ -70,7 +71,7 @@ final exerciseGoalProvider =
       .doc('${key.childId}_${key.exerciseId}') // composite key
       .snapshots()
       .map((doc) => doc.exists ? FitnessGoal.fromFirestore(doc) : null)
-      .handleError((_) {});
+      .fallbackOnError(null);
 });
 
 // ── Notifier ──────────────────────────────────────────────────────────────────

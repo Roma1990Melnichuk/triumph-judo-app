@@ -32,6 +32,7 @@ dependencies:
   google_fonts: ^6.2.1
   webview_flutter: ^4.10.0
   fl_chart: ^0.69.0
+  url_launcher: ^6.3.0
 
 dev_dependencies:
   flutter_test:
@@ -70,3 +71,4 @@ flutter:
     - assets/achievements/
     - assets/icons/
     - assets/progress/
+    - assets/shop/

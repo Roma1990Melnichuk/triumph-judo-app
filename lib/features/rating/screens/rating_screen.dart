@@ -156,7 +156,9 @@ class _RatingScreenState extends ConsumerState<RatingScreen> {
             // ── Tab row ──────────────────────────────────────────────────────
             Padding(
               padding: const EdgeInsets.fromLTRB(16, 0, 16, 6),
-              child: Row(
+              child: SingleChildScrollView(
+                scrollDirection: Axis.horizontal,
+                child: Row(
                 children: _RatingTab.values.map((t) {
                   final active = t == _tab;
                   return GestureDetector(
@@ -192,6 +194,7 @@ class _RatingScreenState extends ConsumerState<RatingScreen> {
                     ),
                   );
                 }).toList(),
+                ),
               ),
             ),
 
@@ -469,10 +472,13 @@ class _RatingScreenState extends ConsumerState<RatingScreen> {
                               ),
                               title: Row(
                                 children: [
-                                  Text(
-                                    child.fullName,
-                                    style: const TextStyle(
-                                        fontWeight: FontWeight.w600),
+                                  Flexible(
+                                    child: Text(
+                                      child.fullName,
+                                      overflow: TextOverflow.ellipsis,
+                                      style: const TextStyle(
+                                          fontWeight: FontWeight.w600),
+                                    ),
                                   ),
                                   if (isOwn && !isCoach) ...[
                                     const SizedBox(width: 6),

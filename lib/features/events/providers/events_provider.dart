@@ -5,6 +5,7 @@ import '../../../core/models/event_model.dart';
 import '../../../core/constants/belt_levels.dart';
 import '../../auth/providers/auth_provider.dart';
 import '../../team/providers/children_provider.dart';
+import '../../../core/utils/stream_utils.dart';
 
 // ── All events ────────────────────────────────────────────────────────────────
 final allEventsProvider = StreamProvider<List<EventModel>>((ref) {
@@ -16,7 +17,7 @@ final allEventsProvider = StreamProvider<List<EventModel>>((ref) {
       .orderBy('date', descending: false)
       .snapshots()
       .map((s) => s.docs.map(EventModel.fromFirestore).toList())
-      .handleError((_) {});
+      .fallbackOnError(const []);
 });
 
 // ── Filter state ─────────────────────────────────────────────────────────────

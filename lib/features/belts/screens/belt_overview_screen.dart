@@ -92,6 +92,22 @@ class _BeltOverviewScreenState extends ConsumerState<BeltOverviewScreen> {
                       ),
                     ),
                   ),
+                  GestureDetector(
+                    onTap: () => context.push('/exercise-library'),
+                    child: Container(
+                      width: 44, height: 44,
+                      margin: const EdgeInsets.only(right: 8),
+                      decoration: BoxDecoration(
+                        color: AppColors.orange.withValues(alpha: 0.1),
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(
+                            color: AppColors.orange.withValues(alpha: 0.3)),
+                      ),
+                      alignment: Alignment.center,
+                      child: const Icon(Icons.fitness_center_rounded,
+                          color: AppColors.orange, size: 20),
+                    ),
+                  ),
                   if (isCoach)
                     GestureDetector(
                       onTap: () => context.push('/bulk-belt'),
