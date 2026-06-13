@@ -465,6 +465,136 @@ void main() {
     });
   });
 
+  // ── Мультивибір — пояс (belts) ─────────────────────────────────────────────
+
+  group('Фільтр — Мультивибір пояс (belts)', () {
+    late ProviderContainer c;
+    setUp(() => c = makeContainer(all));
+    tearDown(() => c.dispose());
+
+    test('belts={white} → тільки білий пояс', () async {
+      final r = await applyFilter(
+          c, ChildrenFilter(belts: {BeltLevel.white}));
+      expect(r.every((x) => x.currentBelt == BeltLevel.white), isTrue);
+    });
+
+    test('belts={white, yellow} → і білий, і жовтий', () async {
+      final r = await applyFilter(
+          c, ChildrenFilter(belts: {BeltLevel.white, BeltLevel.yellow}));
+      expect(r.every((x) =>
+          x.currentBelt == BeltLevel.white ||
+          x.currentBelt == BeltLevel.yellow), isTrue);
+      expect(r.any((x) => x.currentBelt == BeltLevel.white), isTrue);
+      expect(r.any((x) => x.currentBelt == BeltLevel.yellow), isTrue);
+    });
+
+    test('belts={{}} → всі повертаються (немає фільтрації)', () async {
+      final r = await applyFilter(c, const ChildrenFilter(belts: {}));
+      expect(r, hasLength(all.length));
+    });
+
+    test('belts має пріоритет над belt', () async {
+      // belts={white, yellow}, belt=orange — belts перекриває belt
+      final r = await applyFilter(
+          c,
+          ChildrenFilter(
+            belt: BeltLevel.orange,
+            belts: {BeltLevel.white, BeltLevel.yellow},
+          ));
+      expect(r.any((x) => x.currentBelt == BeltLevel.orange), isFalse);
+    });
+
+    test('clearBelts → скидає набір поясів', () {
+      final f = ChildrenFilter(belts: {BeltLevel.yellow})
+          .copyWith(clearBelts: true);
+      expect(f.belts, isEmpty);
+    });
+  });
+
+  // ── Мультивибір — рік народження (birthYears) ──────────────────────────────
+
+  group('Фільтр — Мультивибір рік народження (birthYears)', () {
+    late ProviderContainer c;
+    setUp(() => c = makeContainer(all));
+    tearDown(() => c.dispose());
+
+    test('birthYears={2010} → тільки 2010', () async {
+      final r = await applyFilter(c, const ChildrenFilter(birthYears: {2010}));
+      expect(r.every((x) => x.birthYear == 2010), isTrue);
+    });
+
+    test('birthYears={2010, 2011} → обидва роки', () async {
+      final r = await applyFilter(
+          c, const ChildrenFilter(birthYears: {2010, 2011}));
+      expect(r.every((x) => x.birthYear == 2010 || x.birthYear == 2011),
+          isTrue);
+      expect(r.any((x) => x.birthYear == 2010), isTrue);
+      expect(r.any((x) => x.birthYear == 2011), isTrue);
+    });
+
+    test('birthYears={} → всі', () async {
+      final r = await applyFilter(c, const ChildrenFilter(birthYears: {}));
+      expect(r, hasLength(all.length));
+    });
+
+    test('birthYears має пріоритет над birthYear', () async {
+      final r = await applyFilter(
+          c, const ChildrenFilter(birthYear: 2012, birthYears: {2010, 2011}));
+      expect(r.any((x) => x.birthYear == 2012), isFalse);
+    });
+
+    test('clearBirthYears → скидає набір', () {
+      final f = const ChildrenFilter(birthYears: {2010, 2011})
+          .copyWith(clearBirthYears: true);
+      expect(f.birthYears, isEmpty);
+    });
+  });
+
+  // ── Мультивибір — вагова категорія (weightCats) ────────────────────────────
+
+  group('Фільтр — Мультивибір вагова категорія (weightCats)', () {
+    late ProviderContainer c;
+    setUp(() => c = makeContainer(all));
+    tearDown(() => c.dispose());
+
+    test('weightCats={-30 кг} → тільки -30 кг', () async {
+      final r = await applyFilter(
+          c, const ChildrenFilter(weightCats: {'-30 кг'}));
+      expect(r.every((x) => x.weightCategory == '-30 кг'), isTrue);
+    });
+
+    test('weightCats={-30 кг, -36 кг} → обидві категорії', () async {
+      final r = await applyFilter(
+          c, const ChildrenFilter(weightCats: {'-30 кг', '-36 кг'}));
+      expect(r.every((x) =>
+          x.weightCategory == '-30 кг' ||
+          x.weightCategory == '-36 кг'), isTrue);
+    });
+
+    test('weightCats={} → всі', () async {
+      final r = await applyFilter(c, const ChildrenFilter(weightCats: {}));
+      expect(r, hasLength(all.length));
+    });
+
+    test('clearWeightCats → скидає набір', () {
+      final f = const ChildrenFilter(weightCats: {'-30 кг'})
+          .copyWith(clearWeightCats: true);
+      expect(f.weightCats, isEmpty);
+    });
+
+    test('weightCats + гендер разом', () async {
+      final r = await applyFilter(
+          c,
+          const ChildrenFilter(
+            gender: Gender.female,
+            weightCats: {'-30 кг'},
+          ));
+      expect(r.every(
+          (x) => x.gender == Gender.female && x.weightCategory == '-30 кг'),
+          isTrue);
+    });
+  });
+
   // ── Gender enum ─────────────────────────────────────────────────────────────
 
   group('Gender enum', () {

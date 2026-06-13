@@ -1,6 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:uuid/uuid.dart';
+import '../../../core/models/child_model.dart';
 import '../../../core/models/competition_result_model.dart';
 import '../../../core/models/competition_type_model.dart';
 import '../../auth/providers/auth_provider.dart';
@@ -62,6 +63,19 @@ final allResultsProvider =
       .snapshots()
       .map((s) => s.docs.map(CompetitionResultModel.fromFirestore).toList())
       .fallbackOnError(const []);
+});
+
+// ── Filtered children with medal filter applied ──────────────────────────────
+final filteredChildrenWithMedalsProvider = Provider<List<ChildModel>>((ref) {
+  final children = ref.watch(filteredChildrenProvider);
+  final filter = ref.watch(childrenFilterProvider);
+  if (filter.medalPlaces.isEmpty) return children;
+  final results = ref.watch(allResultsProvider).asData?.value ?? [];
+  final qualified = results
+      .where((r) => filter.medalPlaces.contains(r.place))
+      .map((r) => r.childId)
+      .toSet();
+  return children.where((c) => qualified.contains(c.id)).toList();
 });
 
 // ── Competition types ────────────────────────────────────────────────────────

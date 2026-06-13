@@ -271,6 +271,56 @@ class BeltNotifier extends StateNotifier<AsyncValue<void>> {
       },
       SetOptions(merge: true),
     );
+    await syncAllChildrenBeltReady(belt);
+  }
+
+  /// Remove an exercise from a belt and re-sync beltReady for all children.
+  Future<void> removeExercise({
+    required BeltLevel belt,
+    required String exerciseId,
+    required String coachId,
+  }) async {
+    final docRef = _db.collection('belt_requirements').doc(belt.name);
+    final snap = await docRef.get();
+    final existing = (snap.data()?['exercises'] as List<dynamic>? ?? [])
+        .map((e) => Exercise.fromMap(e as Map<String, dynamic>))
+        .where((e) => e.id != exerciseId)
+        .toList();
+    await docRef.set(
+      {
+        'exercises': existing.map((e) => e.toMap()).toList(),
+        'updatedAt': Timestamp.now(),
+        'updatedByCoachId': coachId,
+      },
+      SetOptions(merge: true),
+    );
+    await syncAllChildrenBeltReady(belt);
+  }
+
+  /// Re-evaluate beltReady for every child who has progress for [belt].
+  Future<void> syncAllChildrenBeltReady(BeltLevel belt) async {
+    try {
+      final reqSnap =
+          await _db.collection('belt_requirements').doc(belt.name).get();
+      final exercises = reqSnap.data()?['exercises'] as List<dynamic>? ?? [];
+      final progressSnap = await _db
+          .collection('belt_progress')
+          .where('belt', isEqualTo: belt.name)
+          .get();
+      for (final doc in progressSnap.docs) {
+        final childId = doc.data()['childId'] as String?;
+        if (childId == null) continue;
+        final progressMap =
+            (doc.data()['passed'] as Map<String, dynamic>?) ?? {};
+        final isReady = exercises.isNotEmpty &&
+            exercises.every(
+                (e) => progressMap[(e as Map<String, dynamic>)['id']] == true);
+        await _db
+            .collection('children')
+            .doc(childId)
+            .update({'beltReady': isReady});
+      }
+    } catch (_) {}
   }
 
   Exercise newExercise(String name, String description) => Exercise(

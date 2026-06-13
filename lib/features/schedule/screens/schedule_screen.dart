@@ -2,10 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/constants/app_colors.dart';
 import '../../../core/models/child_model.dart';
+import '../../../core/models/event_model.dart';
 import '../../../core/models/training_schedule_model.dart';
 import '../../../core/models/training_session_model.dart';
 import '../../../shared/widgets/triumph_icon.dart';
 import '../../auth/providers/auth_provider.dart';
+import '../../events/providers/events_provider.dart';
 import '../../team/providers/children_provider.dart';
 import '../providers/schedule_provider.dart';
 
@@ -47,6 +49,13 @@ class _ScheduleScreenState extends ConsumerState<ScheduleScreen> {
     final childrenMap = ref.watch(childByIdMapProvider);
     final user = ref.watch(currentUserModelProvider).asData?.value;
     final coachId = user?.uid ?? '';
+    final events = ref.watch(allEventsProvider).asData?.value ?? [];
+    final eventsByDate = <DateTime, List<EventModel>>{};
+    for (final e in events) {
+      final key = DateTime(e.date.year, e.date.month, e.date.day);
+      eventsByDate.putIfAbsent(key, () => []).add(e);
+    }
+    final todayEvents = eventsByDate[_dateOnly] ?? [];
 
     return Scaffold(
       backgroundColor: AppColors.background,
@@ -102,6 +111,7 @@ class _ScheduleScreenState extends ConsumerState<ScheduleScreen> {
                   displayMonth: _displayMonth,
                   selectedDate: _selectedDate,
                   trainingWeekdays: trainingWeekdays,
+                  eventDates: eventsByDate.keys.toSet(),
                   onDayTap: (date) => setState(() => _selectedDate = date),
                   onPrevMonth: () => setState(() {
                     _displayMonth = DateTime(
@@ -128,11 +138,16 @@ class _ScheduleScreenState extends ConsumerState<ScheduleScreen> {
                   ),
                 ),
 
-                if (todaySchedules.isEmpty)
+                // Events for selected day
+                ...todayEvents.map((e) => _EventCard(event: e)),
+
+                if (todaySchedules.isEmpty && todayEvents.isEmpty)
                   Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 20),
                     child: _EmptyCard(text: 'Немає занять на цей день'),
                   )
+                else if (todaySchedules.isEmpty)
+                  const SizedBox()
                 else
                   ...todaySchedules.map((s) => _SessionCard(
                         schedule: s,
@@ -348,6 +363,7 @@ class _MonthCalendar extends StatelessWidget {
     required this.displayMonth,
     required this.selectedDate,
     required this.trainingWeekdays,
+    required this.eventDates,
     required this.onDayTap,
     required this.onPrevMonth,
     required this.onNextMonth,
@@ -356,6 +372,7 @@ class _MonthCalendar extends StatelessWidget {
   final DateTime displayMonth;
   final DateTime selectedDate;
   final Set<int> trainingWeekdays;
+  final Set<DateTime> eventDates;
   final ValueChanged<DateTime> onDayTap;
   final VoidCallback onPrevMonth;
   final VoidCallback onNextMonth;
@@ -458,6 +475,7 @@ class _MonthCalendar extends StatelessWidget {
                   date.year == today.year;
               final hasTraining =
                   trainingWeekdays.contains(date.weekday);
+              final hasEvent = eventDates.contains(date);
 
               return GestureDetector(
                 onTap: () => onDayTap(date),
@@ -493,17 +511,36 @@ class _MonthCalendar extends StatelessWidget {
                     ),
                     SizedBox(
                       height: 6,
-                      child: hasTraining
+                      child: (hasTraining || hasEvent)
                           ? Center(
-                              child: Container(
-                                width: 4,
-                                height: 4,
-                                decoration: BoxDecoration(
-                                  shape: BoxShape.circle,
-                                  color: isSelected
-                                      ? Colors.white
-                                      : AppColors.primary,
-                                ),
+                              child: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  if (hasTraining)
+                                    Container(
+                                      width: 4,
+                                      height: 4,
+                                      margin: EdgeInsets.symmetric(horizontal: 1),
+                                      decoration: BoxDecoration(
+                                        shape: BoxShape.circle,
+                                        color: isSelected
+                                            ? Colors.white
+                                            : AppColors.primary,
+                                      ),
+                                    ),
+                                  if (hasEvent)
+                                    Container(
+                                      width: 4,
+                                      height: 4,
+                                      margin: EdgeInsets.symmetric(horizontal: 1),
+                                      decoration: BoxDecoration(
+                                        shape: BoxShape.circle,
+                                        color: isSelected
+                                            ? Colors.white
+                                            : AppColors.warning,
+                                      ),
+                                    ),
+                                ],
                               ),
                             )
                           : null,
@@ -512,6 +549,77 @@ class _MonthCalendar extends StatelessWidget {
                 ),
               );
             },
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+// ── Event card ────────────────────────────────────────────────────────────────
+
+class _EventCard extends StatelessWidget {
+  const _EventCard({required this.event});
+  final EventModel event;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      margin: const EdgeInsets.fromLTRB(20, 0, 20, 12),
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+      decoration: BoxDecoration(
+        color: AppColors.surface,
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: AppColors.warning.withValues(alpha: 0.4)),
+      ),
+      child: Row(
+        children: [
+          Container(
+            width: 4,
+            height: 44,
+            decoration: BoxDecoration(
+              color: AppColors.warning,
+              borderRadius: BorderRadius.circular(2),
+            ),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  event.title,
+                  style: const TextStyle(
+                    fontWeight: FontWeight.w600,
+                    fontSize: 14,
+                    color: AppColors.textPrimary,
+                  ),
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  '${event.type.displayName}${event.location.isNotEmpty ? "  •  ${event.location}" : ""}',
+                  style: const TextStyle(
+                    color: AppColors.textSecondary,
+                    fontSize: 12,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+            decoration: BoxDecoration(
+              color: AppColors.warning.withValues(alpha: 0.1),
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: const Text(
+              'Подія',
+              style: TextStyle(
+                color: AppColors.warning,
+                fontSize: 11,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
           ),
         ],
       ),

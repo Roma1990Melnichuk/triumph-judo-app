@@ -328,6 +328,113 @@ void main() {
     });
   });
 
+  // ── TC-BELT-005 ─────────────────────────────────────────────────────────────
+
+  group('TC-BELT-005: syncAllChildrenBeltReady оновлює всіх спортсменів', () {
+    test('нове завдання → beltReady=false у ОБОХ спортсменів', () async {
+      final db = FakeFirebaseFirestore();
+      final n = await _notifier(db);
+
+      // 1 existing exercise
+      await n.addExercise(
+        belt: BeltLevel.yellow,
+        name: 'Техніка А',
+        description: '',
+        category: ExerciseCategory.technique,
+        coachId: 'coach1',
+      );
+      await db.collection('children').doc('child1').set({'name': 'Тест 1'});
+      await db.collection('children').doc('child2').set({'name': 'Тест 2'});
+
+      final exs1 = await _exercises(db, BeltLevel.yellow);
+      // Both children pass the exercise → beltReady=true
+      for (final childId in ['child1', 'child2']) {
+        await n.toggleExercise(
+          childId: childId,
+          belt: BeltLevel.yellow,
+          exerciseId: exs1[0]['id'] as String,
+          passed: true,
+        );
+      }
+      expect(await _beltReady(db, 'child1'), isTrue);
+      expect(await _beltReady(db, 'child2'), isTrue);
+
+      // Coach adds a new exercise — addExercise calls syncAllChildrenBeltReady
+      await n.addExercise(
+        belt: BeltLevel.yellow,
+        name: 'Техніка Б',
+        description: '',
+        category: ExerciseCategory.physical,
+        coachId: 'coach1',
+      );
+
+      // Both children should now be not ready (new task not passed)
+      expect(await _beltReady(db, 'child1'), isFalse);
+      expect(await _beltReady(db, 'child2'), isFalse);
+    });
+
+    test('removeExercise → beltReady перераховується для всіх', () async {
+      final db = FakeFirebaseFirestore();
+      final n = await _notifier(db);
+
+      // Add 2 exercises
+      await n.addExercise(
+        belt: BeltLevel.orange,
+        name: 'Завдання 1',
+        description: '',
+        category: ExerciseCategory.technique,
+        coachId: 'coach1',
+      );
+      await n.addExercise(
+        belt: BeltLevel.orange,
+        name: 'Завдання 2',
+        description: '',
+        category: ExerciseCategory.physical,
+        coachId: 'coach1',
+      );
+      await db.collection('children').doc('child1').set({'name': 'Тест'});
+
+      final exs = await _exercises(db, BeltLevel.orange);
+      // Pass only exercise 1
+      await n.toggleExercise(
+        childId: 'child1',
+        belt: BeltLevel.orange,
+        exerciseId: exs[0]['id'] as String,
+        passed: true,
+      );
+      expect(await _beltReady(db, 'child1'), isFalse);
+
+      // Remove exercise 2 — now only 1 exercise, which is passed → beltReady=true
+      await n.removeExercise(
+        belt: BeltLevel.orange,
+        exerciseId: exs[1]['id'] as String,
+        coachId: 'coach1',
+      );
+
+      final exsAfter = await _exercises(db, BeltLevel.orange);
+      expect(exsAfter.length, equals(1));
+      expect(await _beltReady(db, 'child1'), isTrue);
+    });
+
+    test('syncAllChildrenBeltReady не кидає виняток якщо немає прогресу', () async {
+      final db = FakeFirebaseFirestore();
+      final n = await _notifier(db);
+
+      await n.addExercise(
+        belt: BeltLevel.green,
+        name: 'Тест',
+        description: '',
+        category: ExerciseCategory.technique,
+        coachId: 'coach1',
+      );
+      // No belt_progress docs exist — syncAllChildrenBeltReady should handle gracefully
+      await expectLater(
+        n.syncAllChildrenBeltReady(BeltLevel.green),
+        completes,
+      );
+    });
+  });
+
   // ── BeltRequirementModel.byCategory ─────────────────────────────────────────
 
   group('BeltRequirementModel.byCategory — завжди 4 категорії', () {

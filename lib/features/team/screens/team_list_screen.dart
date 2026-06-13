@@ -6,6 +6,7 @@ import '../../../core/constants/belt_levels.dart';
 import '../../../core/models/child_model.dart' show displayWeight;
 import '../../../core/models/membership_model.dart';
 import '../../../features/auth/providers/auth_provider.dart';
+import '../../../features/competitions/providers/competitions_provider.dart';
 import '../../../features/membership/providers/membership_provider.dart';
 import '../../../services/export_service.dart';
 import '../providers/children_provider.dart';
@@ -54,7 +55,7 @@ class _TeamListScreenState extends ConsumerState<TeamListScreen> {
     final allChildren = ref.watch(allChildrenProvider);
     // Parents see only their own children
     final children = isCoach
-        ? ref.watch(filteredChildrenProvider)
+        ? ref.watch(filteredChildrenWithMedalsProvider)
         : (allChildren.value ?? []).where((c) => user?.ownsChild(c.id) ?? false).toList();
     final membershipMap = ref.watch(membershipStatusMapProvider);
     final membershipEndDateMap = isCoach ? ref.watch(membershipEndDateMapProvider) : <String, DateTime>{};
@@ -130,6 +131,7 @@ class _TeamListScreenState extends ConsumerState<TeamListScreen> {
       onShowWeightPicker: () => _showWeightPicker(context, filter, weightCategories),
       onShowGenderPicker: () => _showGenderPicker(context, filter),
       onShowMembershipPicker: () => _showMembershipPicker(context, filter),
+      onShowMedalPicker: () => _showMedalPicker(context, filter),
       ref: ref,
     );
 
@@ -313,49 +315,86 @@ class _TeamListScreenState extends ConsumerState<TeamListScreen> {
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
-      builder: (_) => SafeArea(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            const Padding(
-              padding: EdgeInsets.all(16),
-              child: Text(
-                'Оберіть пояс',
-                style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-              ),
-            ),
-            Flexible(
-              child: SingleChildScrollView(
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: BeltLevel.values.map(
-                    (b) => ListTile(
-                      leading: Container(
-                        width: 24,
-                        height: 24,
-                        decoration: BoxDecoration(
-                          color: b.color,
-                          shape: BoxShape.circle,
-                          border: b == BeltLevel.white
-                              ? Border.all(color: Colors.grey.shade300)
-                              : null,
-                        ),
+      builder: (_) {
+        final selected = {...filter.belts};
+        return StatefulBuilder(
+          builder: (ctx, setS) => SafeArea(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Padding(
+                  padding: const EdgeInsets.all(16),
+                  child: Row(
+                    children: [
+                      const Expanded(
+                        child: Text('Оберіть пояс',
+                            style: TextStyle(
+                                fontSize: 16, fontWeight: FontWeight.bold)),
                       ),
-                      title: Text(b.displayName),
-                      onTap: () {
-                        ref.read(childrenFilterProvider.notifier).state =
-                            filter.copyWith(belt: b);
-                        Navigator.pop(context);
-                      },
-                    ),
-                  ).toList(),
+                      if (selected.isNotEmpty)
+                        TextButton(
+                          onPressed: () {
+                            setS(() => selected.clear());
+                          },
+                          child: const Text('Скинути'),
+                        ),
+                    ],
+                  ),
                 ),
-              ),
+                Flexible(
+                  child: SingleChildScrollView(
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: BeltLevel.values.map((b) {
+                        final isSel = selected.contains(b);
+                        return ListTile(
+                          leading: Container(
+                            width: 24,
+                            height: 24,
+                            decoration: BoxDecoration(
+                              color: b.color,
+                              shape: BoxShape.circle,
+                              border: b == BeltLevel.white
+                                  ? Border.all(color: Colors.grey.shade300)
+                                  : null,
+                            ),
+                          ),
+                          title: Text(b.displayName),
+                          trailing: isSel
+                              ? const Icon(Icons.check,
+                                  color: AppColors.primary)
+                              : null,
+                          selected: isSel,
+                          selectedColor: AppColors.primary,
+                          onTap: () => setS(() {
+                            if (isSel) selected.remove(b);
+                            else selected.add(b);
+                          }),
+                        );
+                      }).toList(),
+                    ),
+                  ),
+                ),
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
+                  child: FilledButton(
+                    onPressed: () {
+                      ref.read(childrenFilterProvider.notifier).update(
+                            (s) => s.copyWith(
+                              belts: Set.from(selected),
+                              clearBelts: selected.isEmpty,
+                            ),
+                          );
+                      Navigator.pop(context);
+                    },
+                    child: const Text('Застосувати'),
+                  ),
+                ),
+              ],
             ),
-            const SizedBox(height: 16),
-          ],
-        ),
-      ),
+          ),
+        );
+      },
     );
   }
 
@@ -370,60 +409,101 @@ class _TeamListScreenState extends ConsumerState<TeamListScreen> {
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
-      builder: (_) => SafeArea(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            const Padding(
-              padding: EdgeInsets.all(16),
-              child: Text(
-                'Рік народження',
-                style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-              ),
-            ),
-            Flexible(
-              child: SingleChildScrollView(
-                child: Column(
-                  children: allYears.map((y) {
-                    final count = counts[y];
-                    return ListTile(
-                      title: Text(y.toString()),
-                      trailing: count != null
-                          ? Container(
-                              padding: const EdgeInsets.symmetric(
-                                  horizontal: 10, vertical: 3),
-                              decoration: BoxDecoration(
-                                color: AppColors.primary.withValues(alpha: 0.1),
-                                borderRadius: BorderRadius.circular(12),
-                              ),
-                              child: Text(
-                                '$count',
-                                style: const TextStyle(
-                                    fontSize: 13,
-                                    fontWeight: FontWeight.bold,
-                                    color: AppColors.primary),
-                              ),
-                            )
-                          : null,
-                      selected: filter.birthYear == y,
-                      selectedColor: AppColors.primary,
-                      onTap: count != null
-                          ? () {
-                              ref.read(childrenFilterProvider.notifier).state =
-                                  filter.copyWith(birthYear: y);
-                              Navigator.pop(context);
-                            }
-                          : null,
-                      enabled: count != null,
-                    );
-                  }).toList(),
+      builder: (_) {
+        final selected = {...filter.birthYears};
+        return StatefulBuilder(
+          builder: (ctx, setS) => SafeArea(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Padding(
+                  padding: const EdgeInsets.all(16),
+                  child: Row(
+                    children: [
+                      const Expanded(
+                        child: Text('Рік народження',
+                            style: TextStyle(
+                                fontSize: 16, fontWeight: FontWeight.bold)),
+                      ),
+                      if (selected.isNotEmpty)
+                        TextButton(
+                          onPressed: () => setS(() => selected.clear()),
+                          child: const Text('Скинути'),
+                        ),
+                    ],
+                  ),
                 ),
-              ),
+                Flexible(
+                  child: SingleChildScrollView(
+                    child: Column(
+                      children: allYears.map((y) {
+                        final count = counts[y];
+                        final isSel = selected.contains(y);
+                        return ListTile(
+                          title: Text(y.toString()),
+                          trailing: count != null
+                              ? Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    Container(
+                                      padding: const EdgeInsets.symmetric(
+                                          horizontal: 10, vertical: 3),
+                                      decoration: BoxDecoration(
+                                        color: AppColors.primary
+                                            .withValues(alpha: 0.1),
+                                        borderRadius:
+                                            BorderRadius.circular(12),
+                                      ),
+                                      child: Text(
+                                        '$count',
+                                        style: const TextStyle(
+                                            fontSize: 13,
+                                            fontWeight: FontWeight.bold,
+                                            color: AppColors.primary),
+                                      ),
+                                    ),
+                                    if (isSel) ...[
+                                      const SizedBox(width: 8),
+                                      const Icon(Icons.check,
+                                          color: AppColors.primary),
+                                    ],
+                                  ],
+                                )
+                              : null,
+                          selected: isSel,
+                          selectedColor: AppColors.primary,
+                          onTap: count != null
+                              ? () => setS(() {
+                                    if (isSel) selected.remove(y);
+                                    else selected.add(y);
+                                  })
+                              : null,
+                          enabled: count != null,
+                        );
+                      }).toList(),
+                    ),
+                  ),
+                ),
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
+                  child: FilledButton(
+                    onPressed: () {
+                      ref.read(childrenFilterProvider.notifier).update(
+                            (s) => s.copyWith(
+                              birthYears: Set.from(selected),
+                              clearBirthYears: selected.isEmpty,
+                            ),
+                          );
+                      Navigator.pop(context);
+                    },
+                    child: const Text('Застосувати'),
+                  ),
+                ),
+              ],
             ),
-            const SizedBox(height: 16),
-          ],
-        ),
-      ),
+          ),
+        );
+      },
     );
   }
 
@@ -480,46 +560,75 @@ class _TeamListScreenState extends ConsumerState<TeamListScreen> {
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
-      builder: (_) => SafeArea(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            const Padding(
-              padding: EdgeInsets.all(16),
-              child: Text(
-                'Вагова категорія',
-                style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-              ),
-            ),
-            Flexible(
-              child: SingleChildScrollView(
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: categories.map((w) {
-                    final selected = filter.weightCategory == w;
-                    return ListTile(
-                      leading: const Icon(Icons.scale, size: 20,
-                          color: AppColors.textSecondary),
-                      title: Text(displayWeight(w)),
-                      trailing: selected
-                          ? const Icon(Icons.check, color: AppColors.primary)
-                          : null,
-                      selected: selected,
-                      selectedColor: AppColors.primary,
-                      onTap: () {
-                        ref.read(childrenFilterProvider.notifier).state =
-                            filter.copyWith(weightCategory: w);
-                        Navigator.pop(context);
-                      },
-                    );
-                  }).toList(),
+      builder: (_) {
+        final selected = {...filter.weightCats};
+        return StatefulBuilder(
+          builder: (ctx, setS) => SafeArea(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Padding(
+                  padding: const EdgeInsets.all(16),
+                  child: Row(
+                    children: [
+                      const Expanded(
+                        child: Text('Вагова категорія',
+                            style: TextStyle(
+                                fontSize: 16, fontWeight: FontWeight.bold)),
+                      ),
+                      if (selected.isNotEmpty)
+                        TextButton(
+                          onPressed: () => setS(() => selected.clear()),
+                          child: const Text('Скинути'),
+                        ),
+                    ],
+                  ),
                 ),
-              ),
+                Flexible(
+                  child: SingleChildScrollView(
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: categories.map((w) {
+                        final isSel = selected.contains(w);
+                        return ListTile(
+                          leading: const Icon(Icons.scale,
+                              size: 20, color: AppColors.textSecondary),
+                          title: Text(displayWeight(w)),
+                          trailing: isSel
+                              ? const Icon(Icons.check,
+                                  color: AppColors.primary)
+                              : null,
+                          selected: isSel,
+                          selectedColor: AppColors.primary,
+                          onTap: () => setS(() {
+                            if (isSel) selected.remove(w);
+                            else selected.add(w);
+                          }),
+                        );
+                      }).toList(),
+                    ),
+                  ),
+                ),
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
+                  child: FilledButton(
+                    onPressed: () {
+                      ref.read(childrenFilterProvider.notifier).update(
+                            (s) => s.copyWith(
+                              weightCats: Set.from(selected),
+                              clearWeightCats: selected.isEmpty,
+                            ),
+                          );
+                      Navigator.pop(context);
+                    },
+                    child: const Text('Застосувати'),
+                  ),
+                ),
+              ],
             ),
-            const SizedBox(height: 16),
-          ],
-        ),
-      ),
+          ),
+        );
+      },
     );
   }
 
@@ -560,6 +669,81 @@ class _TeamListScreenState extends ConsumerState<TeamListScreen> {
           ],
         ),
       ),
+    );
+  }
+
+  void _showMedalPicker(BuildContext context, ChildrenFilter filter) {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (_) {
+        final selected = {...filter.medalPlaces};
+        const places = [
+          (1, 'Перше місце'),
+          (2, 'Друге місце'),
+          (3, 'Третє місце'),
+        ];
+        return StatefulBuilder(
+          builder: (ctx, setS) => SafeArea(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Padding(
+                  padding: const EdgeInsets.all(16),
+                  child: Row(
+                    children: [
+                      const Expanded(
+                        child: Text('Місця на змаганнях',
+                            style: TextStyle(
+                                fontSize: 16, fontWeight: FontWeight.bold)),
+                      ),
+                      if (selected.isNotEmpty)
+                        TextButton(
+                          onPressed: () => setS(() => selected.clear()),
+                          child: const Text('Скинути'),
+                        ),
+                    ],
+                  ),
+                ),
+                ...places.map((entry) {
+                  final (place, label) = entry;
+                  final isSel = selected.contains(place);
+                  return ListTile(
+                    title: Text(label),
+                    trailing: isSel
+                        ? const Icon(Icons.check, color: AppColors.primary)
+                        : null,
+                    selected: isSel,
+                    selectedColor: AppColors.primary,
+                    onTap: () => setS(() {
+                      if (isSel) selected.remove(place);
+                      else selected.add(place);
+                    }),
+                  );
+                }),
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
+                  child: FilledButton(
+                    onPressed: () {
+                      ref.read(childrenFilterProvider.notifier).update(
+                            (s) => s.copyWith(
+                              medalPlaces: Set.from(selected),
+                              clearMedalPlaces: selected.isEmpty,
+                            ),
+                          );
+                      Navigator.pop(context);
+                    },
+                    child: const Text('Застосувати'),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
     );
   }
 
@@ -634,6 +818,7 @@ class _FilterSection extends StatelessWidget {
     required this.onShowWeightPicker,
     required this.onShowGenderPicker,
     required this.onShowMembershipPicker,
+    required this.onShowMedalPicker,
     required this.ref,
   });
 
@@ -654,6 +839,7 @@ class _FilterSection extends StatelessWidget {
   final VoidCallback onShowWeightPicker;
   final VoidCallback onShowGenderPicker;
   final VoidCallback onShowMembershipPicker;
+  final VoidCallback onShowMedalPicker;
   final WidgetRef ref;
 
   @override
@@ -728,28 +914,40 @@ class _FilterSection extends StatelessWidget {
             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
             child: Row(
               children: [
-                // Belt filter
+                // Belt filter (multi-select)
                 _FilterChip(
-                  label: filter.belt?.displayName ?? 'Пояс',
-                  selected: filter.belt != null,
+                  label: filter.belts.length > 1
+                      ? 'Пояс (${filter.belts.length})'
+                      : filter.belts.length == 1
+                          ? filter.belts.first.displayName
+                          : filter.belt?.displayName ?? 'Пояс',
+                  selected: filter.belts.isNotEmpty || filter.belt != null,
                   onTap: onShowBeltPicker,
-                  onClear: filter.belt != null
+                  onClear: (filter.belts.isNotEmpty || filter.belt != null)
                       ? () => ref
                           .read(childrenFilterProvider.notifier)
-                          .state = filter.copyWith(clearBelt: true)
+                          .update((s) =>
+                              s.copyWith(clearBelt: true, clearBelts: true))
                       : null,
                 ),
                 const SizedBox(width: 8),
-                // Year filter
+                // Year filter (multi-select)
                 _FilterChip(
-                  label: filter.birthYear?.toString() ?? 'Рік н.',
-                  selected: filter.birthYear != null,
+                  label: filter.birthYears.length > 1
+                      ? 'Рік (${filter.birthYears.length})'
+                      : filter.birthYears.length == 1
+                          ? filter.birthYears.first.toString()
+                          : filter.birthYear?.toString() ?? 'Рік н.',
+                  selected:
+                      filter.birthYears.isNotEmpty || filter.birthYear != null,
                   onTap: onShowYearPicker,
-                  onClear: filter.birthYear != null
-                      ? () => ref
-                          .read(childrenFilterProvider.notifier)
-                          .state = filter.copyWith(clearBirthYear: true)
-                      : null,
+                  onClear:
+                      (filter.birthYears.isNotEmpty || filter.birthYear != null)
+                          ? () => ref
+                              .read(childrenFilterProvider.notifier)
+                              .update((s) => s.copyWith(
+                                  clearBirthYear: true, clearBirthYears: true))
+                          : null,
                 ),
                 const SizedBox(width: 8),
                 // Coach filter
@@ -770,20 +968,28 @@ class _FilterSection extends StatelessWidget {
                   ),
                   const SizedBox(width: 8),
                 ],
-                // Weight filter
+                // Weight filter (multi-select)
                 if (weightCategories.isNotEmpty) ...[
                   _FilterChip(
-                    label: filter.weightCategory != null
-                        ? displayWeight(filter.weightCategory!)
-                        : 'Вага',
-                    selected: filter.weightCategory != null,
+                    label: filter.weightCats.length > 1
+                        ? 'Вага (${filter.weightCats.length})'
+                        : filter.weightCats.length == 1
+                            ? displayWeight(filter.weightCats.first)
+                            : filter.weightCategory != null
+                                ? displayWeight(filter.weightCategory!)
+                                : 'Вага',
+                    selected: filter.weightCats.isNotEmpty ||
+                        filter.weightCategory != null,
                     onTap: onShowWeightPicker,
-                    onClear: filter.weightCategory != null
-                        ? () => ref
-                            .read(childrenFilterProvider.notifier)
-                            .state =
-                            filter.copyWith(clearWeightCategory: true)
-                        : null,
+                    onClear:
+                        (filter.weightCats.isNotEmpty ||
+                                filter.weightCategory != null)
+                            ? () => ref
+                                .read(childrenFilterProvider.notifier)
+                                .update((s) => s.copyWith(
+                                    clearWeightCategory: true,
+                                    clearWeightCats: true))
+                            : null,
                   ),
                   const SizedBox(width: 8),
                 ],
@@ -827,6 +1033,22 @@ class _FilterSection extends StatelessWidget {
                               (s) => s.copyWith(clearMembershipStatus: true))
                       : null,
                 ),
+                const SizedBox(width: 8),
+                // Medal filter (multi-select)
+                _FilterChip(
+                  label: filter.medalPlaces.length == 1
+                      ? _medalPlaceLabel(filter.medalPlaces.first)
+                      : filter.medalPlaces.length > 1
+                          ? 'Медалі (${filter.medalPlaces.length})'
+                          : 'Медалі',
+                  selected: filter.medalPlaces.isNotEmpty,
+                  onTap: onShowMedalPicker,
+                  onClear: filter.medalPlaces.isNotEmpty
+                      ? () => ref
+                          .read(childrenFilterProvider.notifier)
+                          .update((s) => s.copyWith(clearMedalPlaces: true))
+                      : null,
+                ),
               ],
             ),
           ),
@@ -838,6 +1060,15 @@ class _FilterSection extends StatelessWidget {
 }
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
+
+String _medalPlaceLabel(int place) {
+  switch (place) {
+    case 1: return 'Перше місце';
+    case 2: return 'Друге місце';
+    case 3: return 'Третє місце';
+    default: return '$place місце';
+  }
+}
 
 String _membershipStatusLabel(MembershipStatus s) {
   switch (s) {

@@ -36,6 +36,11 @@ class ChildrenFilter {
   final Gender? gender;
   final bool beltReady;
   final MembershipStatus? membershipStatus;
+  // Multi-select fields (take priority over single-select when non-empty)
+  final Set<BeltLevel> belts;
+  final Set<int> birthYears;
+  final Set<String> weightCats;
+  final Set<int> medalPlaces;
 
   const ChildrenFilter({
     this.lastName = '',
@@ -46,6 +51,10 @@ class ChildrenFilter {
     this.gender,
     this.beltReady = false,
     this.membershipStatus,
+    this.belts = const {},
+    this.birthYears = const {},
+    this.weightCats = const {},
+    this.medalPlaces = const {},
   });
 
   ChildrenFilter copyWith({
@@ -57,12 +66,20 @@ class ChildrenFilter {
     Gender? gender,
     bool? beltReady,
     MembershipStatus? membershipStatus,
+    Set<BeltLevel>? belts,
+    Set<int>? birthYears,
+    Set<String>? weightCats,
+    Set<int>? medalPlaces,
     bool clearBirthYear = false,
     bool clearCoachId = false,
     bool clearBelt = false,
     bool clearWeightCategory = false,
     bool clearGender = false,
     bool clearMembershipStatus = false,
+    bool clearBelts = false,
+    bool clearBirthYears = false,
+    bool clearWeightCats = false,
+    bool clearMedalPlaces = false,
   }) =>
       ChildrenFilter(
         lastName: lastName ?? this.lastName,
@@ -73,6 +90,10 @@ class ChildrenFilter {
         gender: clearGender ? null : (gender ?? this.gender),
         beltReady: beltReady ?? this.beltReady,
         membershipStatus: clearMembershipStatus ? null : (membershipStatus ?? this.membershipStatus),
+        belts: clearBelts ? const {} : (belts ?? this.belts),
+        birthYears: clearBirthYears ? const {} : (birthYears ?? this.birthYears),
+        weightCats: clearWeightCats ? const {} : (weightCats ?? this.weightCats),
+        medalPlaces: clearMedalPlaces ? const {} : (medalPlaces ?? this.medalPlaces),
       );
 }
 
@@ -91,10 +112,16 @@ final filteredChildrenProvider = Provider<List<ChildModel>>((ref) {
         !c.firstName.toLowerCase().contains(f.lastName.toLowerCase())) {
       return false;
     }
-    if (f.birthYear != null && c.birthYear != f.birthYear) return false;
+    if (f.birthYears.isNotEmpty) {
+      if (!f.birthYears.contains(c.birthYear)) return false;
+    } else if (f.birthYear != null && c.birthYear != f.birthYear) return false;
     if (f.coachId != null && c.coachName != f.coachId) return false;
-    if (f.belt != null && c.currentBelt != f.belt) return false;
-    if (f.weightCategory != null && c.weightCategory != f.weightCategory) return false;
+    if (f.belts.isNotEmpty) {
+      if (!f.belts.contains(c.currentBelt)) return false;
+    } else if (f.belt != null && c.currentBelt != f.belt) return false;
+    if (f.weightCats.isNotEmpty) {
+      if (!f.weightCats.contains(c.weightCategory)) return false;
+    } else if (f.weightCategory != null && c.weightCategory != f.weightCategory) return false;
     if (f.gender != null && c.gender != f.gender) return false;
     if (f.beltReady && !c.beltReady) return false;
     if (f.membershipStatus != null && membershipMap[c.id] != f.membershipStatus) return false;
