@@ -218,10 +218,8 @@ class MedalTrackerDashboardCard extends ConsumerWidget {
                         gradient: AppColors.ctaGradient,
                         borderRadius: BorderRadius.circular(10),
                       ),
-                      child: const ColorFiltered(
-                        colorFilter: ColorFilter.mode(AppColors.background, BlendMode.srcIn),
-                        child: TriumphIcon(TIcon.medal, size: 20),
-                      ),
+                      child: const Icon(Icons.emoji_events_rounded,
+                          size: 20, color: Colors.white),
                     ),
                     const SizedBox(width: 10),
                     Expanded(

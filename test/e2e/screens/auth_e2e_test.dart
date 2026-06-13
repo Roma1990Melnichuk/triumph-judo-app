@@ -48,6 +48,9 @@ class _FakeAuthNotifier extends StateNotifier<AsyncValue<void>>
   Future<void> updateProfile({required String name, String? phone}) async {}
 
   @override
+  Future<void> updateProfilePhoto(String url) async {}
+
+  @override
   Future<void> linkChild(String userId, String childId) async {}
 
   @override

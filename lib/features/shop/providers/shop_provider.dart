@@ -138,30 +138,46 @@ class ShopNotifier extends StateNotifier<AsyncValue<void>> {
 
   Future<void> addProduct(ShopProduct p) async {
     state = const AsyncLoading();
-    state = await AsyncValue.guard(() async {
+    try {
       await _col.doc(p.id).set(p.toFirestore());
-    });
+      state = const AsyncData(null);
+    } catch (e, st) {
+      state = AsyncError(e, st);
+      rethrow;
+    }
   }
 
   Future<void> updateProduct(ShopProduct p) async {
     state = const AsyncLoading();
-    state = await AsyncValue.guard(() async {
+    try {
       await _col.doc(p.id).update(p.toFirestore());
-    });
+      state = const AsyncData(null);
+    } catch (e, st) {
+      state = AsyncError(e, st);
+      rethrow;
+    }
   }
 
   Future<void> toggleActive(String id, bool isActive) async {
     state = const AsyncLoading();
-    state = await AsyncValue.guard(() async {
+    try {
       await _col.doc(id).update({'isActive': isActive});
-    });
+      state = const AsyncData(null);
+    } catch (e, st) {
+      state = AsyncError(e, st);
+      rethrow;
+    }
   }
 
   Future<void> deleteProduct(String id) async {
     state = const AsyncLoading();
-    state = await AsyncValue.guard(() async {
+    try {
       await _col.doc(id).delete();
-    });
+      state = const AsyncData(null);
+    } catch (e, st) {
+      state = AsyncError(e, st);
+      rethrow;
+    }
   }
 }
 

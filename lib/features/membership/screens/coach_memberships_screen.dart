@@ -3,8 +3,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 import '../../../core/constants/app_colors.dart';
-import '../../../shared/widgets/triumph_icon.dart';
+import 'package:flutter/services.dart';
 import '../../../core/models/child_model.dart';
+import '../models/promo_code.dart';
 import '../../../core/models/membership_model.dart';
 import '../providers/membership_provider.dart';
 import '../models/tariff_plan.dart';
@@ -21,6 +22,20 @@ class CoachMembershipsScreen extends ConsumerWidget {
 
     return Scaffold(
       backgroundColor: AppColors.background,
+      floatingActionButton: FloatingActionButton.extended(
+        backgroundColor: AppColors.accent,
+        foregroundColor: Colors.black,
+        icon: const Icon(Icons.settings_outlined, size: 20),
+        label: const Text('Тарифи', style: TextStyle(fontWeight: FontWeight.w700)),
+        onPressed: () => showModalBottomSheet(
+          context: context,
+          isScrollControlled: true,
+          backgroundColor: AppColors.surface,
+          shape: const RoundedRectangleBorder(
+              borderRadius: BorderRadius.vertical(top: Radius.circular(24))),
+          builder: (_) => const _TariffManagementSheet(),
+        ),
+      ),
       body: SafeArea(
         child: Column(
           children: [
@@ -38,10 +53,8 @@ class CoachMembershipsScreen extends ConsumerWidget {
                         borderRadius: BorderRadius.circular(12),
                       ),
                       child: const Center(
-                        child: ColorFiltered(
-                          colorFilter: ColorFilter.mode(AppColors.textPrimary, BlendMode.srcIn),
-                          child: TriumphIcon(TIcon.back, size: 22),
-                        ),
+                        child: Icon(Icons.arrow_back_ios_new_rounded,
+                            size: 20, color: AppColors.textPrimary),
                       ),
                     ),
                   ),
@@ -526,4 +539,578 @@ String _dayWord(int days) {
       days % 10 <= 4 &&
       (days % 100 < 10 || days % 100 >= 20)) { return 'дні'; }
   return 'днів';
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Tariff & promo management sheet (coach only)
+// ─────────────────────────────────────────────────────────────────────────────
+
+class _TariffManagementSheet extends ConsumerStatefulWidget {
+  const _TariffManagementSheet();
+
+  @override
+  ConsumerState<_TariffManagementSheet> createState() =>
+      _TariffManagementSheetState();
+}
+
+class _TariffManagementSheetState
+    extends ConsumerState<_TariffManagementSheet>
+    with SingleTickerProviderStateMixin {
+  late TabController _tab;
+  late List<TariffPlan> _plans;
+  late List<PromoCode> _promos;
+  bool _plansInitialized = false;
+  bool _promosInitialized = false;
+  bool _saving = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _tab = TabController(length: 2, vsync: this);
+    _plans = List.from(TariffPlan.defaults);
+    _promos = [];
+  }
+
+  @override
+  void dispose() {
+    _tab.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final plansAsync = ref.watch(tariffPlansProvider);
+    final promosAsync = ref.watch(promoCodesProvider);
+
+    if (!_plansInitialized && plansAsync.asData != null) {
+      _plans = List.from(plansAsync.asData!.value);
+      _plansInitialized = true;
+    }
+    if (!_promosInitialized && promosAsync.asData != null) {
+      _promos = List.from(promosAsync.asData!.value);
+      _promosInitialized = true;
+    }
+
+    final bottomPad = MediaQuery.of(context).viewInsets.bottom;
+
+    return DraggableScrollableSheet(
+      expand: false,
+      initialChildSize: 0.85,
+      minChildSize: 0.5,
+      maxChildSize: 0.95,
+      builder: (_, scrollCtrl) => Column(
+        children: [
+          // Handle
+          Padding(
+            padding: const EdgeInsets.fromLTRB(0, 12, 0, 0),
+            child: Center(
+              child: Container(
+                width: 40, height: 4,
+                decoration: BoxDecoration(
+                    color: AppColors.surface3,
+                    borderRadius: BorderRadius.circular(2)),
+              ),
+            ),
+          ),
+          // Header
+          Padding(
+            padding: const EdgeInsets.fromLTRB(20, 12, 20, 0),
+            child: Row(
+              children: [
+                const Expanded(
+                  child: Text(
+                    'Тарифи та промокоди',
+                    style: TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.w700,
+                        color: AppColors.textPrimary),
+                  ),
+                ),
+                GestureDetector(
+                  onTap: () => Navigator.pop(context),
+                  child: const Icon(Icons.close, color: AppColors.textSecondary),
+                ),
+              ],
+            ),
+          ),
+          // Tabs
+          TabBar(
+            controller: _tab,
+            labelColor: AppColors.accent,
+            unselectedLabelColor: AppColors.textSecondary,
+            indicatorColor: AppColors.accent,
+            tabs: const [
+              Tab(text: 'Тарифи'),
+              Tab(text: 'Промокоди'),
+            ],
+          ),
+          Expanded(
+            child: TabBarView(
+              controller: _tab,
+              children: [
+                // ── Tariffs tab ──────────────────────────────────────────
+                ListView(
+                  controller: scrollCtrl,
+                  padding: EdgeInsets.fromLTRB(16, 12, 16, bottomPad + 80),
+                  children: [
+                    ..._plans.asMap().entries.map((entry) {
+                      final i = entry.key;
+                      final plan = entry.value;
+                      return _TariffEditRow(
+                        plan: plan,
+                        onChanged: (updated) => setState(() => _plans[i] = updated),
+                      );
+                    }),
+                  ],
+                ),
+                // ── Promo codes tab ──────────────────────────────────────
+                ListView(
+                  controller: scrollCtrl,
+                  padding: EdgeInsets.fromLTRB(16, 12, 16, bottomPad + 80),
+                  children: [
+                    ..._promos.asMap().entries.map((entry) {
+                      final i = entry.key;
+                      final promo = entry.value;
+                      return _PromoRow(
+                        promo: promo,
+                        onToggle: (val) => setState(() {
+                          _promos[i] = PromoCode(
+                            code: promo.code,
+                            discountPct: promo.discountPct,
+                            validUntil: promo.validUntil,
+                            isActive: val,
+                          );
+                        }),
+                        onDelete: () => setState(() => _promos.removeAt(i)),
+                      );
+                    }),
+                    const SizedBox(height: 12),
+                    OutlinedButton.icon(
+                      onPressed: _addPromo,
+                      icon: const Icon(Icons.add, size: 18),
+                      label: const Text('Додати промокод'),
+                      style: OutlinedButton.styleFrom(
+                        foregroundColor: AppColors.accent,
+                        side: const BorderSide(color: AppColors.accent),
+                        shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12)),
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+          // Save button
+          Padding(
+            padding: EdgeInsets.fromLTRB(16, 0, 16, bottomPad + 16),
+            child: ElevatedButton(
+              onPressed: _saving ? null : _save,
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppColors.primary,
+                minimumSize: const Size(double.infinity, 50),
+                shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(14)),
+              ),
+              child: _saving
+                  ? const SizedBox(
+                      width: 22, height: 22,
+                      child: CircularProgressIndicator(
+                          color: Colors.white, strokeWidth: 2))
+                  : const Text('Зберегти',
+                      style: TextStyle(
+                          fontSize: 16, fontWeight: FontWeight.w700)),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _addPromo() async {
+    final result = await showDialog<PromoCode>(
+      context: context,
+      builder: (_) => const _AddPromoDialog(),
+    );
+    if (result != null) setState(() => _promos.add(result));
+  }
+
+  Future<void> _save() async {
+    setState(() => _saving = true);
+    try {
+      final notifier = ref.read(tariffNotifierProvider.notifier);
+      await notifier.savePlans(_plans);
+      await notifier.savePromoCodes(_promos);
+      if (mounted) Navigator.pop(context);
+    } catch (e) {
+      if (mounted) {
+        setState(() => _saving = false);
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+          content: Text('Помилка: $e'),
+          backgroundColor: AppColors.primary,
+        ));
+      }
+    }
+  }
+}
+
+// ── Tariff edit row ───────────────────────────────────────────────────────────
+
+class _TariffEditRow extends StatefulWidget {
+  const _TariffEditRow({required this.plan, required this.onChanged});
+  final TariffPlan plan;
+  final ValueChanged<TariffPlan> onChanged;
+
+  @override
+  State<_TariffEditRow> createState() => _TariffEditRowState();
+}
+
+class _TariffEditRowState extends State<_TariffEditRow> {
+  late final TextEditingController _priceCtrl;
+  late final TextEditingController _oldPriceCtrl;
+  late final TextEditingController _badgeCtrl;
+
+  @override
+  void initState() {
+    super.initState();
+    _priceCtrl = TextEditingController(
+        text: widget.plan.price.toStringAsFixed(0));
+    _oldPriceCtrl = TextEditingController(
+        text: widget.plan.oldPrice?.toStringAsFixed(0) ?? '');
+    _badgeCtrl = TextEditingController(text: widget.plan.badge);
+  }
+
+  @override
+  void dispose() {
+    _priceCtrl.dispose();
+    _oldPriceCtrl.dispose();
+    _badgeCtrl.dispose();
+    super.dispose();
+  }
+
+  void _emit() {
+    final price = double.tryParse(_priceCtrl.text.trim()) ?? widget.plan.price;
+    final oldPrice = _oldPriceCtrl.text.trim().isEmpty
+        ? null
+        : double.tryParse(_oldPriceCtrl.text.trim());
+    widget.onChanged(TariffPlan(
+      name: widget.plan.name,
+      days: widget.plan.days,
+      price: price,
+      oldPrice: oldPrice,
+      badge: _badgeCtrl.text.trim(),
+    ));
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      margin: const EdgeInsets.only(bottom: 12),
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: AppColors.surface2,
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: AppColors.surface3),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            '${widget.plan.name} · ${widget.plan.days} дн.',
+            style: const TextStyle(
+                fontSize: 14,
+                fontWeight: FontWeight.w700,
+                color: AppColors.textPrimary),
+          ),
+          const SizedBox(height: 10),
+          Row(
+            children: [
+              Expanded(
+                child: _Field(
+                  controller: _priceCtrl,
+                  label: 'Ціна (грн)',
+                  isNumeric: true,
+                  onChanged: (_) => _emit(),
+                ),
+              ),
+              const SizedBox(width: 10),
+              Expanded(
+                child: _Field(
+                  controller: _oldPriceCtrl,
+                  label: 'Стара ціна (грн)',
+                  hint: 'необов\'язково',
+                  isNumeric: true,
+                  onChanged: (_) => _emit(),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 8),
+          _Field(
+            controller: _badgeCtrl,
+            label: 'Бейдж (напр. Популярний)',
+            hint: 'необов\'язково',
+            onChanged: (_) => _emit(),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+// ── Promo row ─────────────────────────────────────────────────────────────────
+
+class _PromoRow extends StatelessWidget {
+  const _PromoRow({
+    required this.promo,
+    required this.onToggle,
+    required this.onDelete,
+  });
+  final PromoCode promo;
+  final ValueChanged<bool> onToggle;
+  final VoidCallback onDelete;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      margin: const EdgeInsets.only(bottom: 8),
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+      decoration: BoxDecoration(
+        color: AppColors.surface2,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(
+          color: promo.isValid ? AppColors.success.withValues(alpha: 0.4) : AppColors.surface3,
+        ),
+      ),
+      child: Row(
+        children: [
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    Text(
+                      promo.code,
+                      style: const TextStyle(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w700,
+                          color: AppColors.textPrimary,
+                          letterSpacing: 1),
+                    ),
+                    const SizedBox(width: 8),
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                      decoration: BoxDecoration(
+                        color: AppColors.accent.withValues(alpha: 0.15),
+                        borderRadius: BorderRadius.circular(6),
+                      ),
+                      child: Text(
+                        '−${promo.discountPct}%',
+                        style: const TextStyle(
+                            fontSize: 11,
+                            fontWeight: FontWeight.w700,
+                            color: AppColors.accent),
+                      ),
+                    ),
+                  ],
+                ),
+                if (promo.validUntil != null)
+                  Text(
+                    'До ${DateFormat('dd.MM.yyyy').format(promo.validUntil!)}',
+                    style: const TextStyle(
+                        fontSize: 11, color: AppColors.textSecondary),
+                  ),
+              ],
+            ),
+          ),
+          Switch(
+            value: promo.isActive,
+            onChanged: onToggle,
+            activeColor: AppColors.success,
+          ),
+          IconButton(
+            icon: const Icon(Icons.delete_outline,
+                size: 20, color: AppColors.primary),
+            onPressed: onDelete,
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+// ── Add promo dialog ──────────────────────────────────────────────────────────
+
+class _AddPromoDialog extends StatefulWidget {
+  const _AddPromoDialog();
+
+  @override
+  State<_AddPromoDialog> createState() => _AddPromoDialogState();
+}
+
+class _AddPromoDialogState extends State<_AddPromoDialog> {
+  final _codeCtrl = TextEditingController();
+  final _pctCtrl = TextEditingController();
+  DateTime? _validUntil;
+
+  @override
+  void dispose() {
+    _codeCtrl.dispose();
+    _pctCtrl.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Dialog(
+      backgroundColor: AppColors.surface,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+      insetPadding: const EdgeInsets.symmetric(horizontal: 20),
+      child: Padding(
+        padding: const EdgeInsets.all(20),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text('Новий промокод',
+                style: TextStyle(
+                    fontSize: 17,
+                    fontWeight: FontWeight.w700,
+                    color: AppColors.textPrimary)),
+            const SizedBox(height: 16),
+            _Field(
+              controller: _codeCtrl,
+              label: 'Код (напр. TRIUMPH20)',
+              onChanged: (_) => setState(() {
+                _codeCtrl.value = _codeCtrl.value.copyWith(
+                  text: _codeCtrl.text.toUpperCase(),
+                  selection: TextSelection.collapsed(
+                      offset: _codeCtrl.text.length),
+                );
+              }),
+            ),
+            const SizedBox(height: 10),
+            _Field(
+              controller: _pctCtrl,
+              label: 'Знижка (%)',
+              inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+            ),
+            const SizedBox(height: 10),
+            GestureDetector(
+              onTap: () async {
+                final picked = await showDatePicker(
+                  context: context,
+                  initialDate: DateTime.now().add(const Duration(days: 30)),
+                  firstDate: DateTime.now(),
+                  lastDate: DateTime.now().add(const Duration(days: 3650)),
+                );
+                if (picked != null) setState(() => _validUntil = picked);
+              },
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                decoration: BoxDecoration(
+                  border: Border.all(color: AppColors.surface3),
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: Row(
+                  children: [
+                    const Icon(Icons.calendar_today_outlined,
+                        size: 16, color: AppColors.textSecondary),
+                    const SizedBox(width: 8),
+                    Text(
+                      _validUntil != null
+                          ? 'Дійсний до: ${DateFormat('dd.MM.yyyy').format(_validUntil!)}'
+                          : 'Термін дії (необов\'язково)',
+                      style: TextStyle(
+                        fontSize: 13,
+                        color: _validUntil != null
+                            ? AppColors.textPrimary
+                            : AppColors.textSecondary,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+            const SizedBox(height: 20),
+            Row(children: [
+              Expanded(
+                child: OutlinedButton(
+                  onPressed: () => Navigator.pop(context),
+                  child: const Text('Скасувати'),
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: ElevatedButton(
+                  onPressed: () {
+                    final code = _codeCtrl.text.trim().toUpperCase();
+                    final pct = int.tryParse(_pctCtrl.text.trim()) ?? 0;
+                    if (code.isEmpty || pct <= 0 || pct >= 100) return;
+                    Navigator.pop(context, PromoCode(
+                      code: code,
+                      discountPct: pct,
+                      validUntil: _validUntil,
+                    ));
+                  },
+                  style: ElevatedButton.styleFrom(
+                      backgroundColor: AppColors.primary),
+                  child: const Text('Додати',
+                      style: TextStyle(color: Colors.white)),
+                ),
+              ),
+            ]),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+// ── Shared input field ────────────────────────────────────────────────────────
+
+class _Field extends StatelessWidget {
+  const _Field({
+    required this.controller,
+    required this.label,
+    this.hint,
+    this.onChanged,
+    this.inputFormatters,
+    this.isNumeric = false,
+  });
+
+  final TextEditingController controller;
+  final String label;
+  final String? hint;
+  final ValueChanged<String>? onChanged;
+  final List<TextInputFormatter>? inputFormatters;
+  final bool isNumeric;
+
+  @override
+  Widget build(BuildContext context) {
+    return TextField(
+      controller: controller,
+      onChanged: onChanged,
+      inputFormatters: inputFormatters ??
+          (isNumeric ? [FilteringTextInputFormatter.allow(RegExp(r'[0-9.]'))] : null),
+      keyboardType: isNumeric ? TextInputType.number : null,
+      decoration: InputDecoration(
+        labelText: label,
+        hintText: hint,
+        filled: true,
+        fillColor: AppColors.background,
+        contentPadding:
+            const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(10),
+          borderSide: const BorderSide(color: AppColors.surface3),
+        ),
+        enabledBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(10),
+          borderSide: const BorderSide(color: AppColors.surface3),
+        ),
+      ),
+    );
+  }
 }

@@ -288,6 +288,59 @@ class _ExerciseLibraryScreenState
                     }).toList(),
                   ),
                 ),
+                const SizedBox(height: 16),
+                const Text('Пояси (для яких підходить)',
+                    style: TextStyle(
+                        fontSize: 12, color: AppColors.textSecondary)),
+                const SizedBox(height: 6),
+                Wrap(
+                  spacing: 8,
+                  runSpacing: 6,
+                  children: BeltLevel.values.map((b) {
+                    final selected = belts.contains(b);
+                    return GestureDetector(
+                      onTap: () => setModal(() {
+                        if (selected) {
+                          belts = belts.where((x) => x != b).toList();
+                        } else {
+                          belts = [...belts, b];
+                        }
+                      }),
+                      child: AnimatedContainer(
+                        duration: const Duration(milliseconds: 150),
+                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                        decoration: BoxDecoration(
+                          color: selected
+                              ? (b.color).withValues(alpha: 0.18)
+                              : const Color(0xFF1C1C1C),
+                          borderRadius: BorderRadius.circular(20),
+                          border: Border.all(
+                            color: selected ? b.color : const Color(0xFF2C2C2C),
+                          ),
+                        ),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Container(
+                              width: 10, height: 10,
+                              decoration: BoxDecoration(
+                                color: b.color,
+                                shape: BoxShape.circle,
+                              ),
+                            ),
+                            const SizedBox(width: 5),
+                            Text(b.displayName,
+                                style: TextStyle(
+                                  fontSize: 11,
+                                  color: selected ? b.color : AppColors.textSecondary,
+                                  fontWeight: selected ? FontWeight.w700 : FontWeight.w400,
+                                )),
+                          ],
+                        ),
+                      ),
+                    );
+                  }).toList(),
+                ),
                 const SizedBox(height: 20),
                 ElevatedButton(
                   onPressed: () async {

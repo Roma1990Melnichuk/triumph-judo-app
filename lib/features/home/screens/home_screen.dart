@@ -31,7 +31,8 @@ class HomeScreen extends ConsumerStatefulWidget {
 class _HomeScreenState extends ConsumerState<HomeScreen>
     with TickerProviderStateMixin {
   final List<AnimationController> _entryCtrl = [];
-  bool _achievementsSeeded = false;
+  static bool _achievementsSeeded = false;
+  bool _showAllTeam = false;
 
   @override
   void initState() {
@@ -121,6 +122,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
             'earnedAt': Timestamp.fromDate(earnedAt),
             if (coachId.isNotEmpty) 'grantedByCoachId': coachId,
           },
+          SetOptions(merge: true),
         );
         count++;
         if (count == 400) {
@@ -176,8 +178,12 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
     final medAsync    = ref.watch(totalResultsCountProvider);
 
     final children   = allAsync.asData?.value ?? [];
-    final total      = children.length;
-    final beltReady  = children.where((c) => c.beltReady).toList();
+    final myTeam     = isCoach
+        ? children.where((c) => c.coachId == user?.uid).toList()
+        : children;
+    final displayed  = isCoach && !_showAllTeam ? myTeam : children;
+    final total      = displayed.length;
+    final beltReady  = displayed.where((c) => c.beltReady).toList();
     final recent     = recentAsync.asData?.value ?? [];
     final medals     = medAsync.asData?.value ?? 0;
     final todayWday  = DateTime.now().weekday;
@@ -349,63 +355,78 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
                   ),
 
                 // ── Stats ────────────────────────────────────────────────────
-                SliverToBoxAdapter(
-                  child: Padding(
-                    padding: const EdgeInsets.fromLTRB(20, 22, 20, 0),
-                    child: _enter(3, Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Row(
-                          mainAxisAlignment:
-                              MainAxisAlignment.spaceBetween,
-                          children: [
-                            const Flexible(
-                              child: Text(
-                                'Статистика команди',
-                                style: TextStyle(
-                                  fontSize: 16,
-                                  fontWeight: FontWeight.w500, // Inter Medium 16
-                                  color: AppColors.textPrimary,
+                if (isCoach)
+                  SliverToBoxAdapter(
+                    child: Padding(
+                      padding: const EdgeInsets.fromLTRB(20, 22, 20, 0),
+                      child: _enter(3, Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Flexible(
+                                child: Text(
+                                  _showAllTeam ? 'Статистика — всі' : 'Моя команда',
+                                  style: const TextStyle(
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.w500,
+                                    color: AppColors.textPrimary,
+                                  ),
                                 ),
                               ),
-                            ),
-                            const Text(
-                              'за цей місяць',
-                              style: TextStyle(
-                                fontSize: 12,
-                                color: AppColors.textSecondary,
+                              GestureDetector(
+                                onTap: () => setState(() => _showAllTeam = !_showAllTeam),
+                                child: Container(
+                                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                                  decoration: BoxDecoration(
+                                    color: AppColors.surface2,
+                                    borderRadius: BorderRadius.circular(20),
+                                    border: Border.all(color: AppColors.surface3),
+                                  ),
+                                  child: Text(
+                                    _showAllTeam ? 'Моя команда' : 'Дивитись всіх',
+                                    style: const TextStyle(
+                                      fontSize: 11,
+                                      color: AppColors.accent,
+                                      fontWeight: FontWeight.w600,
+                                    ),
+                                  ),
+                                ),
                               ),
+                            ],
+                          ),
+                          const SizedBox(height: 12),
+                          Row(children: [
+                            _StatCard(
+                              icon: Icons.group_outlined,
+                              numValue: total,
+                              label: 'Спортсменів',
+                              iconColors: const [Color(0xFFD50000), Color(0xFF7A0000)],
+                              onTap: () => context.go('/team'),
                             ),
-                          ],
-                        ),
-                        const SizedBox(height: 12),
-                        Row(children: [
-                          _StatCard(
-                            icon: Icons.group_outlined,
-                            numValue: total,
-                            label: 'Спортсменів',
-                            iconColors: const [Color(0xFFD50000), Color(0xFF7A0000)],
-                          ),
-                          const SizedBox(width: 10),
-                          _StatCard(
-                            icon: Icons.bar_chart,
-                            numValue: activePct,
-                            numSuffix: '%',
-                            label: 'Відвідуваність',
-                            iconColors: const [Color(0xFFFFD21A), Color(0xFFFF8A00)],
-                          ),
-                          const SizedBox(width: 10),
-                          _StatCard(
-                            icon: Icons.military_tech_outlined,
-                            numValue: medals,
-                            label: 'Медалі',
-                            iconColors: const [Color(0xFFFF8A00), Color(0xFFD50000)],
-                          ),
-                        ]),
-                      ],
-                    )),
+                            const SizedBox(width: 10),
+                            _StatCard(
+                              icon: Icons.bar_chart,
+                              numValue: activePct,
+                              numSuffix: '%',
+                              label: 'Відвідуваність',
+                              iconColors: const [Color(0xFFFFD21A), Color(0xFFFF8A00)],
+                              onTap: () => context.go('/team'),
+                            ),
+                            const SizedBox(width: 10),
+                            _StatCard(
+                              icon: Icons.military_tech_outlined,
+                              numValue: medals,
+                              label: 'Медалі',
+                              iconColors: const [Color(0xFFFF8A00), Color(0xFFD50000)],
+                              onTap: () => context.go('/rating'),
+                            ),
+                          ]),
+                        ],
+                      )),
+                    ),
                   ),
-                ),
 
                 // ── Belt-ready ───────────────────────────────────────────────
                 if (beltReady.isNotEmpty)
@@ -895,6 +916,7 @@ class _StatCard extends StatelessWidget {
     required this.label,
     required this.iconColors,
     this.numSuffix = '',
+    this.onTap,
   });
 
   final IconData? icon;
@@ -902,11 +924,14 @@ class _StatCard extends StatelessWidget {
   final String numSuffix;
   final String label;
   final List<Color> iconColors;
+  final VoidCallback? onTap;
 
   @override
   Widget build(BuildContext context) {
     return Expanded(
-      child: Container(
+      child: GestureDetector(
+        onTap: onTap,
+        child: Container(
         padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 6),
         decoration: BoxDecoration(
           color: AppColors.surface,
@@ -953,6 +978,7 @@ class _StatCard extends StatelessWidget {
             ),
           ],
         ),
+      ),
       ),
     );
   }
@@ -1122,7 +1148,7 @@ class _RecentSection extends StatelessWidget {
               ),
             ),
             GestureDetector(
-              onTap: () => context.push('/achievement-catalog'),
+              onTap: () => context.go('/rating'),
               child: const Text(
                 'Всі  ›',
                 style: TextStyle(

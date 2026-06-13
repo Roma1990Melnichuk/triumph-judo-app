@@ -11,8 +11,9 @@ import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 import '../../../core/constants/app_colors.dart';
 import '../../../core/models/membership_model.dart';
-import '../../../shared/widgets/triumph_icon.dart';
 import '../providers/membership_provider.dart';
+import '../providers/tariff_provider.dart';
+import '../models/tariff_plan.dart';
 import 'membership_detail_screen.dart';
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -24,58 +25,35 @@ class MembershipScreen extends ConsumerWidget {
 
   final String childId;
 
-  static const List<TariffData> _tariffs = [
-    TariffData(
-      name: 'Разове тренування',
-      description: 'Одне тренування без зобов\'язань',
-      iconEmoji: '⭐',
-      badge: '',
-      price: 150,
-    ),
-    TariffData(
-      name: '1 тиждень',
-      description: 'Необмежені тренування протягом тижня',
-      iconEmoji: '🥋',
-      badge: 'Новинка',
-      price: 550,
-    ),
-    TariffData(
-      name: '1 місяць',
-      description: 'Повний доступ на місяць',
-      iconEmoji: '🏆',
-      badge: 'Популярний',
-      price: 1450,
-      oldPrice: 1650,
-    ),
-    TariffData(
-      name: '3 місяці',
-      description: 'Квартальний абонемент з економією',
-      iconEmoji: '💎',
-      badge: 'Вигідний',
-      price: 3600,
-      oldPrice: 4500,
-    ),
-    TariffData(
-      name: '6 місяців',
-      description: 'Півроку без перерв у тренуваннях',
-      iconEmoji: '🔱',
-      badge: 'VIP',
-      price: 6000,
-      oldPrice: 8000,
-    ),
-    TariffData(
-      name: '12 місяців',
-      description: 'Річний абонемент — максимальна вигода',
-      iconEmoji: '👑',
-      badge: '',
-      price: 9600,
-      oldPrice: 14400,
-    ),
-  ];
+  static TariffData _planToTariffData(TariffPlan p) {
+    const icons = ['⭐', '🥋', '🏆', '💎', '🔱', '👑'];
+    final idx = TariffPlan.defaults.indexWhere((d) => d.name == p.name);
+    return TariffData(
+      name: p.name,
+      description: _descriptionFor(p),
+      iconEmoji: (idx >= 0 && idx < icons.length) ? icons[idx] : '🏅',
+      badge: p.badge,
+      price: p.price,
+      oldPrice: p.oldPrice,
+    );
+  }
+
+  static String _descriptionFor(TariffPlan p) {
+    if (p.days == 1) return 'Одне тренування без зобов\'язань';
+    if (p.days <= 7) return 'Необмежені тренування протягом тижня';
+    if (p.days <= 30) return 'Повний доступ на місяць';
+    if (p.days <= 90) return 'Квартальний абонемент з економією';
+    if (p.days <= 180) return 'Півроку без перерв у тренуваннях';
+    return 'Річний абонемент — максимальна вигода';
+  }
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final membershipAsync = ref.watch(membershipByAthleteProvider(childId));
+    final plansAsync = ref.watch(tariffPlansProvider);
+    final tariffs = (plansAsync.asData?.value ?? TariffPlan.defaults)
+        .map(_planToTariffData)
+        .toList();
 
     return Scaffold(
       backgroundColor: AppColors.background,
@@ -96,10 +74,8 @@ class MembershipScreen extends ConsumerWidget {
                         borderRadius: BorderRadius.circular(12),
                       ),
                       child: const Center(
-                        child: ColorFiltered(
-                          colorFilter: ColorFilter.mode(AppColors.textPrimary, BlendMode.srcIn),
-                          child: TriumphIcon(TIcon.back, size: 22),
-                        ),
+                        child: Icon(Icons.arrow_back_ios_new_rounded,
+                            size: 20, color: AppColors.textPrimary),
                       ),
                     ),
                   ),
@@ -144,7 +120,7 @@ class MembershipScreen extends ConsumerWidget {
 
             const SizedBox(height: 12),
 
-            ..._tariffs.map((t) => _TariffTile(
+            ...tariffs.map((t) => _TariffTile(
                   tariff: t,
                   onTap: () => context.push(
                     '/abonements/detail',
@@ -298,10 +274,7 @@ class _CompactMembershipCard extends StatelessWidget {
                   color: Colors.white.withValues(alpha: 0.15),
                   borderRadius: BorderRadius.circular(10),
                 ),
-                child: const ColorFiltered(
-                  colorFilter: ColorFilter.mode(Colors.white, BlendMode.srcIn),
-                  child: TriumphIcon(TIcon.trophy, size: 20),
-                ),
+                child: const Icon(Icons.emoji_events_rounded, size: 20, color: Colors.white),
               ),
               const SizedBox(width: 12),
               Expanded(
@@ -553,10 +526,7 @@ class _CompactMembershipCard extends StatelessWidget {
               color: AppColors.surface2,
               borderRadius: BorderRadius.circular(10),
             ),
-            child: const ColorFiltered(
-              colorFilter: ColorFilter.mode(AppColors.textSecondary, BlendMode.srcIn),
-              child: TriumphIcon(TIcon.trophy, size: 20),
-            ),
+            child: const Icon(Icons.emoji_events_outlined, size: 20, color: AppColors.textSecondary),
           ),
           const SizedBox(width: 12),
           const Expanded(

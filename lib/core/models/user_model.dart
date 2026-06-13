@@ -6,6 +6,7 @@ class UserModel {
   final String name;
   final String role; // 'coach' | 'parent'
   final String? phone;
+  final String? photoUrl;
   /// Legacy single-child field — kept for backward compatibility.
   /// Prefer [childIds] for new code.
   final String? childId;
@@ -21,6 +22,7 @@ class UserModel {
     required this.name,
     required this.role,
     this.phone,
+    this.photoUrl,
     this.childId,
     this.childIds = const [],
     this.clubId,
@@ -45,6 +47,7 @@ class UserModel {
       name: data['name'] as String? ?? '',
       role: data['role'] as String? ?? 'parent',
       phone: data['phone'] as String?,
+      photoUrl: data['photoUrl'] as String?,
       childId: legacyId,
       childIds: ids,
       clubId: data['clubId'] as String?,
@@ -56,6 +59,7 @@ class UserModel {
         'name': name,
         'role': role,
         if (phone != null && phone!.isNotEmpty) 'phone': phone,
+        if (photoUrl != null && photoUrl!.isNotEmpty) 'photoUrl': photoUrl,
         // Always write the array; keep legacy field for old clients
         'childIds': childIds,
         if (childIds.isNotEmpty) 'childId': childIds.first,
@@ -65,10 +69,12 @@ class UserModel {
   UserModel copyWith({
     String? name,
     String? phone,
+    String? photoUrl,
     String? childId,
     List<String>? childIds,
     String? clubId,
     bool clearPhone = false,
+    bool clearPhoto = false,
   }) =>
       UserModel(
         uid: uid,
@@ -76,6 +82,7 @@ class UserModel {
         name: name ?? this.name,
         role: role,
         phone: clearPhone ? null : (phone ?? this.phone),
+        photoUrl: clearPhoto ? null : (photoUrl ?? this.photoUrl),
         childId: childId ?? this.childId,
         childIds: childIds ?? this.childIds,
         clubId: clubId ?? this.clubId,

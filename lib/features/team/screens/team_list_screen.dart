@@ -91,8 +91,9 @@ class _TeamListScreenState extends ConsumerState<TeamListScreen> {
             }
           }).toList();
 
-    // Compute peer ranks
-    final quickSorted = [...quickFiltered]..sort((a, b) {
+    // Compute peer ranks from ALL athletes (not filtered subset) so every
+    // athlete sees their true academy-wide position.
+    final allForRanks = [...(allChildren.value ?? [])]..sort((a, b) {
       final cmp = b.totalPoints.compareTo(a.totalPoints);
       if (cmp != 0) return cmp;
       return a.lastName.compareTo(b.lastName);
@@ -103,7 +104,7 @@ class _TeamListScreenState extends ConsumerState<TeamListScreen> {
     final weightTotals = <String, int>{};
     final weightCounters = <String, int>{};
     final sameWeightRanks = <String, int>{};
-    for (final c in quickSorted) {
+    for (final c in allForRanks) {
       yearTotals[c.birthYear] = (yearTotals[c.birthYear] ?? 0) + 1;
       yearCounters[c.birthYear] = (yearCounters[c.birthYear] ?? 0) + 1;
       sameYearRanks[c.id] = yearCounters[c.birthYear]!;

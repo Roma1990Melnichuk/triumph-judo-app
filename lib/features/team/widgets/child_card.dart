@@ -186,25 +186,22 @@ class ChildCard extends ConsumerWidget {
                     ]),
 
                     // Peer ranks
-                    if ((sameYearRank != null && (sameYearTotal ?? 0) > 1) ||
-                        (sameWeightRank != null && (sameWeightTotal ?? 0) > 1)) ...[
+                    if (sameYearRank != null || (sameWeightRank != null && child.weightCategory.isNotEmpty)) ...[
                       const SizedBox(height: 5),
                       Wrap(
                         spacing: 6,
                         runSpacing: 4,
                         children: [
-                          if (sameYearRank != null && (sameYearTotal ?? 0) > 1)
+                          if (sameYearRank != null)
                             _PeerBadge(
                               icon: Icons.people_outline,
-                              label: '$sameYearRank з $sameYearTotal однол.',
+                              label: '#$sameYearRank / ${sameYearTotal ?? '?'} одн. ${child.birthYear}р.',
                               color: AppColors.info,
                             ),
-                          if (sameWeightRank != null &&
-                              (sameWeightTotal ?? 0) > 1 &&
-                              child.weightCategory.isNotEmpty)
+                          if (sameWeightRank != null && child.weightCategory.isNotEmpty)
                             _PeerBadge(
                               icon: Icons.fitness_center,
-                              label: '$sameWeightRank з $sameWeightTotal у вазі',
+                              label: '#$sameWeightRank / ${sameWeightTotal ?? '?'} × ${child.weightCategory}',
                               color: AppColors.accent,
                             ),
                         ],
@@ -248,8 +245,11 @@ class ChildCard extends ConsumerWidget {
                         attendanceStats.total > 0) ...[
                       const SizedBox(height: 4),
                       Row(children: [
-                        ColorFiltered(
-                          colorFilter: const ColorFilter.mode(AppColors.info, BlendMode.srcIn),
+                        ShaderMask(
+                          shaderCallback: (r) => const LinearGradient(
+                            colors: [AppColors.info, AppColors.info],
+                          ).createShader(r),
+                          blendMode: BlendMode.srcATop,
                           child: TriumphIcon(TIcon.calendar, size: 11),
                         ),
                         const SizedBox(width: 3),
@@ -262,8 +262,11 @@ class ChildCard extends ConsumerWidget {
                         ),
                         if (indivCount > 0) ...[
                           const SizedBox(width: 8),
-                          ColorFiltered(
-                            colorFilter: const ColorFilter.mode(AppColors.accent, BlendMode.srcIn),
+                          ShaderMask(
+                            shaderCallback: (r) => const LinearGradient(
+                              colors: [AppColors.accent, AppColors.accent],
+                            ).createShader(r),
+                            blendMode: BlendMode.srcATop,
                             child: TriumphIcon(TIcon.athlete, size: 11),
                           ),
                           const SizedBox(width: 3),
@@ -330,21 +333,22 @@ class _PeerBadge extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
       decoration: BoxDecoration(
-        color: color.withValues(alpha: 0.1),
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: color.withValues(alpha: 0.3)),
+        color: color.withValues(alpha: 0.13),
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: color.withValues(alpha: 0.4), width: 1),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(icon, size: 11, color: color),
-          const SizedBox(width: 4),
+          Icon(icon, size: 12, color: color),
+          const SizedBox(width: 5),
           Flexible(
             child: Text(
               label,
-              style: TextStyle(fontSize: 10, color: color, fontWeight: FontWeight.w600),
+              style: TextStyle(fontSize: 11, color: color, fontWeight: FontWeight.w700,
+                  letterSpacing: -0.2),
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
             ),

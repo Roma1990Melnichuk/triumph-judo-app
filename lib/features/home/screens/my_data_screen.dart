@@ -111,9 +111,10 @@ class _MyDataBody extends ConsumerWidget {
                         borderRadius: BorderRadius.circular(12),
                       ),
                       child: const Center(
-                        child: ColorFiltered(
-                          colorFilter: ColorFilter.mode(AppColors.textPrimary, BlendMode.srcIn),
-                          child: TriumphIcon(TIcon.back, size: 22),
+                        child: Icon(
+                          Icons.arrow_back_ios_new_rounded,
+                          size: 20,
+                          color: AppColors.textPrimary,
                         ),
                       ),
                     ),
@@ -140,10 +141,10 @@ class _MyDataBody extends ConsumerWidget {
                         border: Border.all(color: AppColors.surface3),
                       ),
                       alignment: Alignment.center,
-                      child: const ColorFiltered(
-                        colorFilter: ColorFilter.mode(
-                            AppColors.textSecondary, BlendMode.srcIn),
-                        child: TriumphIcon(TIcon.athlete, size: 22),
+                      child: const Icon(
+                        Icons.person_outline_rounded,
+                        size: 22,
+                        color: AppColors.textSecondary,
                       ),
                     ),
                   ),

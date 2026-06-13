@@ -3,8 +3,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../core/constants/app_colors.dart';
 import '../providers/membership_provider.dart';
+import '../providers/tariff_provider.dart';
 import '../utils/subscription_date_utils.dart';
-import '../../../shared/widgets/triumph_icon.dart';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // CheckoutScreen
@@ -32,6 +32,10 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen>
     with SingleTickerProviderStateMixin {
   int _selectedPaymentIdx = 0;
   bool _isProcessing = false;
+  final _promoCtrl = TextEditingController();
+  int _discountPct = 0;
+  String? _promoError;
+  bool _promoApplied = false;
 
   late final AnimationController _pulseController;
   late final Animation<double> _pulseAnim;
@@ -71,9 +75,32 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen>
     );
   }
 
+  double get _finalAmount {
+    if (_discountPct <= 0) return widget.amount;
+    return (widget.amount * (100 - _discountPct) / 100).roundToDouble();
+  }
+
+  void _applyPromo() {
+    final codes = ref.read(promoCodesProvider).asData?.value ?? [];
+    final notifier = ref.read(tariffNotifierProvider.notifier);
+    final found = notifier.validateCode(_promoCtrl.text, codes);
+    setState(() {
+      if (found != null) {
+        _discountPct = found.discountPct;
+        _promoApplied = true;
+        _promoError = null;
+      } else {
+        _discountPct = 0;
+        _promoApplied = false;
+        _promoError = 'Невірний або недійсний промокод';
+      }
+    });
+  }
+
   @override
   void dispose() {
     _pulseController.dispose();
+    _promoCtrl.dispose();
     super.dispose();
   }
 
@@ -99,13 +126,13 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen>
             planName: widget.planName,
             startDate: startDate,
             endDate: endDate,
-            amount: widget.amount,
+            amount: _finalAmount,
           );
 
       if (mounted) {
         context.go('/payment-success', extra: {
           'planName': widget.planName,
-          'amount': widget.amount,
+          'amount': _finalAmount,
           'childId': widget.childId,
         });
       }
@@ -143,10 +170,8 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen>
                         borderRadius: BorderRadius.circular(12),
                       ),
                       child: const Center(
-                        child: ColorFiltered(
-                          colorFilter: ColorFilter.mode(AppColors.textPrimary, BlendMode.srcIn),
-                          child: TriumphIcon(TIcon.back, size: 22),
-                        ),
+                        child: Icon(Icons.arrow_back_ios_new_rounded,
+                            size: 20, color: AppColors.textPrimary),
                       ),
                     ),
                   ),
@@ -261,6 +286,106 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen>
 
                   const SizedBox(height: 24),
 
+                  // ── Promo code ───────────────────────────────────────────
+                  const Text(
+                    'ПРОМОКОД',
+                    style: TextStyle(
+                      color: AppColors.textSecondary,
+                      fontSize: 11,
+                      fontWeight: FontWeight.w700,
+                      letterSpacing: 1.4,
+                    ),
+                  ),
+                  const SizedBox(height: 10),
+                  Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Expanded(
+                        child: TextField(
+                          controller: _promoCtrl,
+                          enabled: !_promoApplied,
+                          textCapitalization: TextCapitalization.characters,
+                          decoration: InputDecoration(
+                            hintText: 'Введіть промокод',
+                            errorText: _promoError,
+                            filled: true,
+                            fillColor: AppColors.surface,
+                            contentPadding: const EdgeInsets.symmetric(
+                                horizontal: 14, vertical: 12),
+                            border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(12),
+                              borderSide: const BorderSide(color: AppColors.surface3),
+                            ),
+                            enabledBorder: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(12),
+                              borderSide: const BorderSide(color: AppColors.surface3),
+                            ),
+                            suffixIcon: _promoApplied
+                                ? GestureDetector(
+                                    onTap: () => setState(() {
+                                      _promoApplied = false;
+                                      _discountPct = 0;
+                                      _promoCtrl.clear();
+                                      _promoError = null;
+                                    }),
+                                    child: const Icon(Icons.close,
+                                        size: 18, color: AppColors.textSecondary),
+                                  )
+                                : null,
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 10),
+                      SizedBox(
+                        height: 48,
+                        child: ElevatedButton(
+                          onPressed: _promoApplied ? null : _applyPromo,
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: _promoApplied
+                                ? AppColors.success
+                                : AppColors.accent,
+                            foregroundColor: Colors.white,
+                            shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(12)),
+                            elevation: 0,
+                          ),
+                          child: Text(
+                            _promoApplied ? 'Застосовано' : 'Застосувати',
+                            style: const TextStyle(fontSize: 13),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                  if (_promoApplied) ...[
+                    const SizedBox(height: 8),
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                      decoration: BoxDecoration(
+                        color: AppColors.success.withValues(alpha: 0.12),
+                        borderRadius: BorderRadius.circular(10),
+                        border: Border.all(color: AppColors.success.withValues(alpha: 0.4)),
+                      ),
+                      child: Row(
+                        children: [
+                          const Icon(Icons.check_circle_outline,
+                              size: 16, color: AppColors.success),
+                          const SizedBox(width: 8),
+                          Text(
+                            'Знижка $_discountPct% застосована',
+                            style: const TextStyle(
+                              color: AppColors.success,
+                              fontSize: 13,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+
+                  const SizedBox(height: 24),
+
                   // ── Payment details ──────────────────────────────────────
                   const Text(
                     'ДЕТАЛІ ОПЛАТИ',
@@ -285,15 +410,23 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen>
                             label: 'Абонемент', value: widget.planName),
                         const SizedBox(height: 10),
                         _DetailRow(
-                          label: 'Сума',
+                          label: 'Повна ціна',
                           value: '${widget.amount.toStringAsFixed(0)}₴',
                           valueColor: AppColors.textPrimary,
                         ),
+                        if (_promoApplied) ...[
+                          const SizedBox(height: 10),
+                          _DetailRow(
+                            label: 'Знижка $_discountPct%',
+                            value: '−${(widget.amount - _finalAmount).toStringAsFixed(0)}₴',
+                            valueColor: AppColors.success,
+                          ),
+                        ],
                         const Divider(
                             height: 20, color: AppColors.surface3),
                         _DetailRow(
                           label: 'До сплати',
-                          value: '${widget.amount.toStringAsFixed(0)}₴',
+                          value: '${_finalAmount.toStringAsFixed(0)}₴',
                           valueColor: AppColors.accent,
                           bold: true,
                         ),
@@ -356,7 +489,7 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen>
                             ),
                           )
                         : Text(
-                            'Оплатити ${widget.amount.toStringAsFixed(0)}₴',
+                            'Оплатити ${_finalAmount.toStringAsFixed(0)}₴',
                             style: const TextStyle(
                               color: Colors.white,
                               fontSize: 16,

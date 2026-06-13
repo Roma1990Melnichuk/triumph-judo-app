@@ -5,10 +5,12 @@ import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 import '../../../core/constants/app_colors.dart';
 import '../../../core/constants/belt_levels.dart';
+import '../../../core/models/message_model.dart';
 import '../../../core/models/notification_model.dart';
-import '../../../shared/widgets/triumph_icon.dart';
+import '../../../core/models/user_model.dart';
 import '../../auth/providers/auth_provider.dart';
 import '../../team/providers/children_provider.dart';
+import '../providers/message_provider.dart';
 import '../providers/notification_provider.dart';
 
 final _dateFmt = DateFormat('dd.MM.yyyy HH:mm');
@@ -16,10 +18,87 @@ final _dateFmt = DateFormat('dd.MM.yyyy HH:mm');
 class NotificationsScreen extends ConsumerWidget {
   const NotificationsScreen({super.key});
 
+  Widget _backButton(BuildContext context) => GestureDetector(
+        onTap: () => context.pop(),
+        child: Container(
+          width: 44,
+          height: 44,
+          decoration: BoxDecoration(
+            color: AppColors.surface2,
+            borderRadius: BorderRadius.circular(12),
+          ),
+          child: const Center(
+            child: Icon(Icons.arrow_back_ios_new_rounded,
+                size: 20, color: AppColors.textPrimary),
+          ),
+        ),
+      );
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final user = ref.watch(currentUserModelProvider).asData?.value;
     final isCoach = user?.isCoach ?? false;
+
+    if (isCoach) {
+      return DefaultTabController(
+        length: 2,
+        child: Scaffold(
+          backgroundColor: AppColors.background,
+          body: SafeArea(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(12, 16, 20, 8),
+                  child: Row(
+                    children: [
+                      _backButton(context),
+                      const SizedBox(width: 16),
+                      const Text(
+                        'Сповіщення',
+                        style: TextStyle(
+                          fontSize: 24,
+                          fontWeight: FontWeight.w800,
+                          color: AppColors.textPrimary,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                const TabBar(
+                  labelColor: AppColors.accent,
+                  unselectedLabelColor: AppColors.textSecondary,
+                  indicatorColor: AppColors.accent,
+                  tabs: [
+                    Tab(text: 'Сповіщення'),
+                    Tab(text: 'Від батьків'),
+                  ],
+                ),
+                const Expanded(
+                  child: TabBarView(
+                    children: [_CoachBody(), _CoachMessagesBody()],
+                  ),
+                ),
+              ],
+            ),
+          ),
+          floatingActionButton: FloatingActionButton(
+            onPressed: () {
+              if (user != null) {
+                showDialog<void>(
+                  context: context,
+                  builder: (_) => _ComposeDialog(
+                    coachId: user.uid,
+                    coachName: user.name,
+                  ),
+                );
+              }
+            },
+            child: const Icon(Icons.edit_outlined),
+          ),
+        ),
+      );
+    }
 
     return Scaffold(
       backgroundColor: AppColors.background,
@@ -31,23 +110,7 @@ class NotificationsScreen extends ConsumerWidget {
               padding: const EdgeInsets.fromLTRB(12, 16, 20, 12),
               child: Row(
                 children: [
-                  GestureDetector(
-                    onTap: () => context.pop(),
-                    child: Container(
-                      width: 44,
-                      height: 44,
-                      decoration: BoxDecoration(
-                        color: AppColors.surface2,
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      child: const Center(
-                        child: ColorFiltered(
-                          colorFilter: ColorFilter.mode(AppColors.textPrimary, BlendMode.srcIn),
-                          child: TriumphIcon(TIcon.back, size: 22),
-                        ),
-                      ),
-                    ),
-                  ),
+                  _backButton(context),
                   const SizedBox(width: 16),
                   const Text(
                     'Сповіщення',
@@ -60,26 +123,18 @@ class NotificationsScreen extends ConsumerWidget {
                 ],
               ),
             ),
-            Expanded(
-              child: isCoach ? const _CoachBody() : const _ParentBody(),
-            ),
+            const Expanded(child: _ParentBody()),
           ],
         ),
       ),
-      floatingActionButton: isCoach
+      floatingActionButton: user != null
           ? FloatingActionButton(
-              onPressed: () {
-                if (user != null) {
-                  showDialog<void>(
-                    context: context,
-                    builder: (_) => _ComposeDialog(
-                      coachId: user.uid,
-                      coachName: user.name,
-                    ),
-                  );
-                }
-              },
-              child: const Icon(Icons.edit_outlined),
+              backgroundColor: AppColors.surface2,
+              onPressed: () => showDialog<void>(
+                context: context,
+                builder: (_) => _ParentComposeDialog(user: user),
+              ),
+              child: const Icon(Icons.chat_outlined, color: AppColors.accent),
             )
           : null,
     );
@@ -106,10 +161,8 @@ class _CoachBody extends ConsumerWidget {
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                ColorFiltered(
-                  colorFilter: const ColorFilter.mode(AppColors.surface3, BlendMode.srcIn),
-                  child: TriumphIcon(TIcon.notifications, size: 64),
-                ),
+                Icon(Icons.notifications_none,
+                    size: 64, color: AppColors.surface3),
                 SizedBox(height: 12),
                 Text('Немає надісланих сповіщень',
                     style: TextStyle(color: AppColors.textSecondary)),
@@ -204,10 +257,8 @@ class _ParentBody extends ConsumerWidget {
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                ColorFiltered(
-                  colorFilter: const ColorFilter.mode(AppColors.surface3, BlendMode.srcIn),
-                  child: TriumphIcon(TIcon.notifications, size: 64),
-                ),
+                Icon(Icons.notifications_none,
+                    size: 64, color: AppColors.surface3),
                 SizedBox(height: 12),
                 Text('Немає сповіщень',
                     style: TextStyle(color: AppColors.textSecondary)),
@@ -416,6 +467,252 @@ class _NotifCard extends StatelessWidget {
               )
             : null,
       ),
+    );
+  }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Coach: messages from parents
+// ─────────────────────────────────────────────────────────────────────────────
+
+class _CoachMessagesBody extends ConsumerWidget {
+  const _CoachMessagesBody();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final messagesAsync = ref.watch(parentMessagesProvider);
+    return messagesAsync.when(
+      loading: () => const Center(child: CircularProgressIndicator()),
+      error: (e, _) => Center(child: Text('Помилка: $e')),
+      data: (messages) {
+        if (messages.isEmpty) {
+          return const Center(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(Icons.chat_bubble_outline,
+                    size: 64, color: AppColors.surface3),
+                SizedBox(height: 12),
+                Text('Немає повідомлень від батьків',
+                    style: TextStyle(color: AppColors.textSecondary)),
+              ],
+            ),
+          );
+        }
+        return ListView.builder(
+          padding: const EdgeInsets.symmetric(vertical: 8),
+          itemCount: messages.length,
+          itemBuilder: (context, i) =>
+              _ParentMessageTile(msg: messages[i]),
+        );
+      },
+    );
+  }
+}
+
+class _ParentMessageTile extends ConsumerWidget {
+  const _ParentMessageTile({required this.msg});
+  final ParentMessageModel msg;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    return Container(
+      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+      decoration: BoxDecoration(
+        color: AppColors.surface,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(
+          color: !msg.readByCoach
+              ? AppColors.primary.withValues(alpha: 0.4)
+              : AppColors.surface3,
+        ),
+      ),
+      child: ListTile(
+        contentPadding:
+            const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
+        leading: Container(
+          width: 44,
+          height: 44,
+          decoration: const BoxDecoration(
+            color: AppColors.surface2,
+            shape: BoxShape.circle,
+          ),
+          alignment: Alignment.center,
+          child: const Icon(Icons.person_outline,
+              color: AppColors.textSecondary),
+        ),
+        title: Text(
+          msg.fromParentName.isNotEmpty ? msg.fromParentName : 'Батько/Мати',
+          style: TextStyle(
+            fontWeight:
+                msg.readByCoach ? FontWeight.w500 : FontWeight.bold,
+            fontSize: 14,
+          ),
+        ),
+        subtitle: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const SizedBox(height: 2),
+            Text(msg.body,
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+                style: const TextStyle(
+                    fontSize: 12, color: AppColors.textSecondary)),
+            const SizedBox(height: 4),
+            Text(
+              _dateFmt.format(msg.sentAt),
+              style: const TextStyle(
+                  fontSize: 11, color: AppColors.textSecondary),
+            ),
+          ],
+        ),
+        isThreeLine: true,
+        trailing: !msg.readByCoach
+            ? Container(
+                width: 8,
+                height: 8,
+                decoration: const BoxDecoration(
+                  color: AppColors.primary,
+                  shape: BoxShape.circle,
+                ),
+              )
+            : null,
+        onTap: () {
+          if (!msg.readByCoach) {
+            ref.read(messageNotifierProvider.notifier).markRead(msg.id);
+          }
+          showDialog<void>(
+            context: context,
+            builder: (_) => AlertDialog(
+              title: Text(msg.fromParentName.isNotEmpty
+                  ? msg.fromParentName
+                  : 'Батько/Мати'),
+              content:
+                  SingleChildScrollView(child: Text(msg.body)),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.pop(context),
+                  child: const Text('OK'),
+                ),
+              ],
+            ),
+          );
+        },
+      ),
+    );
+  }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Parent compose dialog
+// ─────────────────────────────────────────────────────────────────────────────
+
+class _ParentComposeDialog extends ConsumerStatefulWidget {
+  const _ParentComposeDialog({required this.user});
+  final UserModel user;
+
+  @override
+  ConsumerState<_ParentComposeDialog> createState() =>
+      _ParentComposeDialogState();
+}
+
+class _ParentComposeDialogState
+    extends ConsumerState<_ParentComposeDialog> {
+  final _bodyCtrl = TextEditingController();
+  bool _loading = false;
+
+  @override
+  void dispose() {
+    _bodyCtrl.dispose();
+    super.dispose();
+  }
+
+  Future<void> _send(String toCoachId) async {
+    final body = _bodyCtrl.text.trim();
+    if (body.isEmpty) return;
+    setState(() => _loading = true);
+    try {
+      await ref.read(messageNotifierProvider.notifier).send(
+            fromParentId: widget.user.uid,
+            fromParentName: widget.user.name,
+            toCoachId: toCoachId,
+            body: body,
+          );
+      if (mounted) Navigator.pop(context);
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+              content: Text('Помилка: $e'),
+              backgroundColor: AppColors.error),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _loading = false);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final children =
+        ref.watch(allChildrenProvider).asData?.value ?? [];
+    final childId =
+        widget.user.childIds.firstOrNull ?? widget.user.childId;
+    final child =
+        children.where((c) => c.id == childId).firstOrNull;
+    final coachId = child?.coachId ?? '';
+    final coachName = child?.coachName ?? 'Тренер';
+
+    return AlertDialog(
+      title: const Text('Написати тренеру'),
+      content: ConstrainedBox(
+        constraints:
+            const BoxConstraints(maxHeight: 300, minWidth: 280),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'Кому: $coachName',
+              style: const TextStyle(
+                  fontSize: 12, color: AppColors.textSecondary),
+            ),
+            const SizedBox(height: 12),
+            TextField(
+              controller: _bodyCtrl,
+              textCapitalization: TextCapitalization.sentences,
+              maxLines: 4,
+              decoration:
+                  const InputDecoration(labelText: 'Повідомлення'),
+            ),
+          ],
+        ),
+      ),
+      actions: [
+        TextButton(
+          onPressed:
+              _loading ? null : () => Navigator.pop(context),
+          child: const Text('Скасувати'),
+        ),
+        TextButton(
+          onPressed:
+              (_loading || coachId.isEmpty) ? null : () => _send(coachId),
+          child: _loading
+              ? const SizedBox(
+                  width: 16,
+                  height: 16,
+                  child:
+                      CircularProgressIndicator(strokeWidth: 2),
+                )
+              : const Text(
+                  'Надіслати',
+                  style: TextStyle(
+                    color: AppColors.primary,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+        ),
+      ],
     );
   }
 }

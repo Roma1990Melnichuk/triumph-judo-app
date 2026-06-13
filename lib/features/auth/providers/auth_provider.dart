@@ -159,6 +159,13 @@ class AuthNotifier extends StateNotifier<AsyncValue<void>> {
     await _firestore.collection('users').doc(uid).update(data);
   }
 
+  Future<void> updateProfilePhoto(String url) async {
+    final uid = _auth.currentUser?.uid;
+    if (uid == null) return;
+    await _firestore.collection('users').doc(uid).update({'photoUrl': url});
+    await _auth.currentUser?.updatePhotoURL(url);
+  }
+
   Future<void> linkChild(String userId, String childId) async {
     await _firestore.collection('users').doc(userId).update({
       'childIds': FieldValue.arrayUnion([childId]),

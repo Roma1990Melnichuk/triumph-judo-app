@@ -118,10 +118,21 @@ service cloud.firestore {
     }
 
     // ── Notifications ─────────────────────────────────────────────────────────
-    // Coaches write, each user reads their own.
+    // Coaches create/delete; any authenticated user may mark their own readByUserIds.
     match /notifications/{notifId} {
-      allow read:  if isAuth();
-      allow write: if isCoach();
+      allow read:   if isAuth();
+      allow create: if isCoach();
+      allow delete: if isCoach();
+      allow update: if isCoach()
+        || (isAuth() && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['readByUserIds']));
+    }
+
+    // ── Parent → Coach messages ───────────────────────────────────────────────
+    match /messages/{messageId} {
+      allow read:   if isAuth() && (isCoach() || uid() == resource.data.fromParentId);
+      allow create: if isAuth() && !isCoach() && uid() == request.resource.data.fromParentId;
+      allow update: if isCoach();
+      allow delete: if isCoach();
     }
 
     // ── Individual slots (personal coaching sessions) ─────────────────────────

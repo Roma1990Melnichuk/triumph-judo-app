@@ -121,9 +121,12 @@ class JourneyHomeWidget extends ConsumerWidget {
                     // Streak counter
                     Row(
                       children: [
-                        const ColorFiltered(
-                          colorFilter: ColorFilter.mode(AppColors.orange, BlendMode.srcIn),
-                          child: TriumphIcon(TIcon.motivation, size: 22),
+                        ShaderMask(
+                          shaderCallback: (b) => const LinearGradient(
+                            colors: [AppColors.orange, AppColors.orange],
+                          ).createShader(b),
+                          blendMode: BlendMode.srcATop,
+                          child: const TriumphIcon(TIcon.motivation, size: 22),
                         ),
                         const SizedBox(width: 8),
                         RichText(
@@ -211,17 +214,19 @@ class JourneyHomeWidget extends ConsumerWidget {
                       ),
                     ),
                   ),
-                  ColorFiltered(
-                    colorFilter: ColorFilter.mode(
-                      streak.current >= 30
-                          ? AppColors.accent
-                          : streak.current >= 7
-                              ? AppColors.orange
-                              : AppColors.textSecondary,
-                      BlendMode.srcIn,
-                    ),
-                    child: const TriumphIcon(TIcon.athlete, size: 72),
-                  ),
+                  Builder(builder: (context) {
+                    final color = streak.current >= 30
+                        ? AppColors.accent
+                        : streak.current >= 7
+                            ? AppColors.orange
+                            : AppColors.textSecondary;
+                    return ShaderMask(
+                      shaderCallback: (b) =>
+                          LinearGradient(colors: [color, color]).createShader(b),
+                      blendMode: BlendMode.srcATop,
+                      child: const TriumphIcon(TIcon.athlete, size: 72),
+                    );
+                  }),
                 ],
               ),
             ],

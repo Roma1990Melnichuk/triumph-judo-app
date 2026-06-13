@@ -4,7 +4,6 @@ import '../../../core/constants/app_colors.dart';
 import '../../../core/constants/achievement_defs.dart';
 import '../../../core/models/achievement_model.dart';
 import '../../../shared/widgets/achievement_badge.dart';
-import '../../../shared/widgets/triumph_icon.dart';
 import '../../auth/providers/auth_provider.dart';
 import '../providers/achievement_provider.dart';
 
@@ -39,10 +38,8 @@ class AchievementCatalogScreen extends ConsumerWidget {
                       borderRadius: BorderRadius.circular(12),
                     ),
                     child: const Center(
-                      child: ColorFiltered(
-                        colorFilter: ColorFilter.mode(AppColors.textPrimary, BlendMode.srcIn),
-                        child: TriumphIcon(TIcon.back, size: 22),
-                      ),
+                      child: Icon(Icons.arrow_back_ios_new_rounded,
+                          size: 20, color: AppColors.textPrimary),
                     ),
                   ),
                 ),
@@ -166,10 +163,8 @@ class _Header extends StatelessWidget {
                 borderRadius: BorderRadius.circular(12),
               ),
               child: const Center(
-                child: ColorFiltered(
-                  colorFilter: ColorFilter.mode(AppColors.textPrimary, BlendMode.srcIn),
-                  child: TriumphIcon(TIcon.back, size: 22),
-                ),
+                child: Icon(Icons.arrow_back_ios_new_rounded,
+                    size: 20, color: AppColors.textPrimary),
               ),
             ),
           ),
@@ -323,8 +318,8 @@ class _CategorySection extends StatelessWidget {
             shrinkWrap: true,
             physics: const NeverScrollableScrollPhysics(),
             gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-              crossAxisCount: 4,
-              childAspectRatio: 0.75,
+              crossAxisCount: 3,
+              childAspectRatio: 0.78,
               crossAxisSpacing: 10,
               mainAxisSpacing: 10,
             ),
@@ -335,7 +330,7 @@ class _CategorySection extends StatelessWidget {
               return _AchievementCell(
                 def: def,
                 isEarned: isEarned,
-                onTap: () => _showDetail(context, def, isEarned),
+                onTap: () => _showDetail(context, defs, earnedIds, i),
               );
             },
           ),
@@ -347,15 +342,15 @@ class _CategorySection extends StatelessWidget {
     );
   }
 
-  void _showDetail(BuildContext context, AchievementDef def, bool isEarned) {
-    showModalBottomSheet(
+  void _showDetail(BuildContext context, List<AchievementDef> defs, Set<String> earnedIds, int index) {
+    showDialog(
       context: context,
-      backgroundColor: AppColors.surface2,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      barrierColor: Colors.black87,
+      builder: (_) => _AchievementPageDialog(
+        defs: defs,
+        earnedIds: earnedIds,
+        initialIndex: index,
       ),
-      builder: (_) => _AchievementDetailSheet(
-          def: def, isEarned: isEarned),
     );
   }
 }
@@ -424,7 +419,7 @@ class _AchievementCell extends StatelessWidget {
                         style: TextStyle(fontSize: 28))
                     : Opacity(
                         opacity: isEarned ? 1.0 : 0.35,
-                        child: AchievementIcon(def: def, size: 44),
+                        child: AchievementIcon(def: def, size: 60),
                       ),
               ),
             ),
@@ -437,7 +432,7 @@ class _AchievementCell extends StatelessWidget {
             maxLines: 2,
             overflow: TextOverflow.ellipsis,
             style: TextStyle(
-              fontSize: 9,
+              fontSize: 11,
               fontWeight: FontWeight.w600,
               color: isEarned
                   ? AppColors.textPrimary
@@ -451,16 +446,39 @@ class _AchievementCell extends StatelessWidget {
   }
 }
 
-// ── Detail bottom sheet ───────────────────────────────────────────────────────
+// ── Swipeable full-screen detail dialog ──────────────────────────────────────
 
-class _AchievementDetailSheet extends StatelessWidget {
-  const _AchievementDetailSheet({
-    required this.def,
-    required this.isEarned,
+class _AchievementPageDialog extends StatefulWidget {
+  const _AchievementPageDialog({
+    required this.defs,
+    required this.earnedIds,
+    required this.initialIndex,
   });
 
-  final AchievementDef def;
-  final bool isEarned;
+  final List<AchievementDef> defs;
+  final Set<String> earnedIds;
+  final int initialIndex;
+
+  @override
+  State<_AchievementPageDialog> createState() => _AchievementPageDialogState();
+}
+
+class _AchievementPageDialogState extends State<_AchievementPageDialog> {
+  late final PageController _controller;
+  late int _current;
+
+  @override
+  void initState() {
+    super.initState();
+    _current = widget.initialIndex;
+    _controller = PageController(initialPage: widget.initialIndex);
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
 
   static const _rarityColors = {
     AchievementRarity.common: Color(0xFF9E9E9E),
@@ -472,135 +490,222 @@ class _AchievementDetailSheet extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final rarityColor =
-        _rarityColors[def.rarity] ?? AppColors.textSecondary;
-    final isHiddenLocked = def.isHidden && !isEarned;
-
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(24, 16, 24, 32),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          // Drag handle
-          Container(
-            width: 40,
-            height: 4,
-            decoration: BoxDecoration(
-              color: AppColors.surface3,
-              borderRadius: BorderRadius.circular(2),
-            ),
-          ),
-          const SizedBox(height: 20),
-
-          // Badge
-          Container(
-            width: 84,
-            height: 84,
-            decoration: BoxDecoration(
-              color: AppColors.surface,
-              shape: BoxShape.circle,
-              border: Border.all(
-                  color: isEarned
-                      ? rarityColor.withValues(alpha: 0.7)
-                      : AppColors.surface3,
-                  width: 2),
-              boxShadow: isEarned
-                  ? [
-                      BoxShadow(
-                        color: rarityColor.withValues(alpha: 0.25),
-                        blurRadius: 16,
-                      ),
-                    ]
-                  : null,
-            ),
-            child: Center(
-              child: isHiddenLocked
-                  ? const Text('❓',
-                      style: TextStyle(fontSize: 36))
-                  : Opacity(
-                      opacity: isEarned ? 1.0 : 0.4,
-                      child: AchievementIcon(def: def, size: 52),
-                    ),
-            ),
-          ),
-          const SizedBox(height: 14),
-
-          // Name
-          Text(
-            isHiddenLocked ? '???' : def.name,
-            style: const TextStyle(
-              fontSize: 18,
-              fontWeight: FontWeight.w800,
-              color: AppColors.textPrimary,
-            ),
-            textAlign: TextAlign.center,
-          ),
-          const SizedBox(height: 6),
-
-          // Rarity chip
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
-            decoration: BoxDecoration(
-              color: rarityColor.withValues(alpha: 0.15),
-              borderRadius: BorderRadius.circular(20),
-            ),
-            child: Text(
-              def.rarity.label,
-              style: TextStyle(
-                fontSize: 12,
-                fontWeight: FontWeight.w600,
-                color: rarityColor,
-              ),
-            ),
-          ),
-          const SizedBox(height: 14),
-
-          // Description
-          Text(
-            isHiddenLocked
-                ? 'Отримай це досягнення, щоб дізнатися більше'
-                : def.description,
-            textAlign: TextAlign.center,
-            style: const TextStyle(
-              fontSize: 13,
-              color: AppColors.textSecondary,
-              height: 1.5,
-            ),
-          ),
-          const SizedBox(height: 16),
-
-          // Status chip
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-            decoration: BoxDecoration(
-              color: isEarned
-                  ? AppColors.success.withValues(alpha: 0.15)
-                  : AppColors.surface,
-              borderRadius: BorderRadius.circular(12),
-              border: Border.all(
-                  color: isEarned ? AppColors.success : AppColors.surface3),
-            ),
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
+    return Dialog.fullscreen(
+      backgroundColor: Colors.transparent,
+      child: GestureDetector(
+        onTap: () => Navigator.pop(context),
+        child: Container(
+          color: Colors.black87,
+          child: SafeArea(
+            child: Column(
               children: [
-                Icon(
-                  isEarned ? Icons.check_circle : Icons.lock_outline,
-                  size: 16,
-                  color: isEarned ? AppColors.success : AppColors.textSecondary,
+                // Close + counter row
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(12, 8, 12, 0),
+                  child: Row(
+                    children: [
+                      GestureDetector(
+                        onTap: () => Navigator.pop(context),
+                        child: Container(
+                          width: 44, height: 44,
+                          decoration: BoxDecoration(
+                            color: Colors.white.withValues(alpha: 0.1),
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: const Center(
+                            child: Icon(Icons.close, size: 20, color: Colors.white),
+                          ),
+                        ),
+                      ),
+                      const Spacer(),
+                      Text(
+                        '${_current + 1} / ${widget.defs.length}',
+                        style: const TextStyle(
+                          color: Colors.white60,
+                          fontSize: 13,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                    ],
+                  ),
                 ),
-                const SizedBox(width: 6),
-                Text(
-                  isEarned ? 'Отримано' : 'Не отримано',
-                  style: TextStyle(
-                    fontSize: 13,
-                    fontWeight: FontWeight.w600,
-                    color: isEarned ? AppColors.success : AppColors.textSecondary,
+
+                // PageView
+                Expanded(
+                  child: GestureDetector(
+                    onTap: () {}, // prevent dialog close when tapping content
+                    child: PageView.builder(
+                      controller: _controller,
+                      itemCount: widget.defs.length,
+                      onPageChanged: (i) => setState(() => _current = i),
+                      itemBuilder: (_, i) {
+                        final def = widget.defs[i];
+                        final isEarned = widget.earnedIds.contains(def.id);
+                        final rarityColor = _rarityColors[def.rarity] ?? AppColors.textSecondary;
+                        final isHiddenLocked = def.isHidden && !isEarned;
+
+                        return Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 32),
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              // Large badge
+                              Container(
+                                width: 160,
+                                height: 160,
+                                decoration: BoxDecoration(
+                                  color: AppColors.surface.withValues(alpha: 0.9),
+                                  shape: BoxShape.circle,
+                                  border: Border.all(
+                                    color: isEarned
+                                        ? rarityColor.withValues(alpha: 0.8)
+                                        : Colors.white24,
+                                    width: 2.5,
+                                  ),
+                                  boxShadow: isEarned
+                                      ? [
+                                          BoxShadow(
+                                            color: rarityColor.withValues(alpha: 0.4),
+                                            blurRadius: 40,
+                                            spreadRadius: 4,
+                                          ),
+                                        ]
+                                      : null,
+                                ),
+                                child: Center(
+                                  child: isHiddenLocked
+                                      ? const Text('❓', style: TextStyle(fontSize: 60))
+                                      : Opacity(
+                                          opacity: isEarned ? 1.0 : 0.35,
+                                          child: AchievementIcon(def: def, size: 110),
+                                        ),
+                                ),
+                              ),
+                              const SizedBox(height: 28),
+
+                              // Name
+                              Text(
+                                isHiddenLocked ? '???' : def.name,
+                                textAlign: TextAlign.center,
+                                style: const TextStyle(
+                                  fontSize: 22,
+                                  fontWeight: FontWeight.w800,
+                                  color: Colors.white,
+                                  height: 1.2,
+                                ),
+                              ),
+                              const SizedBox(height: 10),
+
+                              // Rarity chip
+                              Container(
+                                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 5),
+                                decoration: BoxDecoration(
+                                  color: rarityColor.withValues(alpha: 0.2),
+                                  borderRadius: BorderRadius.circular(20),
+                                  border: Border.all(color: rarityColor.withValues(alpha: 0.4)),
+                                ),
+                                child: Text(
+                                  def.rarity.label,
+                                  style: TextStyle(
+                                    fontSize: 12,
+                                    fontWeight: FontWeight.w700,
+                                    color: rarityColor,
+                                  ),
+                                ),
+                              ),
+                              const SizedBox(height: 16),
+
+                              // Description
+                              Text(
+                                isHiddenLocked
+                                    ? 'Отримай це досягнення, щоб дізнатися більше'
+                                    : def.description,
+                                textAlign: TextAlign.center,
+                                style: TextStyle(
+                                  fontSize: 14,
+                                  color: Colors.white.withValues(alpha: 0.7),
+                                  height: 1.55,
+                                ),
+                              ),
+                              const SizedBox(height: 24),
+
+                              // Status chip
+                              Container(
+                                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+                                decoration: BoxDecoration(
+                                  color: isEarned
+                                      ? AppColors.success.withValues(alpha: 0.2)
+                                      : Colors.white.withValues(alpha: 0.06),
+                                  borderRadius: BorderRadius.circular(14),
+                                  border: Border.all(
+                                    color: isEarned
+                                        ? AppColors.success.withValues(alpha: 0.5)
+                                        : Colors.white24,
+                                  ),
+                                ),
+                                child: Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    Icon(
+                                      isEarned ? Icons.check_circle : Icons.lock_outline,
+                                      size: 18,
+                                      color: isEarned ? AppColors.success : Colors.white54,
+                                    ),
+                                    const SizedBox(width: 8),
+                                    Text(
+                                      isEarned ? 'Отримано' : 'Не отримано',
+                                      style: TextStyle(
+                                        fontSize: 14,
+                                        fontWeight: FontWeight.w700,
+                                        color: isEarned ? AppColors.success : Colors.white54,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ],
+                          ),
+                        );
+                      },
+                    ),
+                  ),
+                ),
+
+                // Dot indicators (max 10 dots to avoid overflow)
+                if (widget.defs.length <= 15)
+                  Padding(
+                    padding: const EdgeInsets.only(bottom: 20),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: List.generate(widget.defs.length, (i) {
+                        final active = i == _current;
+                        return AnimatedContainer(
+                          duration: const Duration(milliseconds: 200),
+                          margin: const EdgeInsets.symmetric(horizontal: 3),
+                          width: active ? 18 : 6,
+                          height: 6,
+                          decoration: BoxDecoration(
+                            color: active ? AppColors.accent : Colors.white24,
+                            borderRadius: BorderRadius.circular(3),
+                          ),
+                        );
+                      }),
+                    ),
+                  ),
+
+                // Swipe hint
+                const Padding(
+                  padding: EdgeInsets.only(bottom: 16),
+                  child: Text(
+                    '← Гортайте →',
+                    style: TextStyle(color: Colors.white30, fontSize: 12),
                   ),
                 ),
               ],
             ),
           ),
-        ],
+        ),
       ),
     );
   }

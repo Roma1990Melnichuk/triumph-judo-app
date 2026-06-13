@@ -1,12 +1,15 @@
 import 'dart:io';
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../../../core/constants/app_colors.dart';
 import '../../../core/models/user_model.dart';
+import '../../../core/utils/cloudinary_upload.dart';
 import '../../../features/auth/providers/auth_provider.dart';
 import '../../../features/notifications/providers/notification_provider.dart';
 import '../../../features/competitions/providers/competitions_provider.dart';
@@ -59,7 +62,10 @@ class SettingsScreen extends ConsumerWidget {
             ),
             child: Row(
               children: [
-                _ProfileAvatar(name: user?.name ?? ''),
+                _ProfileAvatarUpload(
+                  name: user?.name ?? '',
+                  photoUrl: user?.photoUrl,
+                ),
                 const SizedBox(width: 14),
                 Expanded(
                   child: Column(
@@ -866,51 +872,130 @@ class _CompetitionTypesSheetState
 // Add competition type — AlertDialog (not BottomSheet) for proper IME on Android
 // ─────────────────────────────────────────────────────────────────────────────
 
-// ── Profile avatar: photo from Firebase Auth or initials fallback ─────────────
+// ── Profile avatar with photo upload ──────────────────────────────────────────
 
-class _ProfileAvatar extends StatelessWidget {
-  const _ProfileAvatar({required this.name});
+class _ProfileAvatarUpload extends ConsumerStatefulWidget {
+  const _ProfileAvatarUpload({required this.name, this.photoUrl});
   final String name;
+  final String? photoUrl;
+
+  @override
+  ConsumerState<_ProfileAvatarUpload> createState() =>
+      _ProfileAvatarUploadState();
+}
+
+class _ProfileAvatarUploadState extends ConsumerState<_ProfileAvatarUpload> {
+  bool _uploading = false;
 
   String _initials() {
-    final parts = name.trim().split(' ');
+    final parts = widget.name.trim().split(' ');
     if (parts.length >= 2 && parts[0].isNotEmpty && parts[1].isNotEmpty) {
       return '${parts[0][0]}${parts[1][0]}'.toUpperCase();
     }
-    return name.isNotEmpty ? name[0].toUpperCase() : '?';
+    return widget.name.isNotEmpty ? widget.name[0].toUpperCase() : '?';
+  }
+
+  Future<void> _pickAndUpload() async {
+    final uid = FirebaseAuth.instance.currentUser?.uid;
+    if (uid == null) return;
+
+    final picker = ImagePicker();
+    final picked =
+        await picker.pickImage(source: ImageSource.gallery, imageQuality: 85);
+    if (picked == null || !mounted) return;
+
+    setState(() => _uploading = true);
+    try {
+      final bytes = await picked.readAsBytes();
+      final url = await uploadImageToCloudinary(bytes, 'coaches/$uid/profile');
+      await ref.read(authNotifierProvider.notifier).updateProfilePhoto(url);
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Фото профілю оновлено')),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Помилка завантаження: $e')),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _uploading = false);
+    }
   }
 
   @override
   Widget build(BuildContext context) {
-    String? photoUrl;
-    try {
-      photoUrl = FirebaseAuth.instance.currentUser?.photoURL;
-    } catch (_) {}
-    return Container(
-      width: 64,
-      height: 64,
-      decoration: BoxDecoration(
-        shape: BoxShape.circle,
-        gradient: photoUrl != null ? null : AppColors.ctaGradient,
-        boxShadow: [
-          BoxShadow(
-            color: AppColors.primary.withValues(alpha: 0.4),
-            blurRadius: 14,
-            offset: const Offset(0, 4),
+    final url = widget.photoUrl;
+    return GestureDetector(
+      onTap: _uploading ? null : _pickAndUpload,
+      child: Stack(
+        children: [
+          Container(
+            width: 64,
+            height: 64,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              gradient: (url != null && url.isNotEmpty) ? null : AppColors.ctaGradient,
+              boxShadow: [
+                BoxShadow(
+                  color: AppColors.primary.withValues(alpha: 0.4),
+                  blurRadius: 14,
+                  offset: const Offset(0, 4),
+                ),
+              ],
+            ),
+            child: _uploading
+                ? const ClipOval(
+                    child: ColoredBox(
+                      color: Colors.black26,
+                      child: Center(
+                        child: SizedBox(
+                          width: 28,
+                          height: 28,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2.5,
+                            color: Colors.white,
+                          ),
+                        ),
+                      ),
+                    ),
+                  )
+                : (url != null && url.isNotEmpty)
+                    ? ClipOval(
+                        child: CachedNetworkImage(
+                          imageUrl: url,
+                          width: 64,
+                          height: 64,
+                          fit: BoxFit.cover,
+                          errorWidget: (_, __, ___) =>
+                              _InitialsCircle(text: _initials()),
+                        ),
+                      )
+                    : _InitialsCircle(text: _initials()),
           ),
+          if (!_uploading)
+            Positioned(
+              right: 0,
+              bottom: 0,
+              child: Container(
+                width: 22,
+                height: 22,
+                decoration: BoxDecoration(
+                  color: AppColors.primary,
+                  shape: BoxShape.circle,
+                  border: Border.all(color: AppColors.surface, width: 1.5),
+                ),
+                child: const Icon(
+                  Icons.camera_alt_rounded,
+                  size: 12,
+                  color: Colors.white,
+                ),
+              ),
+            ),
         ],
       ),
-      child: photoUrl != null && photoUrl.isNotEmpty
-          ? ClipOval(
-              child: Image.network(
-                photoUrl,
-                width: 64,
-                height: 64,
-                fit: BoxFit.cover,
-                errorBuilder: (_, __, ___) => _InitialsCircle(text: _initials()),
-              ),
-            )
-          : _InitialsCircle(text: _initials()),
     );
   }
 }

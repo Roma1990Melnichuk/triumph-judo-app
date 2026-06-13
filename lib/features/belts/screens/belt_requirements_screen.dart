@@ -6,9 +6,11 @@ import 'package:go_router/go_router.dart';
 import 'package:uuid/uuid.dart';
 import '../../../core/constants/app_colors.dart';
 import '../../../core/constants/belt_levels.dart';
+import '../../../core/models/belt_exercise_model.dart' as libEx;
 import '../../../core/models/belt_requirement_model.dart';
 import '../../../features/auth/providers/auth_provider.dart';
 import '../providers/belt_provider.dart';
+import '../providers/exercise_library_provider.dart';
 import '../../../shared/widgets/belt_badge.dart';
 import '../../../shared/widgets/triumph_icon.dart';
 import '../../../shared/widgets/video_player_dialog.dart';
@@ -202,15 +204,63 @@ class _BeltTabState extends ConsumerState<_BeltTab> {
   }
 
   Future<void> _addExercise() async {
-    final result = await showDialog<Exercise>(
+    final choice = await showModalBottomSheet<String>(
       context: context,
-      builder: (_) => const _ExerciseDialog(),
+      backgroundColor: AppColors.surface,
+      shape: const RoundedRectangleBorder(
+          borderRadius: BorderRadius.vertical(top: Radius.circular(20))),
+      builder: (_) => SafeArea(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const SizedBox(height: 8),
+            Container(
+              width: 36, height: 4,
+              decoration: BoxDecoration(
+                  color: AppColors.surface3, borderRadius: BorderRadius.circular(2)),
+            ),
+            const SizedBox(height: 16),
+            ListTile(
+              leading: const Icon(Icons.library_books_outlined, color: AppColors.orange),
+              title: const Text('Вибрати з бібліотеки',
+                  style: TextStyle(color: AppColors.textPrimary, fontWeight: FontWeight.w600)),
+              onTap: () => Navigator.pop(context, 'library'),
+            ),
+            ListTile(
+              leading: const Icon(Icons.add_circle_outline, color: AppColors.accent),
+              title: const Text('Нова вправа',
+                  style: TextStyle(color: AppColors.textPrimary, fontWeight: FontWeight.w600)),
+              onTap: () => Navigator.pop(context, 'new'),
+            ),
+            const SizedBox(height: 8),
+          ],
+        ),
+      ),
     );
-    if (result != null) {
-      setState(() {
-        _exercises.add(result);
-        _editing = true;
-      });
+    if (choice == null) return;
+
+    if (choice == 'library') {
+      final picked = await showDialog<Exercise>(
+        context: context,
+        builder: (ctx) => _PickFromLibraryDialog(targetBelt: widget.targetBelt),
+      );
+      if (picked != null) {
+        setState(() {
+          _exercises.add(picked);
+          _editing = true;
+        });
+      }
+    } else {
+      final result = await showDialog<Exercise>(
+        context: context,
+        builder: (_) => const _ExerciseDialog(),
+      );
+      if (result != null) {
+        setState(() {
+          _exercises.add(result);
+          _editing = true;
+        });
+      }
     }
   }
 
@@ -563,6 +613,141 @@ class _ExerciseDialogState extends State<_ExerciseDialog> {
           ),
         ),
       ],
+    );
+  }
+}
+
+// ── Pick from library dialog ──────────────────────────────────────────────────
+
+class _PickFromLibraryDialog extends ConsumerStatefulWidget {
+  const _PickFromLibraryDialog({required this.targetBelt});
+  final BeltLevel targetBelt;
+
+  @override
+  ConsumerState<_PickFromLibraryDialog> createState() =>
+      _PickFromLibraryDialogState();
+}
+
+class _PickFromLibraryDialogState extends ConsumerState<_PickFromLibraryDialog> {
+  String _search = '';
+
+  @override
+  Widget build(BuildContext context) {
+    final exercisesAsync = ref.watch(beltExercisesProvider);
+    final allExercises = exercisesAsync.asData?.value ?? <libEx.BeltExerciseModel>[];
+    final filtered = allExercises.where((e) {
+      final matchesBelt =
+          e.forBelts.isEmpty || e.forBelts.contains(widget.targetBelt);
+      final matchesSearch = _search.isEmpty ||
+          e.name.toLowerCase().contains(_search.toLowerCase());
+      return matchesBelt && matchesSearch;
+    }).toList();
+
+    return Dialog(
+      backgroundColor: AppColors.surface,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+      insetPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 40),
+      child: Column(
+        children: [
+          Padding(
+            padding: const EdgeInsets.fromLTRB(20, 20, 20, 12),
+            child: Row(
+              children: [
+                const Expanded(
+                  child: Text(
+                    'Вибрати з бібліотеки',
+                    style: TextStyle(
+                      fontSize: 17,
+                      fontWeight: FontWeight.w700,
+                      color: AppColors.textPrimary,
+                    ),
+                  ),
+                ),
+                GestureDetector(
+                  onTap: () => Navigator.pop(context),
+                  child: const Icon(Icons.close, color: AppColors.textSecondary),
+                ),
+              ],
+            ),
+          ),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16),
+            child: TextField(
+              decoration: const InputDecoration(
+                hintText: 'Пошук...',
+                prefixIcon: Icon(Icons.search, size: 20),
+                contentPadding: EdgeInsets.symmetric(vertical: 10),
+              ),
+              onChanged: (v) => setState(() => _search = v),
+            ),
+          ),
+          const SizedBox(height: 8),
+          Expanded(
+            child: exercisesAsync.when(
+              loading: () => const Center(child: CircularProgressIndicator()),
+              error: (e, _) => Center(child: Text('Помилка: $e')),
+              data: (_) => filtered.isEmpty
+                  ? const Center(
+                      child: Text('Нічого не знайдено',
+                          style: TextStyle(color: AppColors.textSecondary)))
+                  : ListView.builder(
+                      itemCount: filtered.length,
+                      padding: const EdgeInsets.symmetric(horizontal: 12),
+                      itemBuilder: (_, i) {
+                        final ex = filtered[i];
+                        return ListTile(
+                          contentPadding:
+                              const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                          leading: Container(
+                            width: 40, height: 40,
+                            decoration: BoxDecoration(
+                              color: AppColors.orange.withValues(alpha: 0.12),
+                              borderRadius: BorderRadius.circular(10),
+                            ),
+                            child: Center(
+                              child: Text(
+                                ex.category.emoji,
+                                style: const TextStyle(fontSize: 18),
+                              ),
+                            ),
+                          ),
+                          title: Text(
+                            ex.name,
+                            style: const TextStyle(
+                              fontSize: 14,
+                              fontWeight: FontWeight.w600,
+                              color: AppColors.textPrimary,
+                            ),
+                          ),
+                          subtitle: ex.description.isNotEmpty
+                              ? Text(
+                                  ex.description,
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: const TextStyle(
+                                    fontSize: 12,
+                                    color: AppColors.textSecondary,
+                                  ),
+                                )
+                              : null,
+                          onTap: () {
+                            final exercise = Exercise(
+                              id: ex.id,
+                              name: ex.name,
+                              description: ex.description,
+                              category: ExerciseCategory.technique,
+                              videoUrl: ex.videoUrl ?? '',
+                            );
+                            Navigator.pop(context, exercise);
+                          },
+                        );
+                      },
+                    ),
+            ),
+          ),
+          const SizedBox(height: 8),
+        ],
+      ),
     );
   }
 }

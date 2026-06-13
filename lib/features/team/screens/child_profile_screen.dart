@@ -2074,17 +2074,14 @@ class _NagorodyKlubuTab extends ConsumerWidget {
     final async = ref.watch(childAchievementsProvider(childId));
     return async.when(
       loading: () => const Center(child: CircularProgressIndicator()),
-      error: (_, __) => const SizedBox(),
+      error: (e, _) => Center(child: Text('Помилка: $e', style: const TextStyle(color: AppColors.textSecondary))),
       data: (earned) {
         if (earned.isEmpty) {
           return const Center(
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                ColorFiltered(
-                  colorFilter: const ColorFilter.mode(AppColors.textSecondary, BlendMode.srcIn),
-                  child: TriumphIcon(TIcon.trophy, size: 56),
-                ),
+                Icon(Icons.emoji_events_outlined, size: 56, color: AppColors.textSecondary),
                 SizedBox(height: 12),
                 Text('Ще немає нагород',
                     style: TextStyle(
