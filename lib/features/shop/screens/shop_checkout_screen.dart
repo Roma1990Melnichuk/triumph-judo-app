@@ -20,6 +20,7 @@ class _ShopCheckoutScreenState extends ConsumerState<ShopCheckoutScreen> {
   final _formKey = GlobalKey<FormState>();
   final _nameController = TextEditingController();
   final _phoneController = TextEditingController();
+  final _novaPostController = TextEditingController(); // Added for Nova Post branch
   final _commentController = TextEditingController();
 
   ShopDeliveryMethod _delivery = ShopDeliveryMethod.pickupAtClub;
@@ -30,6 +31,7 @@ class _ShopCheckoutScreenState extends ConsumerState<ShopCheckoutScreen> {
   void dispose() {
     _nameController.dispose();
     _phoneController.dispose();
+    _novaPostController.dispose();
     _commentController.dispose();
     super.dispose();
   }
@@ -37,6 +39,12 @@ class _ShopCheckoutScreenState extends ConsumerState<ShopCheckoutScreen> {
   Future<void> _submit(CartModel cart) async {
     if (!_formKey.currentState!.validate()) return;
     setState(() => _isSubmitting = true);
+
+    String fullComment = _commentController.text.trim();
+    if (_delivery == ShopDeliveryMethod.novaPost) {
+      fullComment = 'НП: ${_novaPostController.text.trim()}\n$fullComment';
+    }
+
     try {
       await ref.read(orderNotifierProvider.notifier).createOrder(
             items: cart.items,
@@ -45,7 +53,7 @@ class _ShopCheckoutScreenState extends ConsumerState<ShopCheckoutScreen> {
             payment: _payment,
             recipientName: _nameController.text.trim(),
             recipientPhone: _phoneController.text.trim(),
-            comment: _commentController.text.trim(),
+            comment: fullComment,
           );
       await ref.read(cartNotifierProvider.notifier).clear();
       if (mounted) {
@@ -179,6 +187,21 @@ class _ShopCheckoutScreenState extends ConsumerState<ShopCheckoutScreen> {
                     selected: _delivery,
                     onChanged: (v) => setState(() => _delivery = v),
                   ),
+                  if (_delivery == ShopDeliveryMethod.novaPost) ...[
+                    const SizedBox(height: 12),
+                    _buildTextField(
+                      controller: _novaPostController,
+                      label: 'Місто та відділення НП',
+                      hint: 'Київ, №125 або адреса',
+                      validator: (v) {
+                        if (_delivery == ShopDeliveryMethod.novaPost &&
+                            (v == null || v.trim().isEmpty)) {
+                          return 'Вкажіть дані для доставки';
+                        }
+                        return null;
+                      },
+                    ),
+                  ],
                   const SizedBox(height: 24),
                   _SectionLabel(label: 'Спосіб оплати'),
                   const SizedBox(height: 12),

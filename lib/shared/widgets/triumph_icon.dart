@@ -244,7 +244,8 @@ class TriumphIcon extends StatelessWidget {
       },
     );
 
-    if (color != null) {
+    // Only apply color filter to transparent PNGs to avoid "colored square" effect on opaque WebPs
+    if (color != null && TriumphIcon.hasTransparentBg(icon)) {
       return ColorFiltered(
         colorFilter: ColorFilter.mode(color!, BlendMode.srcIn),
         child: img,

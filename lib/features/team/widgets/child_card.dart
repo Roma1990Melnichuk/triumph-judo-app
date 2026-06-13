@@ -339,11 +339,15 @@ class _PeerBadge extends StatelessWidget {
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(icon, size: 12, color: color),
+          Icon(icon, size: 11, color: color),
           const SizedBox(width: 4),
-          Text(
-            label,
-            style: TextStyle(fontSize: 12, color: color, fontWeight: FontWeight.w600),
+          Flexible(
+            child: Text(
+              label,
+              style: TextStyle(fontSize: 10, color: color, fontWeight: FontWeight.w600),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+            ),
           ),
         ],
       ),

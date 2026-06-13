@@ -137,15 +137,34 @@ class _JourneyScreenState extends ConsumerState<JourneyScreen>
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             // ── Header ──────────────────────────────────────────────────────
-            const Padding(
-              padding: EdgeInsets.fromLTRB(20, 16, 20, 12),
-              child: Text(
-                'Твій шлях',
-                style: TextStyle(
-                  fontSize: 24,
-                  fontWeight: FontWeight.w800,
-                  color: AppColors.textPrimary,
-                ),
+            Padding(
+              padding: const EdgeInsets.fromLTRB(12, 16, 20, 12),
+              child: Row(
+                children: [
+                  GestureDetector(
+                    onTap: () => Navigator.canPop(context) ? Navigator.pop(context) : null,
+                    child: Container(
+                      width: 44, height: 44,
+                      decoration: BoxDecoration(
+                        color: AppColors.surface2,
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: const Center(
+                        child: Icon(Icons.arrow_back_ios_new_rounded,
+                            size: 20, color: AppColors.textPrimary),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  const Text(
+                    'Твій шлях',
+                    style: TextStyle(
+                      fontSize: 24,
+                      fontWeight: FontWeight.w800,
+                      color: AppColors.textPrimary,
+                    ),
+                  ),
+                ],
               ),
             ),
 
@@ -730,8 +749,9 @@ class _StageChip extends StatelessWidget {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          ColorFiltered(
-            colorFilter: ColorFilter.mode(textColor, BlendMode.srcIn),
+          ShaderMask(
+            shaderCallback: (b) => LinearGradient(colors: [textColor, textColor]).createShader(b),
+            blendMode: BlendMode.srcATop,
             child: TriumphIcon(stage.icon, size: 24),
           ),
           const SizedBox(height: 4),
@@ -987,8 +1007,9 @@ class _AchievementChip extends StatelessWidget {
           else if (asset != null)
             Image.asset(asset!, width: 40, height: 40, fit: BoxFit.contain)
           else
-            ColorFiltered(
-              colorFilter: ColorFilter.mode(accentColor, BlendMode.srcIn),
+            ShaderMask(
+              shaderCallback: (b) => LinearGradient(colors: [accentColor, accentColor]).createShader(b),
+              blendMode: BlendMode.srcATop,
               child: TriumphIcon(fallbackIcon, size: 22),
             ),
           const SizedBox(height: 4),
@@ -1086,8 +1107,9 @@ class _StatTile extends StatelessWidget {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          ColorFiltered(
-            colorFilter: const ColorFilter.mode(AppColors.accent, BlendMode.srcIn),
+          ShaderMask(
+            shaderCallback: (b) => const LinearGradient(colors: [AppColors.accent, AppColors.accent]).createShader(b),
+            blendMode: BlendMode.srcATop,
             child: TriumphIcon(tIcon, size: 22),
           ),
           const SizedBox(height: 6),

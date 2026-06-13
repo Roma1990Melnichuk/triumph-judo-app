@@ -78,10 +78,12 @@ class _ShopCartScreenState extends ConsumerState<ShopCartScreen> {
                 : _buildCartContent(cart),
           ),
           if (isMutating)
-            Container(
-              color: Colors.black.withValues(alpha: 0.45),
-              child: const Center(
-                child: CircularProgressIndicator(color: AppColors.primary),
+            Positioned(
+              top: 0, left: 0, right: 0,
+              child: LinearProgressIndicator(
+                color: AppColors.accent,
+                backgroundColor: Colors.transparent,
+                minHeight: 2,
               ),
             ),
         ],

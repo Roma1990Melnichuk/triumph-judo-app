@@ -87,7 +87,8 @@ class _RatingScreenState extends ConsumerState<RatingScreen> {
         // Child is outside top 20: center window on child
         isWindowed = true;
         myActualRank = myRank + 1;
-        int start = (myRank - 5).clamp(0, allRated.length - 1);
+        // UX-01 Fix: Safer range calculation for windowed view
+        int start = (myRank - 5).clamp(0, (allRated.length - 11).clamp(0, allRated.length));
         int end   = (start + 11).clamp(0, allRated.length);
         rankOffset = start;
         children = allRated.sublist(start, end);

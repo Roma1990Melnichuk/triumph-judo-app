@@ -22,9 +22,10 @@ class JourneyHomeWidget extends ConsumerWidget {
     final message = ref.watch(dailyMessageProvider);
     final weekActivity = ref.watch(weekActivityProvider);
 
-    final isLoading = ref.watch(coachSessionsProvider(
-      _coachIdFrom(ref) ?? '',
-    )).isLoading;
+    final coachId = _coachIdFrom(ref);
+    final isLoading = (coachId != null && coachId.isNotEmpty)
+        ? ref.watch(coachSessionsProvider(coachId)).isLoading
+        : ref.watch(allChildrenProvider).isLoading;
 
     return GestureDetector(
       onTap: () => context.push('/journey'),

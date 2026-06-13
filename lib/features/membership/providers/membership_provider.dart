@@ -1,19 +1,22 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/models/membership_model.dart';
+import '../../../core/utils/stream_utils.dart';
 import '../../auth/providers/auth_provider.dart';
 
 // Single membership per athlete — Firestore doc ID = athleteId
 final membershipByAthleteProvider =
     StreamProvider.family<MembershipModel?, String>((ref, athleteId) {
   final db = ref.watch(firestoreProvider);
+  if (athleteId.isEmpty) return Stream.value(null);
   return db
       .collection('memberships')
       .doc(athleteId)
       .snapshots()
       .map((s) => s.exists && s.data() != null
           ? MembershipModel.fromMap(s.data()!, athleteId)
-          : null);
+          : null)
+      .fallbackOnError(null);
 });
 
 // All memberships — for coach overview

@@ -652,6 +652,7 @@ class _AddHonorItemSheetState extends ConsumerState<_AddHonorItemSheet> {
 
               // Type dropdown
               DropdownButtonFormField<HonorBoardType>(
+                isExpanded: true, // Fix potential overflow
                 initialValue: _type,
                 dropdownColor: AppColors.surface2,
                 style: const TextStyle(color: AppColors.textPrimary),
@@ -664,6 +665,7 @@ class _AddHonorItemSheetState extends ConsumerState<_AddHonorItemSheet> {
                           '${t.emoji}  ${t.label}',
                           style: const TextStyle(
                               color: AppColors.textPrimary, fontSize: 14),
+                          overflow: TextOverflow.ellipsis,
                         ),
                       ),
                     )
