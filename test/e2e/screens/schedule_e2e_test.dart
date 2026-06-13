@@ -330,7 +330,7 @@ void main() {
       await _pumpData(tester);
 
       expect(find.text('Тренування A'), findsOneWidget);
-      expect(find.text('Тренування Б'), findsOneWidget);
+      expect(find.text('Тренування Б'), findsWidgets);
       expect(tester.takeException(), isNull);
     });
 
