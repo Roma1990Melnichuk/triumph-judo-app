@@ -7,11 +7,17 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
 import 'package:judo_app/core/constants/belt_levels.dart';
+import 'package:judo_app/core/models/belt_progress_model.dart';
+import 'package:judo_app/core/models/belt_requirement_model.dart';
 import 'package:judo_app/core/models/child_model.dart';
 import 'package:judo_app/core/models/user_model.dart';
 import 'package:judo_app/features/auth/providers/auth_provider.dart';
+import 'package:judo_app/features/belts/providers/belt_provider.dart';
 import 'package:judo_app/features/belts/screens/belt_overview_screen.dart';
+import 'package:judo_app/features/schedule/providers/group_provider.dart';
 import 'package:judo_app/features/team/providers/children_provider.dart';
+import 'package:judo_app/features/team/widgets/child_card.dart';
+import 'package:judo_app/features/individual_training/providers/individual_training_provider.dart';
 
 // ── Хелпери ───────────────────────────────────────────────────────────────────
 
@@ -31,7 +37,7 @@ final _parent = UserModel(
   childIds: const ['kid1'],
 );
 
-ChildModel _child() => ChildModel(
+ChildModel _child({bool beltReady = false}) => ChildModel(
       id: 'kid1',
       firstName: 'Іван',
       lastName: 'Петренко',
@@ -42,6 +48,7 @@ ChildModel _child() => ChildModel(
       coachName: 'Тренер',
       totalPoints: 0,
       createdAt: DateTime(2024),
+      beltReady: beltReady,
     );
 
 GoRouter _router() => GoRouter(
@@ -121,6 +128,164 @@ void main() {
         await tester.tap(beltChips.first);
         await tester.pump(const Duration(milliseconds: 100));
       }
+
+      expect(tester.takeException(), isNull);
+    });
+  });
+
+  // ── TC-BELT-022: beltReady badge ─────────────────────────────────────────────
+  group('BeltOverviewScreen — TC-BELT-022 beltReady badge', () {
+    testWidgets(
+        'TC-BELT-022: ChildCard з beltReady=true відображає бейдж «Готовий до здачі»',
+        (tester) async {
+      tester.view.physicalSize = const Size(390 * 3, 844 * 3);
+      tester.view.devicePixelRatio = 3.0;
+      addTearDown(() {
+        tester.view.resetPhysicalSize();
+        tester.view.resetDevicePixelRatio();
+      });
+
+      final child = _child(beltReady: true);
+
+      await tester.pumpWidget(
+        ProviderScope(
+          overrides: [
+            beltProgressProvider.overrideWith(
+              (ref, arg) => Stream.value(null),
+            ),
+            beltRequirementProvider.overrideWith(
+              (ref, belt) => null,
+            ),
+            childAttendanceStatsProvider.overrideWith(
+              (ref, id) => Stream.value((total: 0, present: 0, pct: 0.0)),
+            ),
+            childConfirmedTrainingCountProvider.overrideWith(
+              (ref, id) => 0,
+            ),
+          ],
+          child: MaterialApp(
+            home: Scaffold(
+              body: ChildCard(
+                child: child,
+                rank: 1,
+                onTap: () {},
+              ),
+            ),
+          ),
+        ),
+      );
+
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 100));
+
+      expect(tester.takeException(), isNull);
+      expect(find.text('Готовий до здачі'), findsOneWidget);
+    });
+
+    testWidgets(
+        'TC-BELT-022: ChildCard з beltReady=false НЕ показує бейдж',
+        (tester) async {
+      tester.view.physicalSize = const Size(390 * 3, 844 * 3);
+      tester.view.devicePixelRatio = 3.0;
+      addTearDown(() {
+        tester.view.resetPhysicalSize();
+        tester.view.resetDevicePixelRatio();
+      });
+
+      final child = _child(beltReady: false);
+
+      await tester.pumpWidget(
+        ProviderScope(
+          overrides: [
+            beltProgressProvider.overrideWith(
+              (ref, arg) => Stream.value(null),
+            ),
+            beltRequirementProvider.overrideWith(
+              (ref, belt) => null,
+            ),
+            childAttendanceStatsProvider.overrideWith(
+              (ref, id) => Stream.value((total: 0, present: 0, pct: 0.0)),
+            ),
+            childConfirmedTrainingCountProvider.overrideWith(
+              (ref, id) => 0,
+            ),
+          ],
+          child: MaterialApp(
+            home: Scaffold(
+              body: ChildCard(
+                child: child,
+                rank: 1,
+                onTap: () {},
+              ),
+            ),
+          ),
+        ),
+      );
+
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 100));
+
+      expect(tester.takeException(), isNull);
+      expect(find.text('Готовий до здачі'), findsNothing);
+    });
+  });
+
+  // ── TC-BELT-015/016/017: progress states ─────────────────────────────────────
+  group('BeltOverviewScreen — TC-BELT-015/016/017 progress states', () {
+    testWidgets(
+        'TC-BELT-015: 0 виконаних технік — рендер без краша',
+        (tester) async {
+      tester.view.physicalSize = const Size(390 * 3, 844 * 3);
+      tester.view.devicePixelRatio = 3.0;
+      addTearDown(() {
+        tester.view.resetPhysicalSize();
+        tester.view.resetDevicePixelRatio();
+      });
+
+      // Suppress overflow for pre-existing layout issues on this screen
+      final handler = FlutterError.onError;
+      FlutterError.onError = (d) {
+        if (d.toString().contains('overflowed')) return;
+        handler?.call(d);
+      };
+      addTearDown(() => FlutterError.onError = handler);
+
+      final db = FakeFirebaseFirestore();
+
+      await tester.pumpWidget(
+        ProviderScope(
+          overrides: [
+            currentUserModelProvider.overrideWith(
+              (_) => Stream.value(_coach),
+            ),
+            allChildrenProvider.overrideWith(
+              (_) => Stream.value([_child()]),
+            ),
+            firestoreProvider.overrideWithValue(db),
+            beltProgressProvider.overrideWith(
+              (ref, arg) => Stream.value(
+                BeltProgressModel(
+                  childId: arg.childId,
+                  belt: arg.belt,
+                  passed: const {},
+                ),
+              ),
+            ),
+            beltRequirementProvider.overrideWith(
+              (ref, belt) => BeltRequirementModel(
+                belt: belt,
+                exercises: const [],
+                updatedAt: DateTime(2024),
+                updatedByCoachId: 'coach1',
+              ),
+            ),
+          ],
+          child: MaterialApp.router(routerConfig: _router()),
+        ),
+      );
+
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 100));
 
       expect(tester.takeException(), isNull);
     });

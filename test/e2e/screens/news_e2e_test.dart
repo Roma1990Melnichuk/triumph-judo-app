@@ -105,4 +105,100 @@ void main() {
       expect(tester.takeException(), isNull);
     });
   });
+
+  // ── TC-NEWS-006: ролі ────────────────────────────────────────────────────────
+
+  group('NewsFeedScreen — TC-NEWS-006 ролі', () {
+    testWidgets(
+        'TC-NEWS-006: батько НЕ бачить кнопку створення новини (FAB або +)',
+        (tester) async {
+      tester.view.physicalSize = const Size(390 * 3, 844 * 3);
+      tester.view.devicePixelRatio = 3.0;
+      addTearDown(() {
+        tester.view.resetPhysicalSize();
+        tester.view.resetDevicePixelRatio();
+      });
+
+      // Suppress pre-existing overflow errors unrelated to this test.
+      final handler = FlutterError.onError;
+      FlutterError.onError = (d) {
+        if (d.toString().contains('overflowed')) return;
+        handler?.call(d);
+      };
+      addTearDown(() => FlutterError.onError = handler);
+
+      await tester.pumpWidget(_app(_parent));
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 100));
+
+      expect(tester.takeException(), isNull);
+      // Parent must not see the create-post FAB.
+      expect(find.byType(FloatingActionButton), findsNothing);
+    });
+
+    testWidgets(
+        'TC-NEWS-007: порожня стрічка показує empty state без краша',
+        (tester) async {
+      tester.view.physicalSize = const Size(390 * 3, 844 * 3);
+      tester.view.devicePixelRatio = 3.0;
+      addTearDown(() {
+        tester.view.resetPhysicalSize();
+        tester.view.resetDevicePixelRatio();
+      });
+
+      // Suppress pre-existing overflow errors unrelated to this test.
+      final handler = FlutterError.onError;
+      FlutterError.onError = (d) {
+        if (d.toString().contains('overflowed')) return;
+        handler?.call(d);
+      };
+      addTearDown(() => FlutterError.onError = handler);
+
+      await tester.pumpWidget(_app(_coach));
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 100));
+
+      expect(tester.takeException(), isNull);
+      // Empty state widget must show the expected message exactly once.
+      expect(find.text('Публікацій ще немає'), findsOneWidget);
+    });
+  });
+
+  // ── TC-NEWS-001: тренер бачить кнопку створення ──────────────────────────────
+
+  group('NewsFeedScreen — TC-NEWS-001 тренер бачить кнопку створення', () {
+    testWidgets(
+        'TC-NEWS-001: тренер бачить кнопку для створення новини',
+        (tester) async {
+      tester.view.physicalSize = const Size(390 * 3, 844 * 3);
+      tester.view.devicePixelRatio = 3.0;
+      addTearDown(() {
+        tester.view.resetPhysicalSize();
+        tester.view.resetDevicePixelRatio();
+      });
+
+      // Suppress pre-existing overflow errors unrelated to this test.
+      final handler = FlutterError.onError;
+      FlutterError.onError = (d) {
+        if (d.toString().contains('overflowed')) return;
+        handler?.call(d);
+      };
+      addTearDown(() => FlutterError.onError = handler);
+
+      await tester.pumpWidget(_app(_coach));
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 100));
+
+      expect(tester.takeException(), isNull);
+      // Coach must see the FAB with the add icon.
+      expect(find.byType(FloatingActionButton), findsOneWidget);
+      expect(
+        find.descendant(
+          of: find.byType(FloatingActionButton),
+          matching: find.byIcon(Icons.add),
+        ),
+        findsOneWidget,
+      );
+    });
+  });
 }

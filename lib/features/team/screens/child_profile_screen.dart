@@ -72,6 +72,7 @@ class _ChildProfileScreenState extends ConsumerState<ChildProfileScreen>
     final user = ref.watch(currentUserModelProvider).asData?.value;
     final isCoach = user?.isCoach ?? false;
     final isOwnProfile = !isCoach && (user?.ownsChild(childId) ?? false);
+    final allChildrenList = ref.watch(allChildrenProvider).asData?.value ?? const [];
 
     return childAsync.when(
       loading: () => const Scaffold(
@@ -105,6 +106,32 @@ class _ChildProfileScreenState extends ConsumerState<ChildProfileScreen>
             ? (passedCount / totalExercises * 100).round()
             : 0;
         final medalCount = results.where((r) => r.place <= 3).length;
+
+        // Peer ranks among all club athletes
+        final _sorted = [...allChildrenList]..sort((a, b) {
+          final cmp = b.totalPoints.compareTo(a.totalPoints);
+          if (cmp != 0) return cmp;
+          return a.lastName.compareTo(b.lastName);
+        });
+        final _yrCounters = <int, int>{};
+        final _yrTotals   = <int, int>{};
+        final _wtCounters = <String, int>{};
+        final _wtTotals   = <String, int>{};
+        final _yrRanks    = <String, int>{};
+        final _wtRanks    = <String, int>{};
+        for (final c in _sorted) {
+          _yrTotals[c.birthYear]  = (_yrTotals[c.birthYear]  ?? 0) + 1;
+          _yrCounters[c.birthYear] = (_yrCounters[c.birthYear] ?? 0) + 1;
+          _yrRanks[c.id] = _yrCounters[c.birthYear]!;
+          final wk = '${c.birthYear}/${c.weightCategory}';
+          _wtTotals[wk]   = (_wtTotals[wk]   ?? 0) + 1;
+          _wtCounters[wk] = (_wtCounters[wk]  ?? 0) + 1;
+          _wtRanks[c.id]  = _wtCounters[wk]!;
+        }
+        final sameYearRank    = _yrRanks[childId];
+        final sameYearTotal   = _yrTotals[child.birthYear];
+        final sameWeightRank  = _wtRanks[childId];
+        final sameWeightTotal = _wtTotals['${child.birthYear}/${child.weightCategory}'];
 
         final attendanceStats =
             ref.watch(childAttendanceStatsProvider(childId)).asData?.value;
@@ -382,6 +409,21 @@ class _ChildProfileScreenState extends ConsumerState<ChildProfileScreen>
                       _ProfileStat(
                           value: '$medalCount',
                           label: 'Медалей'),
+                      if (sameYearTotal != null && sameYearTotal > 1 && sameYearRank != null) ...[
+                        _ProfileStatDivider(),
+                        _ProfileStat(
+                          value: '#$sameYearRank/$sameYearTotal',
+                          label: 'Однолітки',
+                        ),
+                      ],
+                      if (sameWeightTotal != null && sameWeightTotal > 1 &&
+                          sameWeightRank != null && child.weightCategory.isNotEmpty) ...[
+                        _ProfileStatDivider(),
+                        _ProfileStat(
+                          value: '#$sameWeightRank/$sameWeightTotal',
+                          label: 'У вазі',
+                        ),
+                      ],
                       if (attendanceStats != null &&
                           attendanceStats.total > 0) ...[
                         _ProfileStatDivider(),

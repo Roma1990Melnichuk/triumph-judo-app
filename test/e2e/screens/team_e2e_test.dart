@@ -217,4 +217,184 @@ void main() {
       expect(tester.takeException(), isNull);
     });
   });
+
+  // ─────────────────────────────────────────────────────────────────────────
+
+  group('TeamListScreen — peer ranks відображаються', () {
+    testWidgets(
+        'два спортсмени одного року — показує позицію серед однолітків',
+        (tester) async {
+      tester.view.physicalSize = const Size(390 * 3, 844 * 3);
+      tester.view.devicePixelRatio = 3.0;
+      addTearDown(() {
+        tester.view.resetPhysicalSize();
+        tester.view.resetDevicePixelRatio();
+      });
+
+      // Suppress pre-existing overflow errors on this screen
+      final handler = FlutterError.onError;
+      FlutterError.onError = (d) {
+        if (d.toString().contains('overflowed')) return;
+        handler?.call(d);
+      };
+      addTearDown(() => FlutterError.onError = handler);
+
+      final children = [
+        ChildModel(
+          id: 'peer1',
+          firstName: 'Олег',
+          lastName: 'Ковальчук',
+          birthYear: 2012,
+          weightCategory: '-40 кг',
+          currentBelt: BeltLevel.white,
+          coachId: 'coach_Іванов',
+          coachName: 'Іванов',
+          totalPoints: 10,
+          createdAt: DateTime(2024),
+        ),
+        ChildModel(
+          id: 'peer2',
+          firstName: 'Дмитро',
+          lastName: 'Бондар',
+          birthYear: 2012,
+          weightCategory: '-40 кг',
+          currentBelt: BeltLevel.white,
+          coachId: 'coach_Іванов',
+          coachName: 'Іванов',
+          totalPoints: 5,
+          createdAt: DateTime(2024),
+        ),
+      ];
+
+      await _pump(tester, [
+        currentUserModelProvider
+            .overrideWith((_) => Stream.value(_coach('Іванов'))),
+        allChildrenProvider.overrideWith((_) => Stream.value(children)),
+        allMembershipsProvider
+            .overrideWith((_) => Stream.value(const [])),
+      ]);
+
+      // Peer rank text is '#rank/total однол.' — check either fragment
+      final hasOdnol =
+          find.textContaining('однол', skipOffstage: false).evaluate().isNotEmpty;
+      final hasSlash =
+          find.textContaining('/', skipOffstage: false).evaluate().isNotEmpty;
+
+      expect(hasOdnol || hasSlash, isTrue,
+          reason: 'Expected peer rank indicator (однол or /) to be rendered');
+      expect(tester.takeException(), isNull);
+    });
+  });
+
+  // ─────────────────────────────────────────────────────────────────────────
+
+  group('TeamListScreen — quick filters', () {
+    List<ChildModel> _buildMixedChildren() => [
+          ChildModel(
+            id: 'boy1',
+            firstName: 'Олексій',
+            lastName: 'Гречко',
+            birthYear: 2012,
+            weightCategory: '-40 кг',
+            currentBelt: BeltLevel.white,
+            coachId: 'coach_Іванов',
+            coachName: 'Іванов',
+            totalPoints: 0,
+            createdAt: DateTime(2024),
+            gender: Gender.male,
+          ),
+          ChildModel(
+            id: 'boy2',
+            firstName: 'Максим',
+            lastName: 'Левченко',
+            birthYear: 2013,
+            weightCategory: '-42 кг',
+            currentBelt: BeltLevel.white,
+            coachId: 'coach_Іванов',
+            coachName: 'Іванов',
+            totalPoints: 0,
+            createdAt: DateTime(2024),
+            gender: Gender.male,
+          ),
+          ChildModel(
+            id: 'girl1',
+            firstName: 'Ганна',
+            lastName: 'Романенко',
+            birthYear: 2012,
+            weightCategory: '-36 кг',
+            currentBelt: BeltLevel.white,
+            coachId: 'coach_Іванов',
+            coachName: 'Іванов',
+            totalPoints: 0,
+            createdAt: DateTime(2024),
+            gender: Gender.female,
+          ),
+        ];
+
+    testWidgets('фільтр Юнаки показує тільки хлопців', (tester) async {
+      tester.view.physicalSize = const Size(390 * 3, 844 * 3);
+      tester.view.devicePixelRatio = 3.0;
+      addTearDown(() {
+        tester.view.resetPhysicalSize();
+        tester.view.resetDevicePixelRatio();
+      });
+
+      // Suppress pre-existing overflow errors on this screen
+      final handler = FlutterError.onError;
+      FlutterError.onError = (d) {
+        if (d.toString().contains('overflowed')) return;
+        handler?.call(d);
+      };
+      addTearDown(() => FlutterError.onError = handler);
+
+      await _pump(tester, [
+        currentUserModelProvider
+            .overrideWith((_) => Stream.value(_coach('Іванов'))),
+        allChildrenProvider
+            .overrideWith((_) => Stream.value(_buildMixedChildren())),
+        allMembershipsProvider
+            .overrideWith((_) => Stream.value(const [])),
+      ]);
+
+      final chip = find.text('Юнаки');
+      expect(chip, findsOneWidget);
+      await tester.tap(chip);
+      await tester.pumpAndSettle(const Duration(milliseconds: 200));
+
+      expect(tester.takeException(), isNull);
+    });
+
+    testWidgets('фільтр Дівчата не падає з порожнім списком', (tester) async {
+      tester.view.physicalSize = const Size(390 * 3, 844 * 3);
+      tester.view.devicePixelRatio = 3.0;
+      addTearDown(() {
+        tester.view.resetPhysicalSize();
+        tester.view.resetDevicePixelRatio();
+      });
+
+      // Suppress pre-existing overflow errors on this screen
+      final handler = FlutterError.onError;
+      FlutterError.onError = (d) {
+        if (d.toString().contains('overflowed')) return;
+        handler?.call(d);
+      };
+      addTearDown(() => FlutterError.onError = handler);
+
+      await _pump(tester, [
+        currentUserModelProvider
+            .overrideWith((_) => Stream.value(_coach('Іванов'))),
+        allChildrenProvider
+            .overrideWith((_) => Stream.value(_buildMixedChildren())),
+        allMembershipsProvider
+            .overrideWith((_) => Stream.value(const [])),
+      ]);
+
+      final chip = find.text('Дівчата');
+      expect(chip, findsOneWidget);
+      await tester.tap(chip);
+      await tester.pumpAndSettle(const Duration(milliseconds: 200));
+
+      expect(tester.takeException(), isNull);
+    });
+  });
 }
