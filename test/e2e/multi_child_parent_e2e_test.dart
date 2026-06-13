@@ -237,4 +237,136 @@ void main() {
       expect(parent.childId, equals('kid1'));
     });
   });
+
+  // ── TC-PARENT-MULTI: effectiveChildIdProvider + activeChildIdProvider ────────
+
+  group('TC-PARENT-MULTI-001: список/перемикач дітей після входу', () {
+    test('effectiveChildId = перша дитина за замовчуванням', () async {
+      final cont = ProviderContainer(overrides: [
+        currentUserModelProvider.overrideWith(
+            (_) => Stream.value(_parentWith(['c1', 'c2']))),
+        allChildrenProvider.overrideWith((_) => Stream.value([
+              _child('c1', firstName: 'Антон'),
+              _child('c2', firstName: 'Богдан'),
+            ])),
+        allMembershipsProvider.overrideWith((ref) => Stream.value([])),
+      ]);
+      addTearDown(cont.dispose);
+
+      await cont.read(currentUserModelProvider.future);
+      expect(cont.read(effectiveChildIdProvider), equals('c1'));
+    });
+
+    test('всі childIds батька присутні у UserModel', () async {
+      final cont = ProviderContainer(overrides: [
+        currentUserModelProvider.overrideWith(
+            (_) => Stream.value(_parentWith(['c1', 'c2', 'c3']))),
+        allChildrenProvider.overrideWith((_) => Stream.value([])),
+        allMembershipsProvider.overrideWith((ref) => Stream.value([])),
+      ]);
+      addTearDown(cont.dispose);
+
+      final user = await cont.read(currentUserModelProvider.future);
+      expect(user?.childIds, containsAll(['c1', 'c2', 'c3']));
+    });
+  });
+
+  group('TC-PARENT-MULTI-003: перемикання дитини оновлює effectiveChildId', () {
+    test('set activeChildIdProvider → effectiveChildId змінюється', () async {
+      final cont = ProviderContainer(overrides: [
+        currentUserModelProvider.overrideWith(
+            (_) => Stream.value(_parentWith(['c1', 'c2']))),
+        allChildrenProvider.overrideWith((_) => Stream.value([
+              _child('c1', firstName: 'Антон'),
+              _child('c2', firstName: 'Богдан'),
+            ])),
+        allMembershipsProvider.overrideWith((ref) => Stream.value([])),
+      ]);
+      addTearDown(cont.dispose);
+
+      await cont.read(currentUserModelProvider.future);
+      expect(cont.read(effectiveChildIdProvider), equals('c1'));
+
+      cont.read(activeChildIdProvider.notifier).state = 'c2';
+      expect(cont.read(effectiveChildIdProvider), equals('c2'));
+
+      cont.read(activeChildIdProvider.notifier).state = 'c1';
+      expect(cont.read(effectiveChildIdProvider), equals('c1'));
+    });
+
+    test('reset activeChildId → fallback на першу дитину', () async {
+      final cont = ProviderContainer(overrides: [
+        currentUserModelProvider.overrideWith(
+            (_) => Stream.value(_parentWith(['c1', 'c2']))),
+        allChildrenProvider.overrideWith((_) => Stream.value([])),
+        allMembershipsProvider.overrideWith((ref) => Stream.value([])),
+      ]);
+      addTearDown(cont.dispose);
+
+      await cont.read(currentUserModelProvider.future);
+      cont.read(activeChildIdProvider.notifier).state = 'c2';
+      cont.read(activeChildIdProvider.notifier).state = null;
+      expect(cont.read(effectiveChildIdProvider), equals('c1'));
+    });
+
+    test('невалідний childId → не застосовується, fallback на першу', () async {
+      final cont = ProviderContainer(overrides: [
+        currentUserModelProvider.overrideWith(
+            (_) => Stream.value(_parentWith(['c1', 'c2']))),
+        allChildrenProvider.overrideWith((_) => Stream.value([])),
+        allMembershipsProvider.overrideWith((ref) => Stream.value([])),
+      ]);
+      addTearDown(cont.dispose);
+
+      await cont.read(currentUserModelProvider.future);
+      cont.read(activeChildIdProvider.notifier).state = 'does_not_exist';
+      expect(cont.read(effectiveChildIdProvider), equals('c1'));
+    });
+  });
+
+  group('TC-PARENT-MULTI-004: дані дітей не змішуються', () {
+    test('filteredChildrenProvider тримає різні дані для кожної дитини', () async {
+      final c1 = _child('c1', firstName: 'Антон', totalPoints: 30);
+      final c2 = _child('c2', firstName: 'Богдан', totalPoints: 80);
+      final cont = ProviderContainer(overrides: [
+        currentUserModelProvider.overrideWith(
+            (_) => Stream.value(_parentWith(['c1', 'c2']))),
+        allChildrenProvider.overrideWith((_) => Stream.value([c1, c2])),
+        allMembershipsProvider.overrideWith((ref) => Stream.value([])),
+      ]);
+      addTearDown(cont.dispose);
+
+      await cont.read(allChildrenProvider.future);
+      final filtered = cont.read(filteredChildrenProvider);
+
+      final a = filtered.firstWhere((c) => c.id == 'c1');
+      final b = filtered.firstWhere((c) => c.id == 'c2');
+      expect(a.totalPoints, equals(30));
+      expect(b.totalPoints, equals(80));
+      expect(a.totalPoints, isNot(equals(b.totalPoints)));
+    });
+  });
+
+  group('TC-PARENT-MULTI-005: повторний логін не потрібен', () {
+    test('3 перемикання поспіль — currentUserModelProvider не змінюється', () async {
+      final cont = ProviderContainer(overrides: [
+        currentUserModelProvider.overrideWith(
+            (_) => Stream.value(_parentWith(['c1', 'c2', 'c3']))),
+        allChildrenProvider.overrideWith((_) => Stream.value([])),
+        allMembershipsProvider.overrideWith((ref) => Stream.value([])),
+      ]);
+      addTearDown(cont.dispose);
+
+      await cont.read(currentUserModelProvider.future);
+      final uid0 = cont.read(currentUserModelProvider).asData?.value?.uid;
+
+      for (final id in ['c2', 'c3', 'c1']) {
+        cont.read(activeChildIdProvider.notifier).state = id;
+        expect(cont.read(effectiveChildIdProvider), equals(id));
+      }
+
+      final uidAfter = cont.read(currentUserModelProvider).asData?.value?.uid;
+      expect(uidAfter, equals(uid0), reason: 'auth state не змінилась');
+    });
+  });
 }

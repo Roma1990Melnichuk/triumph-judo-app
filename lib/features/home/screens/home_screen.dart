@@ -11,10 +11,12 @@ import '../../../core/models/training_schedule_model.dart';
 import '../../auth/providers/auth_provider.dart';
 import '../../competitions/providers/competitions_provider.dart';
 import '../../membership/widgets/academy_pass_card.dart';
+import '../../nutrition/providers/nutrition_provider.dart';
 import '../../schedule/providers/schedule_provider.dart';
 import '../../team/providers/children_provider.dart';
 import '../../journey/widgets/journey_home_widget.dart';
 import '../../rating/screens/medal_tracker_screen.dart';
+import '../../../core/models/meal_model.dart';
 import '../../../shared/animations/app_animations.dart';
 import '../../../shared/widgets/belt_badge.dart';
 import '../../../shared/widgets/default_avatar.dart';
@@ -163,9 +165,11 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
 
   @override
   Widget build(BuildContext context) {
-    final user        = ref.watch(currentUserModelProvider).asData?.value;
-    final isCoach     = user?.isCoach ?? false;
-    final allAsync    = ref.watch(allChildrenProvider);
+    final user             = ref.watch(currentUserModelProvider).asData?.value;
+    final isCoach          = user?.isCoach ?? false;
+    final childIds         = user?.childIds ?? [];
+    final effectiveChildId = ref.watch(effectiveChildIdProvider);
+    final allAsync         = ref.watch(allChildrenProvider);
 
     final schedAsync  = ref.watch(schedulesProvider);
     final recentAsync = ref.watch(recentResultsProvider);
@@ -277,17 +281,26 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
                   ),
                 ),
 
+                // ── Child switcher (multi-child parents) ────────────────────
+                if (!isCoach && childIds.length > 1 && effectiveChildId != null)
+                  SliverToBoxAdapter(
+                    child: Padding(
+                      padding: const EdgeInsets.only(top: 12),
+                      child: _ChildSwitcherBar(
+                        childIds: childIds,
+                        activeId: effectiveChildId,
+                      ),
+                    ),
+                  ),
+
                 // ── Membership card ──────────────────────────────────────────
                 SliverToBoxAdapter(
                   child: Padding(
                     padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
                     child: _enter(1, Builder(builder: (context) {
                       if (isCoach) return const TeamMembershipCard();
-                      final childId = user?.childIds.isNotEmpty == true
-                          ? user!.childIds.first
-                          : user?.childId;
-                      if (childId == null) return const SizedBox.shrink();
-                      return AcademyPassCard(childId: childId);
+                      if (effectiveChildId == null) return const SizedBox.shrink();
+                      return AcademyPassCard(childId: effectiveChildId);
                     })),
                   ),
                 ),
@@ -323,6 +336,15 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
                     child: Padding(
                       padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
                       child: _enter(6, const JourneyHomeWidget()),
+                    ),
+                  ),
+
+                // ── Food / Nutrition (athletes only) ────────────────────────
+                if (!isCoach && effectiveChildId != null)
+                  SliverToBoxAdapter(
+                    child: Padding(
+                      padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
+                      child: _enter(3, _FoodHomeWidget(childId: effectiveChildId)),
                     ),
                   ),
 
@@ -597,6 +619,201 @@ class _HeroCardState extends State<_HeroCard>
               ),
             ),
           ]),
+        ),
+      ),
+    );
+  }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Child switcher bar — horizontal chip row for multi-child parents
+// ─────────────────────────────────────────────────────────────────────────────
+
+class _ChildSwitcherBar extends ConsumerWidget {
+  const _ChildSwitcherBar({required this.childIds, required this.activeId});
+  final List<String> childIds;
+  final String activeId;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final all = ref.watch(allChildrenProvider).asData?.value ?? [];
+    return SingleChildScrollView(
+      scrollDirection: Axis.horizontal,
+      padding: const EdgeInsets.symmetric(horizontal: 16),
+      child: Row(
+        children: [
+          for (final id in childIds) ...[
+            _buildChip(ref, id, all),
+            const SizedBox(width: 8),
+          ],
+        ],
+      ),
+    );
+  }
+
+  Widget _buildChip(WidgetRef ref, String id, List<ChildModel> all) {
+    final child = all.where((c) => c.id == id).firstOrNull;
+    final isActive = id == activeId;
+    return GestureDetector(
+      onTap: () => ref.read(activeChildIdProvider.notifier).state = id,
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 200),
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+        decoration: BoxDecoration(
+          color: isActive ? AppColors.primary : AppColors.surface,
+          borderRadius: BorderRadius.circular(22),
+          border: Border.all(
+            color: isActive ? AppColors.primary : AppColors.surface3,
+          ),
+        ),
+        child: Text(
+          child?.firstName ?? id,
+          style: TextStyle(
+            fontSize: 13,
+            fontWeight: isActive ? FontWeight.w600 : FontWeight.normal,
+            color: isActive ? Colors.white : AppColors.textPrimary,
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Food / Nutrition home block
+// ─────────────────────────────────────────────────────────────────────────────
+
+class _FoodHomeWidget extends ConsumerWidget {
+  const _FoodHomeWidget({required this.childId});
+  final String childId;
+
+  static const _mealTypes = [
+    MealType.breakfast,
+    MealType.lunch,
+    MealType.snack,
+    MealType.dinner,
+  ];
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final meals = ref.watch(childMealsProvider(childId)).asData?.value ?? [];
+    final todayKey = nutritionDateKey(DateTime.now());
+    final todayMeals = meals.where((m) => m.dateKey == todayKey).toList();
+    final doneTypes = todayMeals
+        .where((m) => m.status == MealStatus.done)
+        .map((m) => m.type)
+        .toSet();
+    final doneCount = doneTypes.length;
+
+    return Container(
+      padding: const EdgeInsets.fromLTRB(16, 14, 12, 14),
+      decoration: BoxDecoration(
+        color: AppColors.surface,
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: AppColors.surface3),
+      ),
+      child: Row(
+        children: [
+          Container(
+            width: 46,
+            height: 46,
+            decoration: BoxDecoration(
+              gradient: const LinearGradient(
+                colors: [Color(0xFF1A1400), Color(0xFF3D2A00)],
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+              ),
+              borderRadius: BorderRadius.circular(14),
+            ),
+            child: const Center(
+              child: Icon(Icons.restaurant_outlined,
+                  color: AppColors.orange, size: 24),
+            ),
+          ),
+          const SizedBox(width: 14),
+          Expanded(
+            child: GestureDetector(
+              behavior: HitTestBehavior.translucent,
+              onTap: () => context.push('/nutrition'),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text(
+                    'Харчування',
+                    style: TextStyle(
+                      fontSize: 15,
+                      fontWeight: FontWeight.w600,
+                      color: AppColors.textPrimary,
+                    ),
+                  ),
+                  const SizedBox(height: 5),
+                  if (todayMeals.isEmpty)
+                    const Text(
+                      'Ще нічого не додано',
+                      style: TextStyle(
+                          fontSize: 12, color: AppColors.textSecondary),
+                    )
+                  else
+                    Row(
+                      children: [
+                        for (final type in _mealTypes) ...[
+                          _MealDot(
+                              filled: doneTypes.contains(type),
+                              label: type.label),
+                          const SizedBox(width: 5),
+                        ],
+                        Text(
+                          '$doneCount / ${_mealTypes.length}',
+                          style: const TextStyle(
+                              fontSize: 12, color: AppColors.textSecondary),
+                        ),
+                      ],
+                    ),
+                ],
+              ),
+            ),
+          ),
+          const SizedBox(width: 8),
+          GestureDetector(
+            onTap: () => context.push('/nutrition/child/$childId/add-meal'),
+            child: Container(
+              width: 38,
+              height: 38,
+              decoration: BoxDecoration(
+                color: AppColors.orange.withValues(alpha: 0.15),
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: const Center(
+                  child: Icon(Icons.add, color: AppColors.orange, size: 22)),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _MealDot extends StatelessWidget {
+  const _MealDot({required this.filled, required this.label});
+  final bool filled;
+  final String label;
+
+  @override
+  Widget build(BuildContext context) {
+    return Tooltip(
+      message: label,
+      child: Container(
+        width: 10,
+        height: 10,
+        decoration: BoxDecoration(
+          color: filled ? AppColors.orange : AppColors.surface3,
+          shape: BoxShape.circle,
+          border: Border.all(
+            color: filled
+                ? AppColors.orange
+                : AppColors.textSecondary.withValues(alpha: 0.3),
+            width: 1,
+          ),
         ),
       ),
     );

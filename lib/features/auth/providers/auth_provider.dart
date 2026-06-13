@@ -188,3 +188,16 @@ final authNotifierProvider =
     ref.watch(firestoreProvider),
   );
 });
+
+/// Manually selected child for multi-child parents. null = use default.
+final activeChildIdProvider = StateProvider<String?>((ref) => null);
+
+/// Resolves the active child: override if valid, else first in childIds, else legacy childId.
+final effectiveChildIdProvider = Provider<String?>((ref) {
+  final user = ref.watch(currentUserModelProvider).asData?.value;
+  if (user == null) return null;
+  final override = ref.watch(activeChildIdProvider);
+  if (override != null && user.childIds.contains(override)) return override;
+  if (user.childIds.isNotEmpty) return user.childIds.first;
+  return user.childId;
+});
