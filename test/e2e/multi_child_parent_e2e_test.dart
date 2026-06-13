@@ -232,7 +232,7 @@ void main() {
         (tester) async {
       final parent = _parentWith(['kid1', 'kid2']);
       expect(parent.childIds, containsAll(['kid1', 'kid2']));
-      expect(parent.childIds!.length, equals(2));
+      expect(parent.childIds.length, equals(2));
       // Primary child
       expect(parent.childId, equals('kid1'));
     });

@@ -207,12 +207,19 @@ class _BeltOverviewScreenState extends ConsumerState<BeltOverviewScreen> {
                     ),
                     const SizedBox(height: 16),
 
-                    if (req != null && req.exercises.isNotEmpty)
+                    if (isCoach || (req != null && req.exercises.isNotEmpty))
                       _CategoryBreakdown(
-                        req:     req,
+                        req: req ??
+                            BeltRequirementModel(
+                              belt: _selected,
+                              exercises: const [],
+                              updatedAt: DateTime(2024),
+                              updatedByCoachId: '',
+                            ),
                         progress: progress,
                         isCoach: isCoach,
-                        belt:    _selected,
+                        belt: _selected,
+                        coachId: user?.uid,
                       )
                     else
                       Container(
@@ -470,18 +477,20 @@ class _BeltHeroCard extends StatelessWidget {
 // Category breakdown
 // ─────────────────────────────────────────────────────────────────────────────
 
-class _CategoryBreakdown extends StatelessWidget {
+class _CategoryBreakdown extends ConsumerWidget {
   const _CategoryBreakdown({
     required this.req,
     required this.progress,
     required this.isCoach,
     required this.belt,
+    required this.coachId,
   });
 
   final BeltRequirementModel req;
   final dynamic progress;
-  final bool     isCoach;
+  final bool      isCoach;
   final BeltLevel belt;
+  final String?   coachId;
 
   static const _categoryIcons = <ExerciseCategory, IconData>{
     ExerciseCategory.technique:   Icons.sports_kabaddi,
@@ -490,10 +499,35 @@ class _CategoryBreakdown extends StatelessWidget {
     ExerciseCategory.competition: Icons.emoji_events_outlined,
   };
 
+  Future<void> _showAddDialog(
+      BuildContext ctx, WidgetRef ref, ExerciseCategory cat) async {
+    final result = await showDialog<({String name, String desc})>(
+      context: ctx,
+      builder: (_) => _AddTaskDialog(category: cat),
+    );
+    if (result == null) return;
+    await ref.read(beltNotifierProvider.notifier).addExercise(
+          belt: belt,
+          name: result.name,
+          description: result.desc,
+          category: cat,
+          coachId: coachId ?? '',
+        );
+  }
+
   @override
-  Widget build(BuildContext context) {
-    final byCategory = req.byCategory;
-    if (byCategory.isEmpty) return const SizedBox();
+  Widget build(BuildContext context, WidgetRef ref) {
+    // Coaches see all 4 categories (even empty) so they can add tasks.
+    // Athletes/parents only see categories that have exercises.
+    final allCategories = req.byCategory;
+    final displayCategories = isCoach
+        ? allCategories
+        : Map.fromEntries(
+            allCategories.entries.where((e) => e.value.isNotEmpty));
+
+    if (displayCategories.isEmpty) return const SizedBox();
+
+    final entries = displayCategories.entries.toList();
 
     return Container(
       decoration: BoxDecoration(
@@ -503,7 +537,7 @@ class _CategoryBreakdown extends StatelessWidget {
       ),
       clipBehavior: Clip.antiAlias,
       child: Column(
-        children: byCategory.entries.toList().asMap().entries.map((outer) {
+        children: entries.asMap().entries.map((outer) {
           final i         = outer.key;
           final cat       = outer.value.key;
           final exercises = outer.value.value;
@@ -515,7 +549,8 @@ class _CategoryBreakdown extends StatelessWidget {
             passed = exercises.where((e) => p[e.id] == true).length;
           }
 
-          final isDone      = progress != null && passed == total;
+          // Empty category: never mark as done
+          final isDone      = progress != null && total > 0 && passed == total;
           final icon        = _categoryIcons[cat] ?? Icons.fitness_center;
           final hasAnyVideo = exercises.any((e) => e.videoUrl.isNotEmpty);
 
@@ -523,7 +558,7 @@ class _CategoryBreakdown extends StatelessWidget {
           if (isDone) {
             trailingWidget = const Icon(
                 Icons.check_circle, color: AppColors.success, size: 22);
-          } else if (progress != null) {
+          } else if (progress != null && total > 0) {
             trailingWidget = Text(
               '${(passed / total * 100).round()}%',
               style: const TextStyle(
@@ -582,99 +617,194 @@ class _CategoryBreakdown extends StatelessWidget {
                     ],
                   ),
                   subtitle: Text(
-                    progress != null
-                        ? '$passed з $total'
-                        : '$total вправ',
+                    total == 0
+                        ? 'немає завдань'
+                        : (progress != null
+                            ? '$passed з $total'
+                            : '$total вправ'),
                     style: const TextStyle(
                         fontSize: 12, color: AppColors.textSecondary),
                   ),
                   trailing: trailingWidget,
-                  children: exercises.map((ex) {
-                    final isPassed = progress != null &&
-                        (progress!.passed as Map<String, bool>)[ex.id] ==
-                            true;
-                    final hasVideo = ex.videoUrl.isNotEmpty;
-                    return ListTile(
-                      dense: true,
-                      contentPadding:
-                          const EdgeInsets.fromLTRB(72, 0, 8, 0),
-                      title: Text(
-                        ex.name,
-                        style: TextStyle(
-                          fontSize: 13,
-                          color: AppColors.textPrimary,
-                          fontWeight: isPassed
-                              ? FontWeight.w600
-                              : FontWeight.normal,
+                  children: [
+                    ...exercises.map((ex) {
+                      final isPassed = progress != null &&
+                          (progress!.passed as Map<String, bool>)[ex.id] ==
+                              true;
+                      final hasVideo = ex.videoUrl.isNotEmpty;
+                      return ListTile(
+                        dense: true,
+                        contentPadding:
+                            const EdgeInsets.fromLTRB(72, 0, 8, 0),
+                        title: Text(
+                          ex.name,
+                          style: TextStyle(
+                            fontSize: 13,
+                            color: AppColors.textPrimary,
+                            fontWeight: isPassed
+                                ? FontWeight.w600
+                                : FontWeight.normal,
+                          ),
                         ),
-                      ),
-                      subtitle: ex.description.isNotEmpty
-                          ? Text(
-                              ex.description,
-                              style: const TextStyle(
-                                fontSize: 11,
-                                color: AppColors.textSecondary,
-                              ),
-                            )
-                          : null,
-                      trailing: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          if (hasVideo)
-                            GestureDetector(
-                              onTap: () => VideoPlayerDialog.show(
-                                  context, ex.videoUrl,
-                                  title: ex.name),
-                              child: Container(
-                                padding:
-                                    const EdgeInsets.symmetric(
-                                        horizontal: 8, vertical: 3),
-                                decoration: BoxDecoration(
-                                  color: AppColors.accent
-                                      .withValues(alpha: 0.12),
-                                  borderRadius:
-                                      BorderRadius.circular(8),
-                                  border: Border.all(
+                        subtitle: ex.description.isNotEmpty
+                            ? Text(
+                                ex.description,
+                                style: const TextStyle(
+                                  fontSize: 11,
+                                  color: AppColors.textSecondary,
+                                ),
+                              )
+                            : null,
+                        trailing: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            if (hasVideo)
+                              GestureDetector(
+                                onTap: () => VideoPlayerDialog.show(
+                                    context, ex.videoUrl,
+                                    title: ex.name),
+                                child: Container(
+                                  padding:
+                                      const EdgeInsets.symmetric(
+                                          horizontal: 8, vertical: 3),
+                                  decoration: BoxDecoration(
                                     color: AppColors.accent
-                                        .withValues(alpha: 0.35),
+                                        .withValues(alpha: 0.12),
+                                    borderRadius:
+                                        BorderRadius.circular(8),
+                                    border: Border.all(
+                                      color: AppColors.accent
+                                          .withValues(alpha: 0.35),
+                                    ),
+                                  ),
+                                  child: const Row(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      Icon(Icons.play_arrow,
+                                          color: AppColors.accent,
+                                          size: 13),
+                                      SizedBox(width: 3),
+                                      Text(
+                                        'Відео',
+                                        style: TextStyle(
+                                          color: AppColors.accent,
+                                          fontSize: 11,
+                                          fontWeight: FontWeight.w600,
+                                        ),
+                                      ),
+                                    ],
                                   ),
                                 ),
-                                child: const Row(
-                                  mainAxisSize: MainAxisSize.min,
-                                  children: [
-                                    Icon(Icons.play_arrow,
-                                        color: AppColors.accent,
-                                        size: 13),
-                                    SizedBox(width: 3),
-                                    Text(
-                                      'Відео',
-                                      style: TextStyle(
-                                        color: AppColors.accent,
-                                        fontSize: 11,
-                                        fontWeight: FontWeight.w600,
-                                      ),
-                                    ),
-                                  ],
+                              ),
+                            if (isPassed) ...[
+                              if (hasVideo) const SizedBox(width: 6),
+                              const Icon(Icons.check_circle,
+                                  color: AppColors.success, size: 16),
+                            ],
+                          ],
+                        ),
+                      );
+                    }),
+                    if (isCoach)
+                      InkWell(
+                        onTap: () => _showAddDialog(context, ref, cat),
+                        child: Padding(
+                          padding:
+                              const EdgeInsets.fromLTRB(72, 8, 16, 10),
+                          child: Row(
+                            children: [
+                              const Icon(Icons.add_circle_outline,
+                                  color: AppColors.accent, size: 18),
+                              const SizedBox(width: 8),
+                              Text(
+                                'Додати завдання',
+                                style: TextStyle(
+                                  color: AppColors.accent,
+                                  fontSize: 13,
+                                  fontWeight: FontWeight.w500,
                                 ),
                               ),
-                            ),
-                          if (isPassed) ...[
-                            if (hasVideo) const SizedBox(width: 6),
-                            const Icon(Icons.check_circle,
-                                color: AppColors.success, size: 16),
-                          ],
-                        ],
+                            ],
+                          ),
+                        ),
                       ),
-                    );
-                  }).toList(),
+                  ],
                 ),
               ),
-              if (i < byCategory.length - 1)
+              if (i < entries.length - 1)
                 const Divider(height: 1, indent: 56),
             ],
           );
         }).toList(),
       ),
+    );
+  }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Add task dialog
+// ─────────────────────────────────────────────────────────────────────────────
+
+class _AddTaskDialog extends StatefulWidget {
+  const _AddTaskDialog({required this.category});
+  final ExerciseCategory category;
+
+  @override
+  State<_AddTaskDialog> createState() => _AddTaskDialogState();
+}
+
+class _AddTaskDialogState extends State<_AddTaskDialog> {
+  final _nameCtrl = TextEditingController();
+  final _descCtrl = TextEditingController();
+
+  @override
+  void dispose() {
+    _nameCtrl.dispose();
+    _descCtrl.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AlertDialog(
+      title: Text('Додати — ${widget.category.displayName}'),
+      content: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          TextField(
+            controller: _nameCtrl,
+            autofocus: true,
+            textCapitalization: TextCapitalization.sentences,
+            decoration: const InputDecoration(
+              labelText: 'Назва завдання *',
+              hintText: 'Введіть назву',
+            ),
+          ),
+          const SizedBox(height: 12),
+          TextField(
+            controller: _descCtrl,
+            decoration: const InputDecoration(
+              labelText: 'Опис',
+              hintText: 'Необов\'язково',
+            ),
+          ),
+        ],
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.pop(context),
+          child: const Text('Скасувати'),
+        ),
+        TextButton(
+          onPressed: () {
+            final name = _nameCtrl.text.trim();
+            if (name.isEmpty) return;
+            Navigator.pop(
+                context, (name: name, desc: _descCtrl.text.trim()));
+          },
+          child: const Text('Додати'),
+        ),
+      ],
     );
   }
 }

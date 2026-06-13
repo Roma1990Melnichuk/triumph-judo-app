@@ -95,10 +95,12 @@ void main() {
       expect(map[ExerciseCategory.physical]?.length, 1);
     });
 
-    test('порожня категорія не потрапляє в map', () {
+    test('всі 4 категорії завжди присутні (порожні — пусті списки)', () {
       final map = req.byCategory;
-      expect(map.containsKey(ExerciseCategory.theory), isFalse);
-      expect(map.containsKey(ExerciseCategory.competition), isFalse);
+      expect(map.length, equals(4));
+      // categories without exercises are present but empty
+      expect(map[ExerciseCategory.theory], isEmpty);
+      expect(map[ExerciseCategory.competition], isEmpty);
     });
   });
 

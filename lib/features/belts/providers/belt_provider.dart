@@ -243,6 +243,36 @@ class BeltNotifier extends StateNotifier<AsyncValue<void>> {
     } catch (_) {}
   }
 
+  /// Add a new exercise to a specific category for a belt level.
+  Future<void> addExercise({
+    required BeltLevel belt,
+    required String name,
+    required String description,
+    required ExerciseCategory category,
+    required String coachId,
+  }) async {
+    final id = _uuid.v4();
+    final docRef = _db.collection('belt_requirements').doc(belt.name);
+    final snap = await docRef.get();
+    final existing = (snap.data()?['exercises'] as List<dynamic>? ?? [])
+        .map((e) => Exercise.fromMap(e as Map<String, dynamic>))
+        .toList();
+    existing.add(Exercise(
+      id: id,
+      name: name,
+      description: description,
+      category: category,
+    ));
+    await docRef.set(
+      {
+        'exercises': existing.map((e) => e.toMap()).toList(),
+        'updatedAt': Timestamp.now(),
+        'updatedByCoachId': coachId,
+      },
+      SetOptions(merge: true),
+    );
+  }
+
   Exercise newExercise(String name, String description) => Exercise(
         id: _uuid.v4(),
         name: name,

@@ -96,12 +96,11 @@ class BeltRequirementModel {
     required this.updatedByCoachId,
   });
 
-  /// Exercises grouped by category
+  /// Exercises grouped by category (all 4 categories always present, may be empty)
   Map<ExerciseCategory, List<Exercise>> get byCategory {
     final result = <ExerciseCategory, List<Exercise>>{};
     for (final cat in ExerciseCategory.values) {
-      final items = exercises.where((e) => e.category == cat).toList();
-      if (items.isNotEmpty) result[cat] = items;
+      result[cat] = exercises.where((e) => e.category == cat).toList();
     }
     return result;
   }
