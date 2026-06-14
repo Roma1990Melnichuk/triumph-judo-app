@@ -15,6 +15,16 @@ service cloud.firestore {
     }
     function isCoach()  { return isAuth() && callerRole() == 'coach'; }
 
+    // Checks that the authenticated user is the parent of the given child.
+    // The user document stores childIds (array) and/or legacy childId (string).
+    function isParentOf(athleteId) {
+      let u = get(/databases/$(database)/documents/users/$(uid())).data;
+      return isAuth() && (
+        u.get('childIds', []).hasAny([athleteId]) ||
+        u.get('childId', '') == athleteId
+      );
+    }
+
     // ── Users ─────────────────────────────────────────────────────────────────
     // Own profile: full access.
     // Coaches: read-only on all users (needed for coach management & parent search).
@@ -82,9 +92,11 @@ service cloud.firestore {
     }
 
     // ── Memberships ───────────────────────────────────────────────────────────
+    // Coaches can manage all. Parents can write their own child's membership
+    // (e.g. after payment via checkout screen).
     match /memberships/{membershipId} {
       allow read:  if isAuth();
-      allow write: if isCoach();
+      allow write: if isCoach() || isParentOf(membershipId);
     }
 
     // ── Events / Competitions ─────────────────────────────────────────────────
@@ -136,9 +148,12 @@ service cloud.firestore {
     }
 
     // ── Individual slots (personal coaching sessions) ─────────────────────────
+    // Coaches create/delete slots. Any authenticated user can request (update) a slot.
     match /individual_slots/{slotId} {
-      allow read:  if isAuth();
-      allow write: if isCoach();
+      allow read:   if isAuth();
+      allow create: if isCoach();
+      allow delete: if isCoach();
+      allow update: if isAuth();
     }
 
     // ── Shop: products ────────────────────────────────────────────────────────

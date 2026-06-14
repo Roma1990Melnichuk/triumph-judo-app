@@ -136,12 +136,12 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen>
           'childId': widget.childId,
         });
       }
-    } catch (_) {
+    } catch (e) {
       if (mounted) {
         setState(() => _isProcessing = false);
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Помилка оплати. Спробуйте ще раз.'),
+          SnackBar(
+            content: Text('Помилка оплати: $e'),
             backgroundColor: AppColors.primary,
           ),
         );

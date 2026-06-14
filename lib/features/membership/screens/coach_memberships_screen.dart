@@ -117,13 +117,13 @@ class CoachMembershipsScreen extends ConsumerWidget {
                 padding: const EdgeInsets.fromLTRB(16, 0, 16, 80),
                 sliver: SliverList(
                   delegate: SliverChildBuilderDelegate(
-                    (ctx, i) {
+                    (_, i) {
                       final child = sorted[i];
                       final m = membershipMap[child.id];
                       return _AthleteRow(
                         child: child,
                         membership: m,
-                        onTap: () => _showSetSheet(ctx, child.id, m),
+                        onTap: () => _showSetSheet(context, child.id, m),
                       );
                     },
                     childCount: sorted.length,
@@ -519,12 +519,12 @@ class _CoachSetMembershipSheetState
             amount: plan.price,
           );
       if (mounted) Navigator.pop(context);
-    } catch (_) {
+    } catch (e) {
       if (mounted) {
         setState(() => _saving = false);
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Помилка збереження. Перевірте підключення.'),
+          SnackBar(
+            content: Text('Помилка: $e'),
             backgroundColor: AppColors.primary,
           ),
         );
