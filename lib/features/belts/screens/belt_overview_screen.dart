@@ -3,7 +3,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../core/constants/app_colors.dart';
 import '../../../core/constants/belt_levels.dart';
-import '../../../shared/widgets/triumph_icon.dart';
 import '../../../core/models/belt_requirement_model.dart';
 import '../../auth/providers/auth_provider.dart';
 import '../../team/providers/children_provider.dart';
@@ -120,10 +119,10 @@ class _BeltOverviewScreenState extends ConsumerState<BeltOverviewScreen> {
                           border: Border.all(color: AppColors.surface3),
                         ),
                         alignment: Alignment.center,
-                        child: const ColorFiltered(
-                          colorFilter: ColorFilter.mode(
-                              AppColors.textSecondary, BlendMode.srcIn),
-                          child: TriumphIcon(TIcon.team, size: 22),
+                        child: const Icon(
+                          Icons.people_outline_rounded,
+                          size: 22,
+                          color: AppColors.textSecondary,
                         ),
                       ),
                     ),
@@ -499,6 +498,59 @@ class _CategoryBreakdown extends ConsumerWidget {
     ExerciseCategory.competition: Icons.emoji_events_outlined,
   };
 
+  Future<void> _showEditDialog(
+      BuildContext ctx, WidgetRef ref, Exercise ex) async {
+    final result = await showDialog<({String name, String desc})>(
+      context: ctx,
+      builder: (_) => _EditExerciseDialog(exercise: ex),
+    );
+    if (result == null) return;
+    final updated = Exercise(
+      id: ex.id,
+      name: result.name,
+      description: result.desc,
+      category: ex.category,
+      videoUrl: ex.videoUrl,
+    );
+    await ref.read(beltNotifierProvider.notifier).updateExercise(
+          belt: belt,
+          updated: updated,
+          coachId: coachId ?? '',
+        );
+  }
+
+  Future<void> _confirmDelete(
+      BuildContext ctx, WidgetRef ref, Exercise ex) async {
+    final ok = await showDialog<bool>(
+      context: ctx,
+      builder: (_) => AlertDialog(
+        backgroundColor: AppColors.surface,
+        title: const Text('Видалити вправу?',
+            style: TextStyle(color: AppColors.textPrimary)),
+        content: Text(ex.name,
+            style: const TextStyle(color: AppColors.textSecondary)),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: const Text('Скасувати',
+                style: TextStyle(color: AppColors.textSecondary)),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, true),
+            child: const Text('Видалити',
+                style: TextStyle(color: AppColors.error)),
+          ),
+        ],
+      ),
+    );
+    if (ok != true) return;
+    await ref.read(beltNotifierProvider.notifier).removeExercise(
+          belt: belt,
+          exerciseId: ex.id,
+          coachId: coachId ?? '',
+        );
+  }
+
   Future<void> _showAddDialog(
       BuildContext ctx, WidgetRef ref, ExerciseCategory cat) async {
     final result = await showDialog<({String name, String desc})>(
@@ -608,11 +660,8 @@ class _CategoryBreakdown extends ConsumerWidget {
                       ),
                       if (hasAnyVideo) ...[
                         const SizedBox(width: 6),
-                        const ColorFiltered(
-                          colorFilter: ColorFilter.mode(
-                              AppColors.accent, BlendMode.srcIn),
-                          child: TriumphIcon(TIcon.video, size: 13),
-                        ),
+                        const Icon(Icons.play_circle_outline,
+                            size: 14, color: AppColors.accent),
                       ],
                     ],
                   ),
@@ -701,6 +750,27 @@ class _CategoryBreakdown extends ConsumerWidget {
                               const Icon(Icons.check_circle,
                                   color: AppColors.success, size: 16),
                             ],
+                            if (isCoach) ...[
+                              const SizedBox(width: 4),
+                              GestureDetector(
+                                onTap: () => _showEditDialog(context, ref, ex),
+                                child: const Padding(
+                                  padding: EdgeInsets.all(4),
+                                  child: Icon(Icons.edit_outlined,
+                                      size: 16,
+                                      color: AppColors.textSecondary),
+                                ),
+                              ),
+                              GestureDetector(
+                                onTap: () => _confirmDelete(context, ref, ex),
+                                child: const Padding(
+                                  padding: EdgeInsets.all(4),
+                                  child: Icon(Icons.delete_outline,
+                                      size: 16,
+                                      color: AppColors.error),
+                                ),
+                              ),
+                            ],
                           ],
                         ),
                       );
@@ -737,6 +807,102 @@ class _CategoryBreakdown extends ConsumerWidget {
           );
         }).toList(),
       ),
+    );
+  }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Edit exercise dialog
+// ─────────────────────────────────────────────────────────────────────────────
+
+class _EditExerciseDialog extends StatefulWidget {
+  const _EditExerciseDialog({required this.exercise});
+  final Exercise exercise;
+
+  @override
+  State<_EditExerciseDialog> createState() => _EditExerciseDialogState();
+}
+
+class _EditExerciseDialogState extends State<_EditExerciseDialog> {
+  late final TextEditingController _nameCtrl;
+  late final TextEditingController _descCtrl;
+
+  @override
+  void initState() {
+    super.initState();
+    _nameCtrl = TextEditingController(text: widget.exercise.name);
+    _descCtrl = TextEditingController(text: widget.exercise.description);
+  }
+
+  @override
+  void dispose() {
+    _nameCtrl.dispose();
+    _descCtrl.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AlertDialog(
+      backgroundColor: AppColors.surface,
+      title: const Text('Редагувати вправу',
+          style: TextStyle(color: AppColors.textPrimary, fontSize: 16)),
+      content: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          TextField(
+            controller: _nameCtrl,
+            autofocus: true,
+            style: const TextStyle(color: AppColors.textPrimary),
+            decoration: InputDecoration(
+              labelText: 'Назва',
+              labelStyle: const TextStyle(color: AppColors.textSecondary),
+              enabledBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(10),
+                borderSide: const BorderSide(color: AppColors.surface3),
+              ),
+              focusedBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(10),
+                borderSide: const BorderSide(color: AppColors.accent),
+              ),
+            ),
+          ),
+          const SizedBox(height: 12),
+          TextField(
+            controller: _descCtrl,
+            style: const TextStyle(color: AppColors.textPrimary),
+            maxLines: 2,
+            decoration: InputDecoration(
+              labelText: 'Опис',
+              labelStyle: const TextStyle(color: AppColors.textSecondary),
+              enabledBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(10),
+                borderSide: const BorderSide(color: AppColors.surface3),
+              ),
+              focusedBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(10),
+                borderSide: const BorderSide(color: AppColors.accent),
+              ),
+            ),
+          ),
+        ],
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.pop(context),
+          child: const Text('Скасувати',
+              style: TextStyle(color: AppColors.textSecondary)),
+        ),
+        TextButton(
+          onPressed: () {
+            final name = _nameCtrl.text.trim();
+            if (name.isEmpty) return;
+            Navigator.pop(context, (name: name, desc: _descCtrl.text.trim()));
+          },
+          child: const Text('Зберегти',
+              style: TextStyle(color: AppColors.accent)),
+        ),
+      ],
     );
   }
 }

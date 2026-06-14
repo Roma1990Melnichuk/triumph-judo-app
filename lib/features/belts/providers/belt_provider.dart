@@ -274,6 +274,28 @@ class BeltNotifier extends StateNotifier<AsyncValue<void>> {
     await syncAllChildrenBeltReady(belt);
   }
 
+  /// Update an existing exercise (name/description) by id.
+  Future<void> updateExercise({
+    required BeltLevel belt,
+    required Exercise updated,
+    required String coachId,
+  }) async {
+    final docRef = _db.collection('belt_requirements').doc(belt.name);
+    final snap = await docRef.get();
+    final existing = (snap.data()?['exercises'] as List<dynamic>? ?? [])
+        .map((e) => Exercise.fromMap(e as Map<String, dynamic>))
+        .map((e) => e.id == updated.id ? updated : e)
+        .toList();
+    await docRef.set(
+      {
+        'exercises': existing.map((e) => e.toMap()).toList(),
+        'updatedAt': Timestamp.now(),
+        'updatedByCoachId': coachId,
+      },
+      SetOptions(merge: true),
+    );
+  }
+
   /// Remove an exercise from a belt and re-sync beltReady for all children.
   Future<void> removeExercise({
     required BeltLevel belt,
