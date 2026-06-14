@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
@@ -96,10 +96,7 @@ class _CoachView extends ConsumerWidget {
                         borderRadius: BorderRadius.circular(12),
                       ),
                       child: const Center(
-                        child: ColorFiltered(
-                          colorFilter: ColorFilter.mode(AppColors.textPrimary, BlendMode.srcIn),
-                          child: TriumphIcon(TIcon.back, size: 22),
-                        ),
+                        child: TriumphIcon(TIcon.back, size: 22, color: AppColors.textPrimary),
                       ),
                     ),
                   ),
@@ -141,10 +138,7 @@ class _CoachView extends ConsumerWidget {
                     color: AppColors.warning.withValues(alpha: 0.4)),
               ),
               child: Row(children: [
-                const ColorFiltered(
-                  colorFilter: ColorFilter.mode(AppColors.warning, BlendMode.srcIn),
-                  child: TriumphIcon(TIcon.notifications, size: 20),
-                ),
+                const TriumphIcon(TIcon.notifications, size: 20, color: AppColors.warning),
                 const SizedBox(width: 10),
                 Expanded(
                   child: Text(
@@ -288,10 +282,7 @@ class _ParentView extends ConsumerWidget {
                           borderRadius: BorderRadius.circular(12),
                         ),
                         child: const Center(
-                          child: ColorFiltered(
-                            colorFilter: ColorFilter.mode(AppColors.textPrimary, BlendMode.srcIn),
-                            child: TriumphIcon(TIcon.back, size: 22),
-                          ),
+                          child: TriumphIcon(TIcon.back, size: 22, color: AppColors.textPrimary),
                         ),
                       ),
                     ),
@@ -600,10 +591,7 @@ class _ActionBtn extends StatelessWidget {
               border: Border.all(color: color.withValues(alpha: 0.3)),
             ),
             child: tIcon != null
-                ? ColorFiltered(
-                    colorFilter: ColorFilter.mode(color, BlendMode.srcIn),
-                    child: TriumphIcon(tIcon!, size: 16),
-                  )
+                ? TriumphIcon(tIcon!, size: 16, color: color)
                 : Icon(icon, size: 16, color: color),
           ),
         ),
@@ -747,10 +735,7 @@ class _AddSlotSheetState extends ConsumerState<_AddSlotSheet> {
                 border: Border.all(color: AppColors.surface3),
               ),
               child: Row(children: [
-                const ColorFiltered(
-                  colorFilter: ColorFilter.mode(AppColors.textSecondary, BlendMode.srcIn),
-                  child: TriumphIcon(TIcon.calendar, size: 16),
-                ),
+                const TriumphIcon(TIcon.calendar, size: 16, color: AppColors.textSecondary),
                 const SizedBox(width: 8),
                 Text(
                   DateFormat('dd MMMM yyyy', 'uk').format(_date),

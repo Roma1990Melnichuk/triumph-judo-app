@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../core/constants/achievement_defs.dart';
@@ -142,10 +142,7 @@ class _BulkGrantAchievementsScreenState
         ScaffoldMessenger.of(context).showSnackBar(SnackBar(
           content: Row(
             children: [
-              const ColorFiltered(
-                colorFilter: ColorFilter.mode(Colors.white, BlendMode.srcIn),
-                child: TriumphIcon(TIcon.success, size: 18),
-              ),
+              const TriumphIcon(TIcon.success, size: 18, color: Colors.white),
               const SizedBox(width: 8),
               Text('Видано $total досягнень'),
             ],
@@ -197,10 +194,7 @@ class _BulkGrantAchievementsScreenState
                         borderRadius: BorderRadius.circular(12),
                       ),
                       child: const Center(
-                        child: ColorFiltered(
-                          colorFilter: ColorFilter.mode(AppColors.textPrimary, BlendMode.srcIn),
-                          child: TriumphIcon(TIcon.back, size: 22),
-                        ),
+                        child: TriumphIcon(TIcon.back, size: 22, color: AppColors.textPrimary),
                       ),
                     ),
                   ),

@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
@@ -67,10 +67,7 @@ class _MyMembershipsScreenState extends ConsumerState<MyMembershipsScreen> {
                         borderRadius: BorderRadius.circular(12),
                       ),
                       child: const Center(
-                        child: ColorFiltered(
-                          colorFilter: ColorFilter.mode(AppColors.textPrimary, BlendMode.srcIn),
-                          child: TriumphIcon(TIcon.back, size: 22),
-                        ),
+                        child: TriumphIcon(TIcon.back, size: 22, color: AppColors.textPrimary),
                       ),
                     ),
                   ),
@@ -229,10 +226,7 @@ class _CurrentMembershipCard extends StatelessWidget {
         ),
         child: const Row(
           children: [
-            ColorFiltered(
-              colorFilter: const ColorFilter.mode(AppColors.textSecondary, BlendMode.srcIn),
-              child: TriumphIcon(TIcon.trophy, size: 24),
-            ),
+            TriumphIcon(TIcon.trophy, size: 24, color: AppColors.textSecondary),
             SizedBox(width: 12),
             Text(
               'Немає активного абонемента',

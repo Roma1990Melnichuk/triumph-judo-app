@@ -1,4 +1,4 @@
-import 'package:cached_network_image/cached_network_image.dart';
+﻿import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -360,10 +360,7 @@ class _RatingScreenState extends ConsumerState<RatingScreen> {
               ),
               child: Row(
                 children: [
-                  ColorFiltered(
-                    colorFilter: const ColorFilter.mode(AppColors.primary, BlendMode.srcIn),
-                    child: TriumphIcon(TIcon.athlete, size: 18),
-                  ),
+                  TriumphIcon(TIcon.athlete, size: 18, color: AppColors.primary),
                   const SizedBox(width: 8),
                   Text(
                     'Ваше місце: ',
@@ -672,10 +669,7 @@ class _RatingScreenState extends ConsumerState<RatingScreen> {
                   style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
             ),
             ...years.map((y) => ListTile(
-                  leading: ColorFiltered(
-                    colorFilter: const ColorFilter.mode(AppColors.textSecondary, BlendMode.srcIn),
-                    child: TriumphIcon(TIcon.trophy, size: 20),
-                  ),
+                  leading: TriumphIcon(TIcon.trophy, size: 20, color: AppColors.textSecondary),
                   title: Text('$y'),
                   trailing: filter.competitionYear == y
                       ? const Icon(Icons.check, color: AppColors.primary)
@@ -787,10 +781,7 @@ class _TeamRatingView extends StatelessWidget {
                 SizedBox(
                   width: 30,
                   child: i < 3
-                      ? ColorFiltered(
-                          colorFilter: ColorFilter.mode(rankColor, BlendMode.srcIn),
-                          child: TriumphIcon(TIcon.medal3d, size: 24),
-                        )
+                      ? TriumphIcon(TIcon.medal3d, size: 24, color: rankColor)
                       : Text(
                           '#${i + 1}',
                           style: TextStyle(

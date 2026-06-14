@@ -1,4 +1,4 @@
-
+﻿
 import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -71,10 +71,7 @@ class _MyAssignmentsScreenState extends ConsumerState<MyAssignmentsScreen> {
                         borderRadius: BorderRadius.circular(12),
                       ),
                       child: const Center(
-                        child: ColorFiltered(
-                          colorFilter: ColorFilter.mode(AppColors.textPrimary, BlendMode.srcIn),
-                          child: TriumphIcon(TIcon.back, size: 22),
-                        ),
+                        child: TriumphIcon(TIcon.back, size: 22, color: AppColors.textPrimary),
                       ),
                     ),
                   ),

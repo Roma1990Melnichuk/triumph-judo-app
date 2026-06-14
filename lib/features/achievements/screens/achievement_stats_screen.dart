@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
@@ -62,10 +62,7 @@ class _AchievementStatsScreenState
                         borderRadius: BorderRadius.circular(12),
                       ),
                       child: const Center(
-                        child: ColorFiltered(
-                          colorFilter: ColorFilter.mode(AppColors.textPrimary, BlendMode.srcIn),
-                          child: TriumphIcon(TIcon.back, size: 22),
-                        ),
+                        child: TriumphIcon(TIcon.back, size: 22, color: AppColors.textPrimary),
                       ),
                     ),
                   ),
@@ -361,10 +358,7 @@ class _AchievementStatsScreenState
                             )
                           : const CircleAvatar(
                               radius: 18,
-                              child: ColorFiltered(
-                                colorFilter: ColorFilter.mode(Colors.white, BlendMode.srcIn),
-                                child: TriumphIcon(TIcon.athlete, size: 16),
-                              ),
+                              child: TriumphIcon(TIcon.athlete, size: 16, color: Colors.white),
                             ),
                       title: Text(
                         child?.fullName ?? a.childId,
@@ -414,10 +408,7 @@ class _StatChip extends StatelessWidget {
         ),
         child: Column(
           children: [
-            ColorFiltered(
-              colorFilter: ColorFilter.mode(color, BlendMode.srcIn),
-              child: TriumphIcon(tIcon, size: 18),
-            ),
+            TriumphIcon(tIcon, size: 18, color: color),
             const SizedBox(height: 4),
             Text(
               value,

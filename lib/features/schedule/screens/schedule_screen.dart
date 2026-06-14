@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/constants/app_colors.dart';
 import '../../../core/models/child_model.dart';
@@ -682,11 +682,7 @@ class _ScheduleItemTile extends StatelessWidget {
               shape: BoxShape.circle,
             ),
             child: const Center(
-              child: ColorFiltered(
-                colorFilter:
-                    ColorFilter.mode(AppColors.primary, BlendMode.srcIn),
-                child: TriumphIcon(TIcon.training, size: 20),
-              ),
+              child: TriumphIcon(TIcon.training, size: 20, color: AppColors.primary),
             ),
           ),
           const SizedBox(width: 12),
@@ -714,11 +710,7 @@ class _ScheduleItemTile extends StatelessWidget {
             ),
           ),
           IconButton(
-            icon: const ColorFiltered(
-              colorFilter:
-                  ColorFilter.mode(AppColors.error, BlendMode.srcIn),
-              child: TriumphIcon(TIcon.delete, size: 20),
-            ),
+            icon: const TriumphIcon(TIcon.delete, size: 20, color: AppColors.error),
             onPressed: onDelete,
             padding: EdgeInsets.zero,
             constraints: const BoxConstraints(minWidth: 32),

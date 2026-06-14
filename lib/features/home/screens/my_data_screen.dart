@@ -1,4 +1,4 @@
-import 'dart:math' as math;
+﻿import 'dart:math' as math;
 
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
@@ -520,11 +520,7 @@ class _StatCell extends StatelessWidget {
         padding: const EdgeInsets.symmetric(vertical: 14),
         child: Column(
           children: [
-            ColorFiltered(
-              colorFilter:
-                  const ColorFilter.mode(AppColors.accent, BlendMode.srcIn),
-              child: TriumphIcon(tIcon, size: 16),
-            ),
+            TriumphIcon(tIcon, size: 16, color: AppColors.accent),
             const SizedBox(height: 4),
             Text(
               value,
@@ -613,11 +609,7 @@ class _InfoTile extends StatelessWidget {
       ),
       child: Column(
         children: [
-          ColorFiltered(
-            colorFilter:
-                const ColorFilter.mode(AppColors.accent, BlendMode.srcIn),
-            child: TriumphIcon(tIcon, size: 18),
-          ),
+          TriumphIcon(tIcon, size: 18, color: AppColors.accent),
           const SizedBox(height: 6),
           Text(
             value,
@@ -723,11 +715,7 @@ class _ActionRow extends StatelessWidget {
                 borderRadius: BorderRadius.circular(10),
               ),
               child: Center(
-                child: ColorFiltered(
-                  colorFilter:
-                      const ColorFilter.mode(AppColors.accent, BlendMode.srcIn),
-                  child: TriumphIcon(tIcon, size: 20),
-                ),
+                child: TriumphIcon(tIcon, size: 20, color: AppColors.accent),
               ),
             ),
             const SizedBox(width: 12),

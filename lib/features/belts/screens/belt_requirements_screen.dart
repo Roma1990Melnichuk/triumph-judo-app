@@ -1,4 +1,4 @@
-import 'package:file_picker/file_picker.dart';
+﻿import 'package:file_picker/file_picker.dart';
 import '../../../core/utils/cloudinary_upload.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -74,10 +74,7 @@ class _BeltRequirementsScreenState
                         borderRadius: BorderRadius.circular(12),
                       ),
                       child: const Center(
-                        child: ColorFiltered(
-                          colorFilter: ColorFilter.mode(AppColors.textPrimary, BlendMode.srcIn),
-                          child: TriumphIcon(TIcon.back, size: 22),
-                        ),
+                        child: TriumphIcon(TIcon.back, size: 22, color: AppColors.textPrimary),
                       ),
                     ),
                   ),
@@ -385,10 +382,7 @@ class _BeltTabState extends ConsumerState<_BeltTab> {
                     final trailingItems = <Widget>[
                       if (hasVideo)
                         IconButton(
-                          icon: const ColorFiltered(
-                            colorFilter: ColorFilter.mode(AppColors.accent, BlendMode.srcIn),
-                            child: TriumphIcon(TIcon.video, size: 22),
-                          ),
+                          icon: const TriumphIcon(TIcon.video, size: 22, color: AppColors.accent),
                           tooltip: 'Переглянути відео',
                           onPressed: () => VideoPlayerDialog.show(
                               context, ex.videoUrl, title: ex.name),
@@ -582,10 +576,7 @@ class _ExerciseDialogState extends State<_ExerciseDialog> {
                           width: 16,
                           height: 16,
                           child: CircularProgressIndicator(strokeWidth: 2))
-                      : const ColorFiltered(
-                          colorFilter: ColorFilter.mode(AppColors.accent, BlendMode.srcIn),
-                          child: TriumphIcon(TIcon.video, size: 18),
-                        ),
+                      : const TriumphIcon(TIcon.video, size: 18, color: AppColors.accent),
                   label: Text(_uploading
                       ? 'Завантаження...'
                       : 'Завантажити відео з пристрою'),

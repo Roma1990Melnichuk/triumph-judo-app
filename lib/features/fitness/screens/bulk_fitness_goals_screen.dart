@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../core/constants/app_colors.dart';
@@ -62,10 +62,7 @@ class _BulkFitnessGoalsScreenState
                         borderRadius: BorderRadius.circular(12),
                       ),
                       child: const Center(
-                        child: ColorFiltered(
-                          colorFilter: ColorFilter.mode(AppColors.textPrimary, BlendMode.srcIn),
-                          child: TriumphIcon(TIcon.back, size: 22),
-                        ),
+                        child: TriumphIcon(TIcon.back, size: 22, color: AppColors.textPrimary),
                       ),
                     ),
                   ),
@@ -200,10 +197,7 @@ class _GoalsTabState extends ConsumerState<_GoalsTab>
         ScaffoldMessenger.of(context).showSnackBar(SnackBar(
           content: Row(
             children: [
-              const ColorFiltered(
-                colorFilter: ColorFilter.mode(Colors.white, BlendMode.srcIn),
-                child: TriumphIcon(TIcon.success, size: 18),
-              ),
+              const TriumphIcon(TIcon.success, size: 18, color: Colors.white),
               const SizedBox(width: 8),
               Expanded(child: Text('Цілі встановлено для ${matched.length} спортсменів')),
             ],
@@ -387,10 +381,7 @@ class _AssignmentsTabState extends ConsumerState<_AssignmentsTab>
         ScaffoldMessenger.of(context).showSnackBar(SnackBar(
           content: Row(
             children: [
-              const ColorFiltered(
-                colorFilter: ColorFilter.mode(Colors.white, BlendMode.srcIn),
-                child: TriumphIcon(TIcon.success, size: 18),
-              ),
+              const TriumphIcon(TIcon.success, size: 18, color: Colors.white),
               const SizedBox(width: 8),
               Expanded(child: Text('Завдання створено для ${matched.length} спортсменів')),
             ],

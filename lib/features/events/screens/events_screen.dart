@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
@@ -726,10 +726,7 @@ void _showEventDetail(
             ),
             const SizedBox(height: 8),
             Row(children: [
-              const ColorFiltered(
-                colorFilter: ColorFilter.mode(AppColors.textSecondary, BlendMode.srcIn),
-                child: TriumphIcon(TIcon.calendar, size: 14),
-              ),
+              const TriumphIcon(TIcon.calendar, size: 14, color: AppColors.textSecondary),
               const SizedBox(width: 6),
               Text(
                 DateFormat('dd MMMM yyyy', 'uk').format(event.date),
@@ -951,10 +948,7 @@ class _EventCard extends ConsumerWidget {
               if (participantCount > 0) ...[
                 const SizedBox(height: 8),
                 Row(children: [
-                  const ColorFiltered(
-                    colorFilter: ColorFilter.mode(AppColors.textSecondary, BlendMode.srcIn),
-                    child: TriumphIcon(TIcon.team, size: 13),
-                  ),
+                  const TriumphIcon(TIcon.team, size: 13, color: AppColors.textSecondary),
                   const SizedBox(width: 4),
                   Text(
                     '$participantCount учасн.',

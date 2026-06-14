@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
@@ -80,10 +80,7 @@ class _AcademyPassCardState extends ConsumerState<AcademyPassCard>
                 borderRadius: BorderRadius.circular(12),
                 border: Border.all(color: AppColors.surface3),
               ),
-              child: const ColorFiltered(
-                colorFilter: ColorFilter.mode(AppColors.textSecondary, BlendMode.srcIn),
-                child: TriumphIcon(TIcon.trophy, size: 22),
-              ),
+              child: const TriumphIcon(TIcon.trophy, size: 22, color: AppColors.textSecondary),
             ),
             const SizedBox(width: 14),
             const Expanded(
@@ -698,10 +695,7 @@ class _BenefitTilesRow extends StatelessWidget {
                     border: Border.all(color: AppColors.surface3),
                   ),
                   child: Column(children: [
-                    ColorFiltered(
-                      colorFilter: const ColorFilter.mode(AppColors.accent, BlendMode.srcIn),
-                      child: TriumphIcon(t.tIcon, size: 18),
-                    ),
+                    TriumphIcon(t.tIcon, size: 18, color: AppColors.accent),
                     const SizedBox(height: 5),
                     Text(
                       t.label,
@@ -884,10 +878,7 @@ class TeamMembershipCard extends ConsumerWidget {
                       color: AppColors.primary.withValues(alpha: 0.12),
                       borderRadius: BorderRadius.circular(10),
                     ),
-                    child: const ColorFiltered(
-                      colorFilter: ColorFilter.mode(AppColors.primary, BlendMode.srcIn),
-                      child: TriumphIcon(TIcon.trophy, size: 16),
-                    ),
+                    child: const TriumphIcon(TIcon.trophy, size: 16, color: AppColors.primary),
                   ),
                   const SizedBox(width: 10),
                   const Text(

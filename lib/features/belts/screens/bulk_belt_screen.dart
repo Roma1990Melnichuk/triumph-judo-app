@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
@@ -82,10 +82,7 @@ class _BulkBeltScreenState extends ConsumerState<BulkBeltScreen> {
         ScaffoldMessenger.of(context).showSnackBar(SnackBar(
           content: Row(
             children: [
-              const ColorFiltered(
-                colorFilter: ColorFilter.mode(Colors.white, BlendMode.srcIn),
-                child: TriumphIcon(TIcon.success, size: 18),
-              ),
+              const TriumphIcon(TIcon.success, size: 18, color: Colors.white),
               const SizedBox(width: 8),
               Expanded(
                 child: Text('Пояс "${belt.displayName}" підтверджено для ${selectedChildren.length} спортсменів'),
@@ -146,10 +143,7 @@ class _BulkBeltScreenState extends ConsumerState<BulkBeltScreen> {
                         borderRadius: BorderRadius.circular(12),
                       ),
                       child: const Center(
-                        child: ColorFiltered(
-                          colorFilter: ColorFilter.mode(AppColors.textPrimary, BlendMode.srcIn),
-                          child: TriumphIcon(TIcon.back, size: 22),
-                        ),
+                        child: TriumphIcon(TIcon.back, size: 22, color: AppColors.textPrimary),
                       ),
                     ),
                   ),
@@ -413,10 +407,7 @@ class _BulkBeltScreenState extends ConsumerState<BulkBeltScreen> {
               ),
               child: Row(
                 children: [
-                  const ColorFiltered(
-                    colorFilter: ColorFilter.mode(AppColors.primary, BlendMode.srcIn),
-                    child: TriumphIcon(TIcon.calendar, size: 18),
-                  ),
+                  const TriumphIcon(TIcon.calendar, size: 18, color: AppColors.primary),
                   const SizedBox(width: 10),
                   Text(
                     DateFormat('dd MMMM yyyy', 'uk').format(_date),
@@ -424,10 +415,7 @@ class _BulkBeltScreenState extends ConsumerState<BulkBeltScreen> {
                         fontWeight: FontWeight.w500, fontSize: 14),
                   ),
                   const Spacer(),
-                  const ColorFiltered(
-                    colorFilter: ColorFilter.mode(AppColors.textSecondary, BlendMode.srcIn),
-                    child: TriumphIcon(TIcon.calendar, size: 16),
-                  ),
+                  const TriumphIcon(TIcon.calendar, size: 16, color: AppColors.textSecondary),
                 ],
               ),
             ),

@@ -1,4 +1,4 @@
-import 'dart:math';
+﻿import 'dart:math';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -381,10 +381,7 @@ class _StatCell extends StatelessWidget {
       child: Column(
         children: [
           if (tIcon != null)
-            ColorFiltered(
-              colorFilter: ColorFilter.mode(color, BlendMode.srcIn),
-              child: TriumphIcon(tIcon!, size: 18),
-            )
+            TriumphIcon(tIcon!, size: 18, color: color)
           else
             Icon(icon, size: 18, color: color),
           const SizedBox(height: 4),
@@ -734,10 +731,7 @@ class _LogTile extends StatelessWidget {
         contentPadding:
             const EdgeInsets.symmetric(horizontal: 14, vertical: 2),
         leading: isBest
-            ? const ColorFiltered(
-                colorFilter: ColorFilter.mode(AppColors.goldMedal, BlendMode.srcIn),
-                child: TriumphIcon(TIcon.trophy, size: 20),
-              )
+            ? const TriumphIcon(TIcon.trophy, size: 20, color: AppColors.goldMedal)
             : ColorFiltered(
                 colorFilter: ColorFilter.mode(AppColors.textSecondary.withValues(alpha: 0.5), BlendMode.srcIn),
                 child: const TriumphIcon(TIcon.training, size: 18),
@@ -936,10 +930,7 @@ class _AddLogSheetState extends State<_AddLogSheet> {
                 child: InputDecorator(
                   decoration: const InputDecoration(
                     labelText: 'Дата',
-                    suffixIcon: ColorFiltered(
-                      colorFilter: ColorFilter.mode(AppColors.textSecondary, BlendMode.srcIn),
-                      child: TriumphIcon(TIcon.calendar, size: 18),
-                    ),
+                    suffixIcon: TriumphIcon(TIcon.calendar, size: 18, color: AppColors.textSecondary),
                   ),
                   child: Text(dateStr),
                 ),

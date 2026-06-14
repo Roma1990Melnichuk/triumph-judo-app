@@ -1,4 +1,4 @@
-import 'dart:io';
+﻿import 'dart:io';
 import 'package:cached_network_image/cached_network_image.dart';
 import '../../../core/utils/cloudinary_upload.dart';
 import 'package:flutter/material.dart';
@@ -282,10 +282,7 @@ class _ChildProfileScreenState extends ConsumerState<ChildProfileScreen>
                                   borderRadius: BorderRadius.circular(12),
                                 ),
                                 child: const Center(
-                                  child: ColorFiltered(
-                                    colorFilter: ColorFilter.mode(AppColors.textPrimary, BlendMode.srcIn),
-                                    child: TriumphIcon(TIcon.back, size: 22),
-                                  ),
+                                  child: TriumphIcon(TIcon.back, size: 22, color: AppColors.textPrimary),
                                 ),
                               ),
                             ),
@@ -303,10 +300,7 @@ class _ChildProfileScreenState extends ConsumerState<ChildProfileScreen>
                                   borderRadius: BorderRadius.circular(12),
                                 ),
                                 child: const Center(
-                                  child: ColorFiltered(
-                                    colorFilter: ColorFilter.mode(AppColors.textPrimary, BlendMode.srcIn),
-                                    child: TriumphIcon(TIcon.statistics, size: 22),
-                                  ),
+                                  child: TriumphIcon(TIcon.statistics, size: 22, color: AppColors.textPrimary),
                                 ),
                               ),
                             ),
@@ -324,10 +318,7 @@ class _ChildProfileScreenState extends ConsumerState<ChildProfileScreen>
                                   borderRadius: BorderRadius.circular(12),
                                 ),
                                 child: const Center(
-                                  child: ColorFiltered(
-                                    colorFilter: ColorFilter.mode(AppColors.textPrimary, BlendMode.srcIn),
-                                    child: TriumphIcon(TIcon.tasks, size: 22),
-                                  ),
+                                  child: TriumphIcon(TIcon.tasks, size: 22, color: AppColors.textPrimary),
                                 ),
                               ),
                             ),
@@ -375,10 +366,7 @@ class _ChildProfileScreenState extends ConsumerState<ChildProfileScreen>
                                     borderRadius: BorderRadius.circular(12),
                                   ),
                                   child: const Center(
-                                    child: ColorFiltered(
-                                      colorFilter: ColorFilter.mode(AppColors.error, BlendMode.srcIn),
-                                      child: TriumphIcon(TIcon.delete, size: 22),
-                                    ),
+                                    child: TriumphIcon(TIcon.delete, size: 22, color: AppColors.error),
                                   ),
                                 ),
                               ),
@@ -1037,10 +1025,7 @@ class _BeltProgressCardState extends ConsumerState<_BeltProgressCard> {
         SnackBar(
           content: Row(
             children: [
-              const ColorFiltered(
-                colorFilter: ColorFilter.mode(Colors.white, BlendMode.srcIn),
-                child: TriumphIcon(TIcon.success, size: 18),
-              ),
+              const TriumphIcon(TIcon.success, size: 18, color: Colors.white),
               const SizedBox(width: 8),
               const Text('Всі вимоги підтверджено'),
             ],
@@ -1513,10 +1498,7 @@ class _CoachSetMembershipSheetState
               border: Border.all(color: AppColors.surface3),
             ),
             child: Row(children: [
-              const ColorFiltered(
-                colorFilter: ColorFilter.mode(AppColors.textSecondary, BlendMode.srcIn),
-                child: TriumphIcon(TIcon.calendar, size: 16),
-              ),
+              const TriumphIcon(TIcon.calendar, size: 16, color: AppColors.textSecondary),
               const SizedBox(width: 10),
               Expanded(
                 child: Column(
@@ -1736,10 +1718,7 @@ class _ProfileInfoChip extends StatelessWidget {
           mainAxisSize: MainAxisSize.min,
           children: [
             if (tIcon != null)
-              ColorFiltered(
-                colorFilter: const ColorFilter.mode(AppColors.textSecondary, BlendMode.srcIn),
-                child: TriumphIcon(tIcon!, size: 13),
-              )
+              TriumphIcon(tIcon!, size: 13, color: AppColors.textSecondary)
             else
               Icon(icon, size: 13, color: AppColors.textSecondary),
             const SizedBox(width: 5),
@@ -1848,10 +1827,7 @@ class _DosyagnennyaTab extends StatelessWidget {
             : p == 3
                 ? AppColors.bronzeMedal
                 : AppColors.textSecondary;
-    return ColorFiltered(
-      colorFilter: ColorFilter.mode(color, BlendMode.srcIn),
-      child: TriumphIcon(p <= 3 ? TIcon.medal3d : TIcon.medal, size: 26),
-    );
+    return TriumphIcon(p <= 3 ? TIcon.medal3d : TIcon.medal, size: 26, color: color);
   }
 
   @override

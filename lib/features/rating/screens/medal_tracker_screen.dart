@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import '../../../core/constants/app_colors.dart';
@@ -422,10 +422,7 @@ class AthleteMedalBlock extends ConsumerWidget {
 
                   // Best result
                   _ResultInfoRow(
-                    icon: const ColorFiltered(
-                      colorFilter: ColorFilter.mode(AppColors.accent, BlendMode.srcIn),
-                      child: TriumphIcon(TIcon.trophy, size: 16),
-                    ),
+                    icon: const TriumphIcon(TIcon.trophy, size: 16, color: AppColors.accent),
                     label: 'Найкращий результат',
                     value: '${best.competitionName} — ${_placeLabel(best.place)}',
                   ),
@@ -433,10 +430,7 @@ class AthleteMedalBlock extends ConsumerWidget {
 
                   // Recent tournament
                   _ResultInfoRow(
-                    icon: const ColorFiltered(
-                      colorFilter: ColorFilter.mode(AppColors.textSecondary, BlendMode.srcIn),
-                      child: TriumphIcon(TIcon.calendar, size: 16),
-                    ),
+                    icon: const TriumphIcon(TIcon.calendar, size: 16, color: AppColors.textSecondary),
                     label: 'Останній турнір',
                     value: '${recent.competitionName} — ${_placeLabel(recent.place)}',
                   ),

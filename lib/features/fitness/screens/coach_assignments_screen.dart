@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../core/constants/app_colors.dart';
@@ -56,10 +56,7 @@ class _CoachAssignmentsScreenState extends ConsumerState<CoachAssignmentsScreen>
                         borderRadius: BorderRadius.circular(12),
                       ),
                       child: const Center(
-                        child: ColorFiltered(
-                          colorFilter: ColorFilter.mode(AppColors.textPrimary, BlendMode.srcIn),
-                          child: TriumphIcon(TIcon.back, size: 22),
-                        ),
+                        child: TriumphIcon(TIcon.back, size: 22, color: AppColors.textPrimary),
                       ),
                     ),
                   ),
@@ -360,10 +357,7 @@ class _CoachAssignmentCard extends ConsumerWidget {
             ),
             const SizedBox(height: 8),
             ListTile(
-              leading: ColorFiltered(
-                colorFilter: const ColorFilter.mode(AppColors.accent, BlendMode.srcIn),
-                child: TriumphIcon(TIcon.statistics, size: 22),
-              ),
+              leading: TriumphIcon(TIcon.statistics, size: 22, color: AppColors.accent),
               title: const Text('Переглянути прогрес'),
               onTap: () {
                 Navigator.pop(sheetCtx);
@@ -371,10 +365,7 @@ class _CoachAssignmentCard extends ConsumerWidget {
               },
             ),
             ListTile(
-              leading: ColorFiltered(
-                colorFilter: const ColorFilter.mode(AppColors.textSecondary, BlendMode.srcIn),
-                child: TriumphIcon(TIcon.team, size: 22),
-              ),
+              leading: TriumphIcon(TIcon.team, size: 22, color: AppColors.textSecondary),
               title: const Text('Список спортсменів'),
               onTap: () {
                 Navigator.pop(sheetCtx);
@@ -454,10 +445,7 @@ class _TipCard extends StatelessWidget {
         child: const Row(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            ColorFiltered(
-              colorFilter: const ColorFilter.mode(AppColors.accent, BlendMode.srcIn),
-              child: TriumphIcon(TIcon.motivation, size: 18),
-            ),
+            TriumphIcon(TIcon.motivation, size: 18, color: AppColors.accent),
             SizedBox(width: 10),
             Expanded(
               child: Text(

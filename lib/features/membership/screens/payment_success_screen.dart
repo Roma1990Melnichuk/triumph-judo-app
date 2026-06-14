@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
@@ -281,10 +281,7 @@ class _PaymentSuccessScreenState extends ConsumerState<PaymentSuccessScreen>
               borderRadius: BorderRadius.circular(12),
             ),
             child: const Center(
-              child: const ColorFiltered(
-                colorFilter: ColorFilter.mode(Colors.white, BlendMode.srcIn),
-                child: TriumphIcon(TIcon.trophy, size: 24),
-              ),
+              child: const TriumphIcon(TIcon.trophy, size: 24, color: Colors.white),
             ),
           ),
           const SizedBox(width: 14),

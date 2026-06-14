@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../core/constants/app_colors.dart';
@@ -425,11 +425,7 @@ class _GroupCard extends StatelessWidget {
               ),
             ),
             ListTile(
-              leading: const ColorFiltered(
-                colorFilter:
-                    ColorFilter.mode(AppColors.error, BlendMode.srcIn),
-                child: TriumphIcon(TIcon.delete, size: 22),
-              ),
+              leading: const TriumphIcon(TIcon.delete, size: 22, color: AppColors.error),
               title: const Text(
                 'Видалити групу',
                 style: TextStyle(color: AppColors.error),
