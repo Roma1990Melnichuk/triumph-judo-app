@@ -686,22 +686,31 @@ class _AddSlotSheetState extends ConsumerState<_AddSlotSheet> {
     if (_slots.isEmpty) return;
     setState(() => _saving = true);
     final price = double.tryParse(_priceCtrl.text.trim());
-    for (final slot in _slots) {
-      await ref.read(individualTrainingNotifierProvider.notifier).createSlot(
-            IndividualSlotModel(
-              id: '',
-              coachId: widget.coachId,
-              coachName: widget.coachName,
-              date: _date,
-              timeStart: slot.start,
-              timeEnd: slot.end,
-              price: price,
-              currency: 'UAH',
-              status: SlotStatus.available,
-            ),
-          );
+    try {
+      for (final slot in _slots) {
+        await ref.read(individualTrainingNotifierProvider.notifier).createSlot(
+              IndividualSlotModel(
+                id: '',
+                coachId: widget.coachId,
+                coachName: widget.coachName,
+                date: _date,
+                timeStart: slot.start,
+                timeEnd: slot.end,
+                price: price,
+                currency: 'UAH',
+                status: SlotStatus.available,
+              ),
+            );
+      }
+      if (mounted) Navigator.pop(context);
+    } catch (e) {
+      if (mounted) {
+        setState(() => _saving = false);
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Помилка збереження: $e')),
+        );
+      }
     }
-    if (mounted) Navigator.pop(context);
   }
 
   @override

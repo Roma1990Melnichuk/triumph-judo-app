@@ -245,12 +245,19 @@ class TriumphIcon extends StatelessWidget {
     );
 
     if (color != null) {
-      return ShaderMask(
-        shaderCallback: (bounds) =>
-            LinearGradient(colors: [color!, color!]).createShader(bounds),
-        blendMode: BlendMode.srcATop,
-        child: img,
-      );
+      if (hasTransparentBg(icon)) {
+        // PNG with transparent bg — ShaderMask tints correctly
+        return ShaderMask(
+          shaderCallback: (bounds) =>
+              LinearGradient(colors: [color!, color!]).createShader(bounds),
+          blendMode: BlendMode.srcATop,
+          child: img,
+        );
+      } else {
+        // WebP with opaque bg — any color filter makes a solid square;
+        // use Material icon fallback with the requested color instead
+        return Icon(_fallback(icon), size: size, color: color);
+      }
     }
 
     return img;

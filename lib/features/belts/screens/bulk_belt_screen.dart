@@ -36,9 +36,9 @@ class _BulkBeltScreenState extends ConsumerState<BulkBeltScreen> {
   }
 
   List<ChildModel> _eligible(List<ChildModel> all) {
-    if (_targetBelt == null) return all;
+    if (_targetBelt == null) return all.where((c) => c.beltReady).toList();
     return all
-        .where((c) => c.currentBelt.next == _targetBelt)
+        .where((c) => c.currentBelt.next == _targetBelt && c.beltReady)
         .toList()
       ..sort((a, b) => a.lastName.compareTo(b.lastName));
   }
@@ -378,7 +378,7 @@ class _BulkBeltScreenState extends ConsumerState<BulkBeltScreen> {
                   BeltBadge(belt: _targetBelt!, size: BeltBadgeSize.small),
                   const SizedBox(width: 8),
                   Text(
-                    '${eligible.where((c) => c.beltReady).length} / ${eligible.length} готові до здачі',
+                    '${eligible.length} готові до здачі',
                     style: const TextStyle(
                         color: AppColors.textSecondary, fontSize: 12),
                   ),

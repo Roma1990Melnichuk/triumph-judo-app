@@ -100,7 +100,7 @@ class IndividualTrainingNotifier extends StateNotifier<AsyncValue<void>> {
   // Coach creates a slot
   Future<void> createSlot(IndividualSlotModel slot) async {
     state = const AsyncValue.loading();
-    state = await AsyncValue.guard(() async {
+    try {
       final id = _uuid.v4();
       await _db.collection('individual_slots').doc(id).set(
             IndividualSlotModel(
@@ -116,7 +116,11 @@ class IndividualTrainingNotifier extends StateNotifier<AsyncValue<void>> {
               isPaid: false,
             ).toFirestore(),
           );
-    });
+      state = const AsyncValue.data(null);
+    } catch (e, st) {
+      state = AsyncValue.error(e, st);
+      rethrow;
+    }
   }
 
   // Parent/athlete requests a slot
