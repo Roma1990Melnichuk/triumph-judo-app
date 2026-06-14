@@ -1632,21 +1632,29 @@ class _AchievementsSection extends ConsumerWidget {
           ],
         ),
 
-        // Earned badges
+        // Earned badges — 3-column grid, full vertical cards
         if (earnedDefs.isNotEmpty) ...[
           const SizedBox(height: 10),
-          Wrap(
-            spacing: 8,
-            runSpacing: 8,
-            children: earnedDefs
-                .map((d) => AchievementBadge(
-                      def: d,
-                      small: true,
-                      earnedAt: earned
-                          .firstWhere((a) => a.achievementId == d.id)
-                          .earnedAt,
-                    ))
-                .toList(),
+          GridView.builder(
+            shrinkWrap: true,
+            physics: const NeverScrollableScrollPhysics(),
+            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+              crossAxisCount: 3,
+              childAspectRatio: 0.82,
+              crossAxisSpacing: 10,
+              mainAxisSpacing: 10,
+            ),
+            itemCount: earnedDefs.length,
+            itemBuilder: (_, i) {
+              final d = earnedDefs[i];
+              return AchievementBadge(
+                def: d,
+                iconSize: 52,
+                earnedAt: earned
+                    .firstWhere((a) => a.achievementId == d.id)
+                    .earnedAt,
+              );
+            },
           ),
         ],
 
@@ -1661,22 +1669,30 @@ class _AchievementsSection extends ConsumerWidget {
                 color: AppColors.textSecondary),
           ),
           const SizedBox(height: 8),
-          Wrap(
-            spacing: 8,
-            runSpacing: 8,
-            children: inProgress.map((e) {
+          GridView.builder(
+            shrinkWrap: true,
+            physics: const NeverScrollableScrollPhysics(),
+            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+              crossAxisCount: 3,
+              childAspectRatio: 0.82,
+              crossAxisSpacing: 10,
+              mainAxisSpacing: 10,
+            ),
+            itemCount: inProgress.length,
+            itemBuilder: (_, i) {
+              final e = inProgress[i];
               final def = achievementById(e.key);
               if (def == null) return const SizedBox.shrink();
               final pct =
                   (e.value.current / e.value.target).clamp(0.0, 1.0);
               return AchievementBadge(
                 def: def,
-                small: true,
+                iconSize: 52,
                 locked: true,
                 progress: pct,
                 progressHint: '${e.value.current} / ${e.value.target}',
               );
-            }).toList(),
+            },
           ),
         ],
       ],

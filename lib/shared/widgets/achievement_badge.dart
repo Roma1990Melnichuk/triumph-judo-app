@@ -46,6 +46,7 @@ class AchievementBadge extends StatelessWidget {
     this.locked = false,
     this.progress,
     this.progressHint,
+    this.iconSize,
   });
 
   final AchievementDef def;
@@ -56,6 +57,8 @@ class AchievementBadge extends StatelessWidget {
   final double? progress;
   /// Human-readable hint, e.g. "47 / 100". Shown only when [progress] ≠ null.
   final String? progressHint;
+  /// Override icon size. Defaults: small=20, full=40.
+  final double? iconSize;
 
   // The rarity color (used for unlocked state and as the target color when lerping).
   Color get _rarityColor {
@@ -122,7 +125,7 @@ class AchievementBadge extends StatelessWidget {
                 children: [
                   locked && def.isHidden
                       ? const Text('❓', style: TextStyle(fontSize: 14))
-                      : AchievementIcon(def: def, size: 20),
+                      : AchievementIcon(def: def, size: iconSize ?? 20),
                   const SizedBox(width: 5),
                   Text(
                     locked && def.isHidden ? '???' : def.name,
@@ -221,7 +224,7 @@ class AchievementBadge extends StatelessWidget {
               children: [
                 locked && def.isHidden
                     ? const Text('❓', style: TextStyle(fontSize: 28))
-                    : AchievementIcon(def: def, size: 40),
+                    : AchievementIcon(def: def, size: iconSize ?? 40),
                 const SizedBox(height: 6),
                 Text(
                   locked && def.isHidden ? '???' : def.name,
