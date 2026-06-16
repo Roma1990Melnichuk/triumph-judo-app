@@ -139,12 +139,11 @@ class GroupNotifier extends StateNotifier<AsyncValue<void>> {
   }) async {
     final docId = AttendanceModel.makeId(groupId, date);
     final ref = _db.collection('attendance').doc(docId);
-    // Ensure doc exists
+    // Ensure base fields exist without resetting absentChildIds
     await ref.set({
       'groupId': groupId,
       'coachId': coachId,
       'date': Timestamp.fromDate(date),
-      'absentChildIds': <String>[],
     }, SetOptions(merge: true));
 
     if (absent) {
