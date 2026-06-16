@@ -644,7 +644,7 @@ class _ParentComposeDialogState
   Widget build(BuildContext context) {
     final children =
         ref.watch(allChildrenProvider).asData?.value ?? [];
-    final childId =
+    final childId = ref.watch(effectiveChildIdProvider) ??
         widget.user.childIds.firstOrNull ?? widget.user.childId;
     final child =
         children.where((c) => c.id == childId).firstOrNull;

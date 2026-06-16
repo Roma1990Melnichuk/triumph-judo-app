@@ -22,8 +22,8 @@ class NutritionScreen extends ConsumerWidget {
       return const _CoachNutritionOverview();
     }
 
-    final childId = user.childId ??
-        (user.childIds.isNotEmpty ? user.childIds.first : '');
+    final childId = ref.watch(effectiveChildIdProvider) ?? '';
+    if (childId.isEmpty) return const SizedBox.shrink();
     return NutritionDashboard(childId: childId);
   }
 }

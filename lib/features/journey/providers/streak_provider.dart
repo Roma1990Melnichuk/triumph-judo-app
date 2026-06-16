@@ -28,7 +28,7 @@ typedef StreakData = ({int current, int best, int total});
   final user = ref.watch(currentUserModelProvider).asData?.value;
   if (user == null || user.isCoach) return null;
 
-  final childId = user.childIds.firstOrNull ?? user.childId;
+  final childId = ref.watch(effectiveChildIdProvider);
   if (childId == null || childId.isEmpty) return null;
 
   final allChildren = ref.watch(allChildrenProvider).asData?.value ?? [];

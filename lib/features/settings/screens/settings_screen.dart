@@ -1364,9 +1364,9 @@ class _LinkChildSheetState extends ConsumerState<_LinkChildSheet> {
   @override
   Widget build(BuildContext context) {
     final children = ref.watch(allChildrenProvider).asData?.value ?? [];
-    final myChild = children
+    final myChildren = children
         .where((c) => widget.user.ownsChild(c.id))
-        .firstOrNull;
+        .toList();
 
     return Padding(
       padding: const EdgeInsets.all(24),
@@ -1374,20 +1374,20 @@ class _LinkChildSheetState extends ConsumerState<_LinkChildSheet> {
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text('Моя дитина',
-              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+          Text(myChildren.length > 1 ? 'Мої діти' : 'Моя дитина',
+              style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
           const SizedBox(height: 12),
-          if (myChild != null)
-            ListTile(
+          if (myChildren.isNotEmpty)
+            ...myChildren.map((child) => ListTile(
               contentPadding: EdgeInsets.zero,
               leading: const CircleAvatar(
                 backgroundColor: AppColors.primary,
-                child: const Icon(Icons.person, color: Colors.white, size: 22),
+                child: Icon(Icons.person, color: Colors.white, size: 22),
               ),
-              title: Text(myChild.fullName,
+              title: Text(child.fullName,
                   style: const TextStyle(fontWeight: FontWeight.w600)),
-              subtitle: Text('${myChild.birthYear} р.н.'),
-            )
+              subtitle: Text('${child.birthYear} р.н.'),
+            ))
           else
             const Text(
               'Дитину не пов\'язано. Зверніться до тренера.',

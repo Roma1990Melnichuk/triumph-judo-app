@@ -1019,37 +1019,39 @@ class _FilterSection extends StatelessWidget {
                           .update((s) => s.copyWith(beltReady: false))
                       : null,
                 ),
-                const SizedBox(width: 8),
-                // Membership status filter
-                _FilterChip(
-                  label: filter.membershipStatus != null
-                      ? _membershipStatusLabel(filter.membershipStatus!)
-                      : 'Абонемент',
-                  selected: filter.membershipStatus != null,
-                  onTap: onShowMembershipPicker,
-                  onClear: filter.membershipStatus != null
-                      ? () => ref
-                          .read(childrenFilterProvider.notifier)
-                          .update(
-                              (s) => s.copyWith(clearMembershipStatus: true))
-                      : null,
-                ),
-                const SizedBox(width: 8),
-                // Medal filter (multi-select)
-                _FilterChip(
-                  label: filter.medalPlaces.length == 1
-                      ? _medalPlaceLabel(filter.medalPlaces.first)
-                      : filter.medalPlaces.length > 1
-                          ? 'Медалі (${filter.medalPlaces.length})'
-                          : 'Медалі',
-                  selected: filter.medalPlaces.isNotEmpty,
-                  onTap: onShowMedalPicker,
-                  onClear: filter.medalPlaces.isNotEmpty
-                      ? () => ref
-                          .read(childrenFilterProvider.notifier)
-                          .update((s) => s.copyWith(clearMedalPlaces: true))
-                      : null,
-                ),
+                if (isCoach) ...[
+                  const SizedBox(width: 8),
+                  // Membership status filter (coach only — parents bypass filteredChildrenProvider)
+                  _FilterChip(
+                    label: filter.membershipStatus != null
+                        ? _membershipStatusLabel(filter.membershipStatus!)
+                        : 'Абонемент',
+                    selected: filter.membershipStatus != null,
+                    onTap: onShowMembershipPicker,
+                    onClear: filter.membershipStatus != null
+                        ? () => ref
+                            .read(childrenFilterProvider.notifier)
+                            .update(
+                                (s) => s.copyWith(clearMembershipStatus: true))
+                        : null,
+                  ),
+                  const SizedBox(width: 8),
+                  // Medal filter (coach only — parents bypass filteredChildrenWithMedalsProvider)
+                  _FilterChip(
+                    label: filter.medalPlaces.length == 1
+                        ? _medalPlaceLabel(filter.medalPlaces.first)
+                        : filter.medalPlaces.length > 1
+                            ? 'Медалі (${filter.medalPlaces.length})'
+                            : 'Медалі',
+                    selected: filter.medalPlaces.isNotEmpty,
+                    onTap: onShowMedalPicker,
+                    onClear: filter.medalPlaces.isNotEmpty
+                        ? () => ref
+                            .read(childrenFilterProvider.notifier)
+                            .update((s) => s.copyWith(clearMedalPlaces: true))
+                        : null,
+                  ),
+                ],
               ],
             ),
           ),
