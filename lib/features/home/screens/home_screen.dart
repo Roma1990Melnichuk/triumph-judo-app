@@ -861,46 +861,62 @@ class _ParentFeatureIcons extends StatelessWidget {
       children: _items.map((item) {
         final (icon, assetPath, label, route, colors) = item;
         return Expanded(
-          child: GestureDetector(
-            onTap: () => context.push(route),
-            child: Column(
-              children: [
-                Container(
-                  width: 54, height: 54,
-                  decoration: BoxDecoration(
-                    gradient: assetPath == null ? LinearGradient(
-                      colors: colors,
-                      begin: Alignment.topLeft,
-                      end: Alignment.bottomRight,
-                    ) : null,
-                    color: assetPath != null ? Colors.black : null,
-                    borderRadius: BorderRadius.circular(16),
-                    boxShadow: [
-                      BoxShadow(
-                        color: colors.last.withValues(alpha: 0.35),
-                        blurRadius: 10,
-                        offset: const Offset(0, 4),
+          child: Column(
+            children: [
+              // Shadow wrapper — Material clips the ink so shadow must be outside
+              Container(
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(16),
+                  boxShadow: [
+                    BoxShadow(
+                      color: colors.last.withValues(alpha: 0.35),
+                      blurRadius: 10,
+                      offset: const Offset(0, 4),
+                    ),
+                  ],
+                ),
+                child: Material(
+                  color: Colors.transparent,
+                  borderRadius: BorderRadius.circular(16),
+                  clipBehavior: Clip.antiAlias,
+                  child: Ink(
+                    width: 54,
+                    height: 54,
+                    decoration: BoxDecoration(
+                      gradient: assetPath == null
+                          ? LinearGradient(
+                              colors: colors,
+                              begin: Alignment.topLeft,
+                              end: Alignment.bottomRight,
+                            )
+                          : null,
+                      color: assetPath != null ? Colors.black : null,
+                      borderRadius: BorderRadius.circular(16),
+                    ),
+                    child: InkWell(
+                      onTap: () => context.push(route),
+                      splashColor: Colors.white24,
+                      highlightColor: Colors.black26,
+                      child: Center(
+                        child: assetPath != null
+                            ? Image.asset(assetPath, width: 54, height: 54)
+                            : Icon(icon, size: 28, color: Colors.white),
                       ),
-                    ],
-                  ),
-                  child: Center(
-                    child: assetPath != null
-                        ? Image.asset(assetPath, width: 54, height: 54)
-                        : Icon(icon, size: 28, color: Colors.white),
+                    ),
                   ),
                 ),
-                const SizedBox(height: 6),
-                Text(
-                  label,
-                  textAlign: TextAlign.center,
-                  style: const TextStyle(
-                    fontSize: 10,
-                    color: AppColors.textSecondary,
-                    fontWeight: FontWeight.w500,
-                  ),
+              ),
+              const SizedBox(height: 6),
+              Text(
+                label,
+                textAlign: TextAlign.center,
+                style: const TextStyle(
+                  fontSize: 10,
+                  color: AppColors.textSecondary,
+                  fontWeight: FontWeight.w500,
                 ),
-              ],
-            ),
+              ),
+            ],
           ),
         );
       }).toList(),
