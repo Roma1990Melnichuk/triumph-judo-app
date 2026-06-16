@@ -6,6 +6,7 @@ import 'package:judo_app/core/constants/app_colors.dart';
 import 'package:judo_app/core/models/cart_model.dart';
 import 'package:judo_app/features/shop/providers/cart_provider.dart';
 import 'package:judo_app/shared/widgets/gradient_button.dart';
+import 'package:judo_app/shared/widgets/app_back_button.dart';
 
 class ShopCartScreen extends ConsumerStatefulWidget {
   const ShopCartScreen({super.key});
@@ -96,10 +97,7 @@ class _ShopCartScreenState extends ConsumerState<ShopCartScreen> {
     return AppBar(
       backgroundColor: AppColors.surface,
       elevation: 0,
-      leading: IconButton(
-        icon: const Icon(Icons.arrow_back_ios_new, color: AppColors.textPrimary),
-        onPressed: () => context.pop(),
-      ),
+      leading: AppBackButton(onPressed: () => context.pop()),
       title: Row(
         mainAxisSize: MainAxisSize.min,
         children: [

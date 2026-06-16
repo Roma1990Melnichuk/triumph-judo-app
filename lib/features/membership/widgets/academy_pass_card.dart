@@ -76,11 +76,10 @@ class _AcademyPassCardState extends ConsumerState<AcademyPassCard>
             Container(
               padding: const EdgeInsets.all(10),
               decoration: BoxDecoration(
-                color: AppColors.surface2,
+                color: Colors.black,
                 borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: AppColors.surface3),
               ),
-              child: const TriumphIcon(TIcon.trophy, size: 22, color: AppColors.textSecondary),
+              child: Image.asset('assets/images/abonement.png', width: 38, height: 38),
             ),
             const SizedBox(width: 14),
             const Expanded(
@@ -875,10 +874,10 @@ class TeamMembershipCard extends ConsumerWidget {
                   Container(
                     padding: const EdgeInsets.all(7),
                     decoration: BoxDecoration(
-                      color: AppColors.primary.withValues(alpha: 0.12),
+                      color: Colors.black,
                       borderRadius: BorderRadius.circular(10),
                     ),
-                    child: const TriumphIcon(TIcon.trophy, size: 16, color: AppColors.primary),
+                    child: Image.asset('assets/images/abonement.png', width: 30, height: 30),
                   ),
                   const SizedBox(width: 10),
                   const Text(

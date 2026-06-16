@@ -632,22 +632,37 @@ class _CategoryBreakdown extends ConsumerWidget {
                       const EdgeInsets.symmetric(horizontal: 16),
                   iconColor: AppColors.textSecondary,
                   collapsedIconColor: AppColors.textSecondary,
-                  leading: Container(
-                    width: 40,
-                    height: 40,
-                    decoration: BoxDecoration(
-                      color: (isDone
-                              ? AppColors.success
-                              : AppColors.accent)
-                          .withValues(alpha: 0.12),
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    child: Icon(
-                      icon,
-                      size: 22,
-                      color: isDone ? AppColors.success : AppColors.accent,
-                    ),
-                  ),
+                  leading: (cat == ExerciseCategory.technique ||
+                          cat == ExerciseCategory.theory)
+                      ? ClipRRect(
+                          borderRadius: BorderRadius.circular(12),
+                          child: SizedBox(
+                            width: 40,
+                            height: 40,
+                            child: Image.asset(
+                              cat == ExerciseCategory.technique
+                                  ? 'assets/images/technique.png'
+                                  : 'assets/images/theory.png',
+                              fit: BoxFit.cover,
+                            ),
+                          ),
+                        )
+                      : Container(
+                          width: 40,
+                          height: 40,
+                          decoration: BoxDecoration(
+                            color: (isDone
+                                    ? AppColors.success
+                                    : AppColors.accent)
+                                .withValues(alpha: 0.12),
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: Icon(
+                            icon,
+                            size: 22,
+                            color: isDone ? AppColors.success : AppColors.accent,
+                          ),
+                        ),
                   title: Row(
                     children: [
                       Text(

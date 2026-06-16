@@ -4,6 +4,7 @@ import '../../../core/constants/app_colors.dart';
 import '../../../core/constants/achievement_defs.dart';
 import '../../../core/models/achievement_model.dart';
 import '../../../shared/widgets/achievement_badge.dart';
+import '../../../shared/widgets/app_back_button.dart';
 import '../../auth/providers/auth_provider.dart';
 import '../providers/achievement_provider.dart';
 
@@ -28,21 +29,7 @@ class AchievementCatalogScreen extends ConsumerWidget {
             children: [
               Align(
                 alignment: Alignment.centerLeft,
-                child: GestureDetector(
-                  onTap: () => Navigator.canPop(context) ? Navigator.pop(context) : null,
-                  child: Container(
-                    margin: const EdgeInsets.fromLTRB(12, 12, 0, 0),
-                    width: 44, height: 44,
-                    decoration: BoxDecoration(
-                      color: AppColors.surface2,
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    child: const Center(
-                      child: Icon(Icons.arrow_back_ios_new_rounded,
-                          size: 20, color: AppColors.textPrimary),
-                    ),
-                  ),
-                ),
+                child: AppBackButton(onPressed: () => Navigator.canPop(context) ? Navigator.pop(context) : null),
               ),
               const Expanded(
                 child: Center(
@@ -154,20 +141,7 @@ class _Header extends StatelessWidget {
         // Back button
         Padding(
           padding: EdgeInsets.fromLTRB(12, topPad + 8, 12, 0),
-          child: GestureDetector(
-            onTap: () => Navigator.canPop(context) ? Navigator.pop(context) : null,
-            child: Container(
-              width: 44, height: 44,
-              decoration: BoxDecoration(
-                color: AppColors.surface2,
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: const Center(
-                child: Icon(Icons.arrow_back_ios_new_rounded,
-                    size: 20, color: AppColors.textPrimary),
-              ),
-            ),
-          ),
+          child: AppBackButton(onPressed: () => Navigator.canPop(context) ? Navigator.pop(context) : null),
         ),
         Container(
       margin: const EdgeInsets.fromLTRB(20, 12, 20, 20),
@@ -319,7 +293,7 @@ class _CategorySection extends StatelessWidget {
             physics: const NeverScrollableScrollPhysics(),
             gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
               crossAxisCount: 3,
-              childAspectRatio: 0.78,
+              childAspectRatio: 0.72,
               crossAxisSpacing: 10,
               mainAxisSpacing: 10,
             ),
@@ -368,21 +342,6 @@ class _AchievementCell extends StatelessWidget {
   final bool isEarned;
   final VoidCallback onTap;
 
-  Color get _rarityColor {
-    switch (def.rarity) {
-      case AchievementRarity.common:
-        return const Color(0xFF9E9E9E);
-      case AchievementRarity.rare:
-        return const Color(0xFF2196F3);
-      case AchievementRarity.epic:
-        return const Color(0xFF9C27B0);
-      case AchievementRarity.legendary:
-        return AppColors.accent;
-      case AchievementRarity.mythic:
-        return AppColors.primary;
-    }
-  }
-
   @override
   Widget build(BuildContext context) {
     final isHiddenLocked = def.isHidden && !isEarned;
@@ -391,37 +350,14 @@ class _AchievementCell extends StatelessWidget {
       onTap: onTap,
       child: Column(
         children: [
-          // Badge container
           Expanded(
-            child: Container(
-              decoration: BoxDecoration(
-                color: AppColors.surface,
-                borderRadius: BorderRadius.circular(12),
-                border: Border.all(
-                  color: isEarned
-                      ? _rarityColor.withValues(alpha: 0.6)
-                      : AppColors.surface3,
-                  width: isEarned ? 1.5 : 1,
-                ),
-                boxShadow: isEarned
-                    ? [
-                        BoxShadow(
-                          color: _rarityColor.withValues(alpha: 0.2),
-                          blurRadius: 6,
-                          offset: const Offset(0, 2),
-                        ),
-                      ]
-                    : null,
-              ),
-              child: Center(
-                child: isHiddenLocked
-                    ? const Text('❓',
-                        style: TextStyle(fontSize: 28))
-                    : Opacity(
-                        opacity: isEarned ? 1.0 : 0.35,
-                        child: AchievementIcon(def: def, size: 60),
-                      ),
-              ),
+            child: Center(
+              child: isHiddenLocked
+                  ? const Text('❓', style: TextStyle(fontSize: 32))
+                  : Opacity(
+                      opacity: isEarned ? 1.0 : 0.28,
+                      child: AchievementIcon(def: def, size: 72),
+                    ),
             ),
           ),
           const SizedBox(height: 4),

@@ -343,13 +343,7 @@ class _EventsScreenState extends ConsumerState<EventsScreen> {
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          ColorFiltered(
-            colorFilter: ColorFilter.mode(
-              AppColors.textSecondary.withValues(alpha: 0.3),
-              BlendMode.srcIn,
-            ),
-            child: TriumphIcon(TIcon.calendar, size: 48),
-          ),
+          Image.asset('assets/images/no_events.png', width: 110, height: 110),
           const SizedBox(height: 10),
           const Text('Немає подій цього дня',
               style: TextStyle(

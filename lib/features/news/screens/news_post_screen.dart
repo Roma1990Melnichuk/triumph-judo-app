@@ -8,6 +8,7 @@ import 'package:judo_app/core/constants/app_colors.dart';
 import 'package:judo_app/core/models/club_post_model.dart';
 import 'package:judo_app/features/auth/providers/auth_provider.dart';
 import 'package:judo_app/features/news/providers/news_provider.dart';
+import 'package:judo_app/shared/widgets/app_back_button.dart';
 
 // ── Type palette ──────────────────────────────────────────────────────────────
 
@@ -48,7 +49,7 @@ class NewsPostScreen extends ConsumerWidget {
         backgroundColor: AppColors.background,
         appBar: AppBar(
           backgroundColor: AppColors.background,
-          leading: const BackButton(color: AppColors.textPrimary),
+          leading: const AppBackButton(),
         ),
         body: const Center(
           child: Text(
@@ -63,7 +64,7 @@ class NewsPostScreen extends ConsumerWidget {
             backgroundColor: AppColors.background,
             appBar: AppBar(
               backgroundColor: AppColors.background,
-              leading: const BackButton(color: AppColors.textPrimary),
+              leading: const AppBackButton(),
             ),
             body: const Center(
               child: Text(
@@ -115,10 +116,7 @@ class NewsPostScreen extends ConsumerWidget {
                 pinned: true,
                 stretch: true,
                 backgroundColor: AppColors.background,
-                leading: IconButton(
-                  icon: const Icon(Icons.arrow_back, color: AppColors.textPrimary),
-                  onPressed: () => context.pop(),
-                ),
+                leading: AppBackButton(onPressed: () => context.pop()),
                 actions: [
                   if (isCoach)
                     IconButton(
@@ -510,17 +508,17 @@ class _MedalsSection extends StatelessWidget {
             mainAxisAlignment: MainAxisAlignment.spaceEvenly,
             children: [
               _MedalColumn(
-                emoji: '🥇',
+                asset: 'assets/images/medal_gold.png',
                 count: post.goldMedals ?? 0,
                 color: AppColors.goldMedal,
               ),
               _MedalColumn(
-                emoji: '🥈',
+                asset: 'assets/images/medal_silver.png',
                 count: post.silverMedals ?? 0,
                 color: AppColors.silverMedal,
               ),
               _MedalColumn(
-                emoji: '🥉',
+                asset: 'assets/images/medal_bronze.png',
                 count: post.bronzeMedals ?? 0,
                 color: AppColors.bronzeMedal,
               ),
@@ -534,11 +532,11 @@ class _MedalsSection extends StatelessWidget {
 
 class _MedalColumn extends StatelessWidget {
   const _MedalColumn({
-    required this.emoji,
+    required this.asset,
     required this.count,
     required this.color,
   });
-  final String emoji;
+  final String asset;
   final int count;
   final Color color;
 
@@ -546,7 +544,7 @@ class _MedalColumn extends StatelessWidget {
   Widget build(BuildContext context) {
     return Column(
       children: [
-        Text(emoji, style: const TextStyle(fontSize: 32)),
+        ClipOval(child: Image.asset(asset, width: 64, height: 64)),
         const SizedBox(height: 6),
         Text(
           '$count',

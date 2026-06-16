@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 
 import '../../../core/constants/app_colors.dart';
+import '../../../shared/widgets/app_back_button.dart';
 import '../../../core/models/club_post_model.dart';
 import '../../auth/providers/auth_provider.dart';
 import '../providers/news_provider.dart';
@@ -63,10 +64,7 @@ class _NewsCommentsScreenState extends ConsumerState<NewsCommentsScreen> {
       appBar: AppBar(
         backgroundColor: AppColors.surface,
         elevation: 0,
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: AppColors.textPrimary),
-          onPressed: () => Navigator.maybePop(context),
-        ),
+        leading: AppBackButton(onPressed: () => Navigator.maybePop(context)),
         title: const Text(
           'Коментарі',
           style: TextStyle(

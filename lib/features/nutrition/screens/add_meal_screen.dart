@@ -6,6 +6,7 @@ import 'package:image_picker/image_picker.dart';
 import '../../../core/constants/app_colors.dart';
 import '../../../core/models/meal_model.dart';
 import '../../../core/utils/cloudinary_upload.dart';
+import '../../../shared/widgets/app_back_button.dart';
 import '../../../shared/widgets/gradient_button.dart';
 import '../providers/nutrition_provider.dart';
 
@@ -155,10 +156,7 @@ class _AddMealScreenState extends ConsumerState<AddMealScreen> {
         backgroundColor: AppColors.background,
         title: Text(_isEdit ? 'Редагувати прийом' : 'Додати прийом',
             style: const TextStyle(fontSize: 17, fontWeight: FontWeight.w700)),
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios_new, size: 20),
-          onPressed: () => context.pop(),
-        ),
+        leading: AppBackButton(onPressed: () => context.pop()),
         actions: [
           if (_isEdit)
             IconButton(

@@ -215,11 +215,11 @@ class MedalTrackerDashboardCard extends ConsumerWidget {
                     Container(
                       padding: const EdgeInsets.all(8),
                       decoration: BoxDecoration(
-                        gradient: AppColors.ctaGradient,
+                        color: Colors.black,
                         borderRadius: BorderRadius.circular(10),
                       ),
-                      child: const Icon(Icons.emoji_events_rounded,
-                          size: 20, color: Colors.white),
+                      child: Image.asset('assets/images/medal_tracker.png',
+                          width: 28, height: 28),
                     ),
                     const SizedBox(width: 10),
                     Expanded(
@@ -272,15 +272,15 @@ class MedalTrackerDashboardCard extends ConsumerWidget {
                 child: Row(
                   children: [
                     Expanded(child: _MedalCounter(
-                        emoji: '🥇', label: 'Золото',
+                        asset: 'assets/images/medal_gold.png', label: 'Золото',
                         count: stats.gold, color: AppColors.goldMedal)),
                     const SizedBox(width: 8),
                     Expanded(child: _MedalCounter(
-                        emoji: '🥈', label: 'Срібло',
+                        asset: 'assets/images/medal_silver.png', label: 'Срібло',
                         count: stats.silver, color: AppColors.silverMedal)),
                     const SizedBox(width: 8),
                     Expanded(child: _MedalCounter(
-                        emoji: '🥉', label: 'Бронза',
+                        asset: 'assets/images/medal_bronze.png', label: 'Бронза',
                         count: stats.bronze, color: AppColors.bronzeMedal)),
                   ],
                 ),
@@ -404,15 +404,15 @@ class AthleteMedalBlock extends ConsumerWidget {
                   Row(
                     children: [
                       Expanded(child: _MedalCounter(
-                          emoji: '🥇', label: 'Золото',
+                          asset: 'assets/images/medal_gold.png', label: 'Золото',
                           count: stats.gold, color: AppColors.goldMedal)),
                       const SizedBox(width: 8),
                       Expanded(child: _MedalCounter(
-                          emoji: '🥈', label: 'Срібло',
+                          asset: 'assets/images/medal_silver.png', label: 'Срібло',
                           count: stats.silver, color: AppColors.silverMedal)),
                       const SizedBox(width: 8),
                       Expanded(child: _MedalCounter(
-                          emoji: '🥉', label: 'Бронза',
+                          asset: 'assets/images/medal_bronze.png', label: 'Бронза',
                           count: stats.bronze, color: AppColors.bronzeMedal)),
                     ],
                   ),
@@ -489,13 +489,13 @@ class _ResultInfoRow extends StatelessWidget {
 
 class _MedalCounter extends StatelessWidget {
   const _MedalCounter({
-    required this.emoji,
+    required this.asset,
     required this.label,
     required this.count,
     required this.color,
   });
 
-  final String emoji;
+  final String asset;
   final String label;
   final int count;
   final Color color;
@@ -516,7 +516,7 @@ class _MedalCounter extends StatelessWidget {
         ),
         child: Column(
           children: [
-            Text(emoji, style: const TextStyle(fontSize: 20)),
+            ClipOval(child: Image.asset(asset, width: 38, height: 38)),
             const SizedBox(height: 4),
             Text(
               '$count',
@@ -582,15 +582,15 @@ class _TopSummaryCard extends StatelessWidget {
             Row(
               children: [
                 Expanded(child: _MedalCounter(
-                    emoji: '🥇', label: 'Золото',
+                    asset: 'assets/images/medal_gold.png', label: 'Золото',
                     count: stats.gold, color: AppColors.goldMedal)),
                 const SizedBox(width: 10),
                 Expanded(child: _MedalCounter(
-                    emoji: '🥈', label: 'Срібло',
+                    asset: 'assets/images/medal_silver.png', label: 'Срібло',
                     count: stats.silver, color: AppColors.silverMedal)),
                 const SizedBox(width: 10),
                 Expanded(child: _MedalCounter(
-                    emoji: '🥉', label: 'Бронза',
+                    asset: 'assets/images/medal_bronze.png', label: 'Бронза',
                     count: stats.bronze, color: AppColors.bronzeMedal)),
               ],
             ),

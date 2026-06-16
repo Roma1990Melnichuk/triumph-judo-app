@@ -156,11 +156,16 @@ class ChildCard extends ConsumerWidget {
                         ),
                       ),
                       const SizedBox(width: 8),
-                      Text(
-                        '${child.birthYear} р.н.',
-                        style: const TextStyle(
-                          fontSize: 12,
-                          color: AppColors.textSecondary,
+                      Flexible(
+                        fit: FlexFit.loose,
+                        child: Text(
+                          '${child.birthYear} р.н.',
+                          style: const TextStyle(
+                            fontSize: 12,
+                            color: AppColors.textSecondary,
+                          ),
+                          overflow: TextOverflow.ellipsis,
+                          maxLines: 1,
                         ),
                       ),
                       if (child.weightCategory.isNotEmpty) ...[
@@ -175,11 +180,16 @@ class ChildCard extends ConsumerWidget {
                           ),
                         ),
                         const SizedBox(width: 5),
-                        Text(
-                          displayWeight(child.weightCategory),
-                          style: const TextStyle(
-                            fontSize: 11,
-                            color: AppColors.textSecondary,
+                        Flexible(
+                          fit: FlexFit.loose,
+                          child: Text(
+                            displayWeight(child.weightCategory),
+                            style: const TextStyle(
+                              fontSize: 11,
+                              color: AppColors.textSecondary,
+                            ),
+                            overflow: TextOverflow.ellipsis,
+                            maxLines: 1,
                           ),
                         ),
                       ],

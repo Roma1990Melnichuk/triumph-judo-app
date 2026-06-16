@@ -14,6 +14,7 @@ import '../../../core/models/membership_model.dart';
 import '../providers/membership_provider.dart';
 import '../providers/tariff_provider.dart';
 import '../models/tariff_plan.dart';
+import '../../../shared/widgets/app_back_button.dart';
 import 'membership_detail_screen.dart';
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -64,21 +65,7 @@ class MembershipScreen extends ConsumerWidget {
               padding: const EdgeInsets.fromLTRB(12, 8, 12, 0),
               child: Row(
                 children: [
-                  GestureDetector(
-                    onTap: () => context.pop(),
-                    child: Container(
-                      width: 44,
-                      height: 44,
-                      decoration: BoxDecoration(
-                        color: AppColors.surface2,
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      child: const Center(
-                        child: Icon(Icons.arrow_back_ios_new_rounded,
-                            size: 20, color: AppColors.textPrimary),
-                      ),
-                    ),
-                  ),
+                  AppBackButton(onPressed: () => context.pop()),
                   const SizedBox(width: 12),
                   const Text(
                     'Абонементи',

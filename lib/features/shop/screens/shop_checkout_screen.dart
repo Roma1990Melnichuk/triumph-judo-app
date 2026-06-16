@@ -7,6 +7,7 @@ import 'package:judo_app/core/models/cart_model.dart';
 import 'package:judo_app/core/models/shop_order_model.dart';
 import 'package:judo_app/features/shop/providers/cart_provider.dart';
 import 'package:judo_app/features/shop/providers/order_provider.dart';
+import 'package:judo_app/shared/widgets/app_back_button.dart';
 import 'package:judo_app/shared/widgets/gradient_button.dart';
 
 class ShopCheckoutScreen extends ConsumerStatefulWidget {
@@ -86,6 +87,7 @@ class _ShopCheckoutScreenState extends ConsumerState<ShopCheckoutScreen> {
         backgroundColor: AppColors.surface,
         foregroundColor: AppColors.textPrimary,
         elevation: 0,
+        leading: AppBackButton(onPressed: () => context.pop()),
         title: const Text(
           'Оформлення замовлення',
           style: TextStyle(

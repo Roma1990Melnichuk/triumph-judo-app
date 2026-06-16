@@ -36,6 +36,7 @@ import '../../../features/membership/providers/tariff_provider.dart';
 import '../../../features/nutrition/providers/nutrition_provider.dart';
 import '../../../features/nutrition/widgets/nutrition_widgets.dart';
 import '../../../core/models/meal_model.dart' show MealStatus;
+import '../utils/peer_rank.dart';
 
 class ChildProfileScreen extends ConsumerStatefulWidget {
   const ChildProfileScreen({super.key, required this.childId});
@@ -104,34 +105,15 @@ class _ChildProfileScreenState extends ConsumerState<ChildProfileScreen>
         final totalExercises = beltReqAsync?.exercises.length ?? 0;
         final beltPct = totalExercises > 0
             ? (passedCount / totalExercises * 100).round()
-            : 0;
+            : 100;
         final medalCount = results.where((r) => r.place <= 3).length;
 
         // Peer ranks among all club athletes
-        final _sorted = [...allChildrenList]..sort((a, b) {
-          final cmp = b.totalPoints.compareTo(a.totalPoints);
-          if (cmp != 0) return cmp;
-          return a.lastName.compareTo(b.lastName);
-        });
-        final _yrCounters = <int, int>{};
-        final _yrTotals   = <int, int>{};
-        final _wtCounters = <String, int>{};
-        final _wtTotals   = <String, int>{};
-        final _yrRanks    = <String, int>{};
-        final _wtRanks    = <String, int>{};
-        for (final c in _sorted) {
-          _yrTotals[c.birthYear]  = (_yrTotals[c.birthYear]  ?? 0) + 1;
-          _yrCounters[c.birthYear] = (_yrCounters[c.birthYear] ?? 0) + 1;
-          _yrRanks[c.id] = _yrCounters[c.birthYear]!;
-          final wk = '${c.birthYear}/${c.weightCategory}';
-          _wtTotals[wk]   = (_wtTotals[wk]   ?? 0) + 1;
-          _wtCounters[wk] = (_wtCounters[wk]  ?? 0) + 1;
-          _wtRanks[c.id]  = _wtCounters[wk]!;
-        }
-        final sameYearRank    = _yrRanks[childId];
-        final sameYearTotal   = _yrTotals[child.birthYear];
-        final sameWeightRank  = _wtRanks[childId];
-        final sameWeightTotal = _wtTotals['${child.birthYear}/${child.weightCategory}'];
+        final _ranks        = computePeerRanks(allChildrenList);
+        final sameYearRank  = _ranks.yearRanks[childId];
+        final sameYearTotal = _ranks.yearTotals[child.birthYear];
+        final sameWeightRank  = _ranks.weightRanks[childId];
+        final sameWeightTotal = _ranks.weightTotals['${child.birthYear}/${child.weightCategory}'];
 
         final attendanceStats =
             ref.watch(childAttendanceStatsProvider(childId)).asData?.value;
@@ -317,8 +299,8 @@ class _ChildProfileScreenState extends ConsumerState<ChildProfileScreen>
                                   color: AppColors.background.withValues(alpha: 0.55),
                                   borderRadius: BorderRadius.circular(12),
                                 ),
-                                child: const Center(
-                                  child: TriumphIcon(TIcon.tasks, size: 22, color: AppColors.textPrimary),
+                                child: Center(
+                                  child: Image.asset('assets/images/my_assignments.png', width: 34, height: 34),
                                 ),
                               ),
                             ),
@@ -333,8 +315,8 @@ class _ChildProfileScreenState extends ConsumerState<ChildProfileScreen>
                                     color: AppColors.background.withValues(alpha: 0.55),
                                     borderRadius: BorderRadius.circular(12),
                                   ),
-                                  child: const Center(
-                                    child: Icon(Icons.edit_outlined, size: 20, color: AppColors.textPrimary),
+                                  child: Center(
+                                    child: Image.asset('assets/images/edit_profile.png', width: 34, height: 34),
                                   ),
                                 ),
                               ),
@@ -350,8 +332,8 @@ class _ChildProfileScreenState extends ConsumerState<ChildProfileScreen>
                                     color: AppColors.background.withValues(alpha: 0.55),
                                     borderRadius: BorderRadius.circular(12),
                                   ),
-                                  child: const Center(
-                                    child: Icon(Icons.edit_outlined, size: 20, color: AppColors.textPrimary),
+                                  child: Center(
+                                    child: Image.asset('assets/images/edit_profile.png', width: 34, height: 34),
                                   ),
                                 ),
                               ),
@@ -365,8 +347,8 @@ class _ChildProfileScreenState extends ConsumerState<ChildProfileScreen>
                                     color: AppColors.background.withValues(alpha: 0.55),
                                     borderRadius: BorderRadius.circular(12),
                                   ),
-                                  child: const Center(
-                                    child: TriumphIcon(TIcon.delete, size: 22, color: AppColors.error),
+                                  child: Center(
+                                    child: Image.asset('assets/images/del_athlete.png', width: 34, height: 34),
                                   ),
                                 ),
                               ),

@@ -15,6 +15,7 @@ import 'package:judo_app/features/auth/providers/auth_provider.dart';
 import 'package:judo_app/features/news/providers/news_provider.dart';
 import 'package:judo_app/features/team/providers/children_provider.dart';
 import 'package:judo_app/shared/widgets/gradient_button.dart';
+import 'package:judo_app/shared/widgets/app_back_button.dart';
 
 class NewsCreatePostScreen extends ConsumerStatefulWidget {
   const NewsCreatePostScreen({super.key, this.postId});
@@ -800,10 +801,7 @@ class _NewsCreatePostScreenState extends ConsumerState<NewsCreatePostScreen> {
             fontSize: 18,
           ),
         ),
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back),
-          onPressed: () => context.pop(),
-        ),
+        leading: AppBackButton(onPressed: () => context.pop()),
       ),
       body: Form(
         key: _formKey,

@@ -1,5 +1,6 @@
 /// E2E тести TC-AUTH-016..TC-AUTH-028 — role-based UI visibility.
 /// Covers TeamListScreen, RatingScreen, SettingsScreen.
+/// ВАЖЛИВО: overflow НЕ suppressується — це дозволяє тестам виявляти реальні баги.
 library;
 
 import 'package:fake_cloud_firestore/fake_cloud_firestore.dart';
@@ -129,8 +130,10 @@ Widget _settingsApp(UserModel user) {
 
 Future<void> _pump(WidgetTester tester, Widget app) async {
   await tester.pumpWidget(app);
-  await tester.pump();
-  await tester.pump(const Duration(milliseconds: 100));
+  for (var i = 0; i < 5; i++) {
+    await tester.pump();
+  }
+  await tester.pump(const Duration(milliseconds: 50));
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -140,7 +143,7 @@ void main() {
 
   group('TeamListScreen — тренер бачить всі елементи управління', () {
     testWidgets(
-        'TC-AUTH-016: тренер бачить кнопку додати спортсмена (FAB)',
+        'TC-AUTH-016: тренер бачить FAB для додавання спортсмена',
         (tester) async {
       tester.view.physicalSize = const Size(390 * 3, 844 * 3);
       tester.view.devicePixelRatio = 3.0;
@@ -148,14 +151,6 @@ void main() {
         tester.view.resetPhysicalSize();
         tester.view.resetDevicePixelRatio();
       });
-
-      // Suppress pre-existing overflow issues on this screen
-      final handler = FlutterError.onError;
-      FlutterError.onError = (d) {
-        if (d.toString().contains('overflowed')) return;
-        handler?.call(d);
-      };
-      addTearDown(() => FlutterError.onError = handler);
 
       await _pump(tester, _teamApp(_coachUser, [_child('c1')]));
 
@@ -173,17 +168,9 @@ void main() {
         tester.view.resetDevicePixelRatio();
       });
 
-      final handler = FlutterError.onError;
-      FlutterError.onError = (d) {
-        if (d.toString().contains('overflowed')) return;
-        handler?.call(d);
-      };
-      addTearDown(() => FlutterError.onError = handler);
-
       await _pump(tester, _teamApp(_coachUser, [_child('c1')]));
 
       expect(tester.takeException(), isNull);
-      // The export button uses Icons.download_outlined (coach-only area in app bar)
       final exportFinder = find.byWidgetPredicate(
         (w) =>
             w is Icon &&
@@ -201,7 +188,7 @@ void main() {
 
   group('TeamListScreen — батько НЕ бачить тренерські елементи', () {
     testWidgets(
-        'TC-AUTH-020: батько НЕ бачить FAB для додавання спортсмена',
+        'TC-AUTH-020: батько НЕ бачить FAB',
         (tester) async {
       tester.view.physicalSize = const Size(390 * 3, 844 * 3);
       tester.view.devicePixelRatio = 3.0;
@@ -209,13 +196,6 @@ void main() {
         tester.view.resetPhysicalSize();
         tester.view.resetDevicePixelRatio();
       });
-
-      final handler = FlutterError.onError;
-      FlutterError.onError = (d) {
-        if (d.toString().contains('overflowed')) return;
-        handler?.call(d);
-      };
-      addTearDown(() => FlutterError.onError = handler);
 
       await _pump(tester, _teamApp(_parentUser, [_child('kid1')]));
 
@@ -233,13 +213,6 @@ void main() {
         tester.view.resetDevicePixelRatio();
       });
 
-      final handler = FlutterError.onError;
-      FlutterError.onError = (d) {
-        if (d.toString().contains('overflowed')) return;
-        handler?.call(d);
-      };
-      addTearDown(() => FlutterError.onError = handler);
-
       final children = [
         _child('kid1', lastName: 'Іванов'),
         _child('kid2', lastName: 'Сидоренко'),
@@ -251,11 +224,10 @@ void main() {
     });
   });
 
-  // ── TC-AUTH-023..024: RatingScreen — role-agnostic render ────────────────────
+  // ── TC-AUTH-023..024: RatingScreen ───────────────────────────────────────────
 
   group('RatingScreen — роль-агностичний рендер', () {
-    testWidgets(
-        'TC-AUTH-023: тренер: рендер без краша',
+    testWidgets('TC-AUTH-023: тренер: рендер без краша і overflow',
         (tester) async {
       tester.view.physicalSize = const Size(390 * 3, 844 * 3);
       tester.view.devicePixelRatio = 3.0;
@@ -263,13 +235,6 @@ void main() {
         tester.view.resetPhysicalSize();
         tester.view.resetDevicePixelRatio();
       });
-
-      final handler = FlutterError.onError;
-      FlutterError.onError = (d) {
-        if (d.toString().contains('overflowed')) return;
-        handler?.call(d);
-      };
-      addTearDown(() => FlutterError.onError = handler);
 
       await _pump(
         tester,
@@ -279,8 +244,7 @@ void main() {
       expect(tester.takeException(), isNull);
     });
 
-    testWidgets(
-        'TC-AUTH-024: батько: рендер без краша',
+    testWidgets('TC-AUTH-024: батько: рендер без краша і overflow',
         (tester) async {
       tester.view.physicalSize = const Size(390 * 3, 844 * 3);
       tester.view.devicePixelRatio = 3.0;
@@ -288,13 +252,6 @@ void main() {
         tester.view.resetPhysicalSize();
         tester.view.resetDevicePixelRatio();
       });
-
-      final handler = FlutterError.onError;
-      FlutterError.onError = (d) {
-        if (d.toString().contains('overflowed')) return;
-        handler?.call(d);
-      };
-      addTearDown(() => FlutterError.onError = handler);
 
       final parentWithChild = UserModel(
         uid: 'parent1',
@@ -314,11 +271,10 @@ void main() {
     });
   });
 
-  // ── TC-AUTH-025..028: SettingsScreen — both roles render without crash ────────
+  // ── TC-AUTH-025..028: SettingsScreen ─────────────────────────────────────────
 
-  group('SettingsScreen — обидві ролі рендеряться без краша', () {
-    testWidgets(
-        'TC-AUTH-025: тренер: рендер без краша',
+  group('SettingsScreen — обидві ролі без краша і overflow', () {
+    testWidgets('TC-AUTH-025: тренер: рендер без краша і overflow',
         (tester) async {
       tester.view.physicalSize = const Size(390 * 3, 844 * 3);
       tester.view.devicePixelRatio = 3.0;
@@ -326,21 +282,13 @@ void main() {
         tester.view.resetPhysicalSize();
         tester.view.resetDevicePixelRatio();
       });
-
-      final handler = FlutterError.onError;
-      FlutterError.onError = (d) {
-        if (d.toString().contains('overflowed')) return;
-        handler?.call(d);
-      };
-      addTearDown(() => FlutterError.onError = handler);
 
       await _pump(tester, _settingsApp(_coachUser));
 
       expect(tester.takeException(), isNull);
     });
 
-    testWidgets(
-        'TC-AUTH-026: батько: рендер без краша',
+    testWidgets('TC-AUTH-026: батько: рендер без краша і overflow',
         (tester) async {
       tester.view.physicalSize = const Size(390 * 3, 844 * 3);
       tester.view.devicePixelRatio = 3.0;
@@ -348,13 +296,6 @@ void main() {
         tester.view.resetPhysicalSize();
         tester.view.resetDevicePixelRatio();
       });
-
-      final handler = FlutterError.onError;
-      FlutterError.onError = (d) {
-        if (d.toString().contains('overflowed')) return;
-        handler?.call(d);
-      };
-      addTearDown(() => FlutterError.onError = handler);
 
       await _pump(tester, _settingsApp(_parentUser));
 

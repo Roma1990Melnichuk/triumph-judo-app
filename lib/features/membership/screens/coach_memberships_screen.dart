@@ -10,6 +10,7 @@ import '../../../core/models/membership_model.dart';
 import '../providers/membership_provider.dart';
 import '../models/tariff_plan.dart';
 import '../providers/tariff_provider.dart';
+import '../../../shared/widgets/app_back_button.dart';
 import '../../team/providers/children_provider.dart';
 
 class CoachMembershipsScreen extends ConsumerWidget {
@@ -25,7 +26,7 @@ class CoachMembershipsScreen extends ConsumerWidget {
       floatingActionButton: FloatingActionButton.extended(
         backgroundColor: AppColors.accent,
         foregroundColor: Colors.black,
-        icon: const Icon(Icons.settings_outlined, size: 20),
+        icon: Image.asset('assets/images/tariffs.png', width: 26, height: 26),
         label: const Text('Тарифи', style: TextStyle(fontWeight: FontWeight.w700)),
         onPressed: () => showModalBottomSheet(
           context: context,
@@ -43,21 +44,7 @@ class CoachMembershipsScreen extends ConsumerWidget {
               padding: const EdgeInsets.fromLTRB(12, 8, 12, 0),
               child: Row(
                 children: [
-                  GestureDetector(
-                    onTap: () => context.pop(),
-                    child: Container(
-                      width: 44,
-                      height: 44,
-                      decoration: BoxDecoration(
-                        color: AppColors.surface2,
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      child: const Center(
-                        child: Icon(Icons.arrow_back_ios_new_rounded,
-                            size: 20, color: AppColors.textPrimary),
-                      ),
-                    ),
-                  ),
+                  AppBackButton(onPressed: () => context.pop()),
                   const SizedBox(width: 12),
                   const Text(
                     'Абонементи',

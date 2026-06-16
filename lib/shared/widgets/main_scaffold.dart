@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import '../../core/constants/app_colors.dart';
 import '../../features/auth/providers/auth_provider.dart';
 import 'offline_banner.dart';
+import 'triumph_icon.dart';
 
 class MainScaffold extends ConsumerStatefulWidget {
   const MainScaffold({super.key, required this.child});
@@ -22,21 +23,21 @@ class _MainScaffoldState extends ConsumerState<MainScaffold>
   static const _coachRoutes  = ['/home', '/team', '/rating', '/events', '/belts', '/settings'];
   static const _parentRoutes = ['/home', '/team', '/rating', '/events', '/settings'];
 
-  // Luxury glyph icons — clean vectors, readable at 26 px
-  static const _coachNavIcons = <IconData>[
-    Icons.home_rounded,          // Головна
-    Icons.groups_rounded,        // Команда
-    Icons.leaderboard_rounded,   // Рейтинг
-    Icons.event_note_rounded,    // Графік
-    Icons.layers_rounded,        // Пояси
-    Icons.tune_rounded,          // Налашт.
+  // Premium TIcon set for BottomNav
+  static const _coachNavIcons = <TIcon>[
+    TIcon.home3d,          // Головна
+    TIcon.team,            // Команда
+    TIcon.rating3d,        // Рейтинг
+    TIcon.calendar3d,      // Графік
+    TIcon.belts,           // Пояси (fixed: belts.webp exists, belts3d.png doesn't)
+    TIcon.settings3d,      // Налашт.
   ];
-  static const _parentNavIcons = <IconData>[
-    Icons.home_rounded,
-    Icons.groups_rounded,
-    Icons.leaderboard_rounded,
-    Icons.event_note_rounded,    // Графік
-    Icons.tune_rounded,
+  static const _parentNavIcons = <TIcon>[
+    TIcon.home3d,
+    TIcon.team,
+    TIcon.rating3d,
+    TIcon.calendar3d,      // Графік
+    TIcon.settings3d,
   ];
 
   static const _coachLabels  = ['Головна', 'Команда', 'Рейтинг', 'Графік', 'Пояси', 'Налашт.'];
@@ -113,7 +114,7 @@ class _TriumphNavBar extends StatelessWidget {
   });
 
   final int currentIndex;
-  final List<IconData> icons;
+  final List<TIcon> icons;
   final List<String> labels;
   final List<Animation<double>> tapScales;
   final ValueChanged<int> onTap;
@@ -191,14 +192,12 @@ class _NavItem extends StatelessWidget {
     required this.active,
   });
 
-  final IconData icon;
-  final String   label;
-  final bool     active;
+  final TIcon  icon;
+  final String label;
+  final bool   active;
 
-  // Orange glow colour constants
-  static const _glowColor  = Color(0xCCFFAA00); // glow layer (blurred copy)
-  static const _activeColor = Color(0xFFFFB000); // crisp top icon
-  static const _inactiveColor = Color(0xFF8A8078); // warm neutral-grey (not cold)
+  static const _activeColor   = Color(0xFFFFB000);
+  static const _inactiveColor = Color(0xFF8A8078);
 
   @override
   Widget build(BuildContext context) {
@@ -208,24 +207,12 @@ class _NavItem extends StatelessWidget {
       children: [
         SizedBox(
           width: 44,
-          height: 34,
-          child: Stack(
-            alignment: Alignment.center,
-            clipBehavior: Clip.none,
-            children: [
-              if (active) ...[
-                // Glow: blurred orange copy of the icon underneath
-                ClipRect(
-                  child: ImageFiltered(
-                    imageFilter: ImageFilter.blur(sigmaX: 9, sigmaY: 9),
-                    child: Icon(icon, size: 26, color: _glowColor),
-                  ),
-                ),
-                // Crisp active icon on top
-                Icon(icon, size: 26, color: _activeColor),
-              ] else
-                Icon(icon, size: 24, color: _inactiveColor),
-            ],
+          height: 40,
+          child: Center(
+            child: Opacity(
+              opacity: active ? 1.0 : 0.45,
+              child: TriumphIcon(icon, size: active ? 32 : 26),
+            ),
           ),
         ),
         const SizedBox(height: 2),
@@ -237,9 +224,6 @@ class _NavItem extends StatelessWidget {
             color: active
                 ? _activeColor
                 : _inactiveColor.withValues(alpha: 0.85),
-            shadows: active
-                ? [Shadow(color: _glowColor, blurRadius: 10)]
-                : null,
           ),
           child: Text(label),
         ),

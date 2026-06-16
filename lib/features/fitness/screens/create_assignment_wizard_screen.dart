@@ -7,6 +7,7 @@ import '../../../core/models/child_model.dart';
 import '../../../core/models/fitness_assignment_model.dart';
 import '../../../core/models/fitness_exercise_model.dart';
 import '../../../core/models/group_model.dart';
+import '../../../shared/widgets/app_back_button.dart';
 import '../../../shared/widgets/gradient_button.dart';
 import '../../auth/providers/auth_provider.dart';
 import '../../team/providers/children_provider.dart';
@@ -173,20 +174,7 @@ class _CreateAssignmentWizardScreenState
                   if (_step == 0)
                     const SizedBox(width: 56)
                   else
-                    GestureDetector(
-                      onTap: () => setState(() => _step--),
-                      child: Container(
-                        width: 44,
-                        height: 44,
-                        decoration: BoxDecoration(
-                          color: AppColors.surface2,
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        child: const Center(
-                          child: Icon(Icons.arrow_back, size: 22, color: AppColors.textPrimary),
-                        ),
-                      ),
-                    ),
+                    AppBackButton(onPressed: () => setState(() => _step--)),
                   const SizedBox(width: 12),
                   Expanded(
                     child: Text(

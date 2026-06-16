@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 import '../../../core/constants/app_colors.dart';
 import '../../../core/models/nutrition_tip_model.dart';
+import '../../../shared/widgets/app_back_button.dart';
 import '../../auth/providers/auth_provider.dart';
 import '../providers/nutrition_provider.dart';
 
@@ -41,11 +42,7 @@ class _NutritionTipsScreenState extends ConsumerState<NutritionTipsScreen> {
             pinned: true,
             backgroundColor: AppColors.background,
             elevation: 0,
-            leading: IconButton(
-              icon: const Icon(Icons.arrow_back_ios_new,
-                  color: AppColors.textPrimary, size: 20),
-              onPressed: () => context.pop(),
-            ),
+            leading: AppBackButton(onPressed: () => context.pop()),
             actions: isCoach
                 ? [
                     IconButton(

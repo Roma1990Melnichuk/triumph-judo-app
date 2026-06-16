@@ -9,6 +9,7 @@ import '../../../core/models/child_model.dart' show ChildModel, displayWeight;
 import '../providers/body_measurement_provider.dart';
 import '../providers/children_provider.dart';
 import '../../../shared/widgets/gradient_button.dart';
+import '../../../shared/widgets/app_back_button.dart';
 
 class BodyMeasurementsScreen extends ConsumerWidget {
   const BodyMeasurementsScreen({super.key, required this.childId});
@@ -31,11 +32,7 @@ class BodyMeasurementsScreen extends ConsumerWidget {
             pinned: true,
             backgroundColor: AppColors.background,
             elevation: 0,
-            leading: IconButton(
-              icon: const Icon(Icons.arrow_back_ios_new,
-                  color: AppColors.textPrimary, size: 20),
-              onPressed: () => context.pop(),
-            ),
+            leading: AppBackButton(onPressed: () => context.pop()),
             title: Text(child?.fullName ?? 'Вага та ріст',
                 style: const TextStyle(
                     fontSize: 17,

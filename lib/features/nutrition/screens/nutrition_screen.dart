@@ -7,6 +7,7 @@ import '../../../core/models/meal_model.dart';
 import '../../auth/providers/auth_provider.dart';
 import '../../team/providers/children_provider.dart';
 import '../providers/nutrition_provider.dart';
+import '../../../shared/widgets/app_back_button.dart';
 import '../widgets/nutrition_widgets.dart';
 
 class NutritionScreen extends ConsumerWidget {
@@ -264,11 +265,7 @@ class _NutritionDashboardState extends ConsumerState<NutritionDashboard> {
             backgroundColor: AppColors.background,
             elevation: 0,
             leading: widget.showBackButton
-                ? IconButton(
-                    icon: const Icon(Icons.arrow_back_ios_new,
-                        color: AppColors.textPrimary, size: 20),
-                    onPressed: () => context.pop(),
-                  )
+                ? AppBackButton(onPressed: () => context.pop())
                 : null,
             automaticallyImplyLeading: widget.showBackButton,
             actions: [

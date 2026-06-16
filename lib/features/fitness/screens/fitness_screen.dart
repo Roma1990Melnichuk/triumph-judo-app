@@ -7,6 +7,7 @@ import '../../../core/models/fitness_log_model.dart';
 import '../../auth/providers/auth_provider.dart';
 import '../providers/fitness_provider.dart';
 import '../providers/fitness_assignment_provider.dart';
+import '../../../shared/widgets/app_back_button.dart';
 import '../../../shared/widgets/triumph_icon.dart';
 
 class FitnessScreen extends ConsumerStatefulWidget {
@@ -68,14 +69,7 @@ class _FitnessScreenState extends ConsumerState<FitnessScreen> {
             pinned: true,
             backgroundColor: AppColors.background,
             elevation: 0,
-            leading: GestureDetector(
-              onTap: () => context.pop(),
-              child: const Icon(
-                Icons.arrow_back_ios_new,
-                color: AppColors.textPrimary,
-                size: 20,
-              ),
-            ),
+            leading: AppBackButton(onPressed: () => context.pop()),
             flexibleSpace: FlexibleSpaceBar(
               collapseMode: CollapseMode.pin,
               background: Container(
@@ -146,11 +140,7 @@ class _FitnessScreenState extends ConsumerState<FitnessScreen> {
                   padding: const EdgeInsets.fromLTRB(12, 12, 12, 0),
                   child: Row(
                     children: [
-                      ColorFiltered(
-                        colorFilter: const ColorFilter.mode(
-                            AppColors.accent, BlendMode.srcIn),
-                        child: TriumphIcon(TIcon.tasks, size: 16),
-                      ),
+                      Image.asset('assets/images/my_assignments.png', width: 24, height: 24),
                       const SizedBox(width: 6),
                       Text(
                         'Активні завдання (${activeAssignments.length})',

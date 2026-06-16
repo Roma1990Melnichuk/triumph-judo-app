@@ -9,6 +9,7 @@ import 'package:judo_app/core/models/shop_product_model.dart';
 import 'package:judo_app/features/shop/providers/cart_provider.dart';
 import 'package:judo_app/features/shop/providers/shop_provider.dart';
 import 'package:judo_app/shared/widgets/gradient_button.dart';
+import 'package:judo_app/shared/widgets/app_back_button.dart';
 
 Widget _shopImage(
   String url, {
@@ -72,11 +73,7 @@ class ShopHomeScreen extends ConsumerWidget {
             surfaceTintColor: Colors.transparent,
             foregroundColor: AppColors.textPrimary,
             pinned: true,
-            leading: IconButton(
-              icon: const Icon(Icons.arrow_back_ios_new,
-                  color: AppColors.textPrimary, size: 20),
-              onPressed: () => context.pop(),
-            ),
+            leading: AppBackButton(onPressed: () => context.pop()),
             title: Text(
               'Клубний магазин',
               style: GoogleFonts.rubik(

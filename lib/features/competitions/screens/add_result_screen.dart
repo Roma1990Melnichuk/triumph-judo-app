@@ -7,6 +7,7 @@ import '../../../core/utils/form_validators.dart';
 import '../../../core/models/competition_result_model.dart';
 import '../../../features/auth/providers/auth_provider.dart';
 import '../../../features/team/providers/children_provider.dart';
+import '../../../shared/widgets/app_back_button.dart';
 import '../../../shared/widgets/gradient_button.dart';
 import '../providers/competitions_provider.dart';
 
@@ -184,21 +185,7 @@ class _AddResultScreenState extends ConsumerState<AddResultScreen> {
               padding: const EdgeInsets.fromLTRB(12, 8, 12, 0),
               child: Row(
                 children: [
-                  GestureDetector(
-                    onTap: () => context.pop(),
-                    child: Container(
-                      width: 44,
-                      height: 44,
-                      decoration: BoxDecoration(
-                        color: AppColors.surface2,
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      child: const Center(
-                        child: Icon(Icons.arrow_back_ios_new,
-                            size: 20, color: AppColors.textPrimary),
-                      ),
-                    ),
-                  ),
+                  AppBackButton(onPressed: () => context.pop()),
                   const SizedBox(width: 12),
                   const Text(
                     'Додати результат',

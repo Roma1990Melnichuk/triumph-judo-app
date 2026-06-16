@@ -44,7 +44,7 @@ class AchievementNotifier extends StateNotifier<AsyncValue<void>> {
     String? note,
   }) async {
     state = const AsyncValue.loading();
-    state = await AsyncValue.guard(() async {
+    try {
       final docId = '${childId}_$defId';
       await _db.collection('achievements').doc(docId).set({
         'childId': childId,
@@ -53,7 +53,11 @@ class AchievementNotifier extends StateNotifier<AsyncValue<void>> {
         'grantedByCoachId': coachId,
         if (note != null && note.isNotEmpty) 'note': note,
       });
-    });
+      state = const AsyncValue.data(null);
+    } catch (e, st) {
+      state = AsyncValue.error(e, st);
+      rethrow;
+    }
   }
 
   Future<void> grantBulk({
@@ -64,7 +68,7 @@ class AchievementNotifier extends StateNotifier<AsyncValue<void>> {
     void Function(int done, int total)? onProgress,
   }) async {
     state = const AsyncValue.loading();
-    state = await AsyncValue.guard(() async {
+    try {
       const maxBatchSize = 400;
       var currentBatchSize = 0;
       var batch = _db.batch();
@@ -96,16 +100,24 @@ class AchievementNotifier extends StateNotifier<AsyncValue<void>> {
         await batch.commit();
         onProgress?.call(done, total);
       }
-    });
+      state = const AsyncValue.data(null);
+    } catch (e, st) {
+      state = AsyncValue.error(e, st);
+      rethrow;
+    }
   }
 
   Future<void> revoke(String childId, String defId) async {
     state = const AsyncValue.loading();
-    state = await AsyncValue.guard(() async {
+    try {
       await _db
           .collection('achievements')
           .doc('${childId}_$defId')
           .delete();
-    });
+      state = const AsyncValue.data(null);
+    } catch (e, st) {
+      state = AsyncValue.error(e, st);
+      rethrow;
+    }
   }
 }

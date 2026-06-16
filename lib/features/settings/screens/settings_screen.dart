@@ -20,6 +20,7 @@ import '../../../shared/widgets/gradient_button.dart';
 import '../../../shared/widgets/triumph_icon.dart';
 import '../../membership/models/tariff_plan.dart';
 import '../../membership/providers/tariff_provider.dart';
+import 'coach_financial_settings_sheet.dart';
 
 class SettingsScreen extends ConsumerWidget {
   const SettingsScreen({super.key});
@@ -135,28 +136,32 @@ class SettingsScreen extends ConsumerWidget {
                   onTap: () => _showTariffEditor(context, ref),
                 ),
                 _MenuItem(
-                  icon: Icons.group_outlined,
-                  color: const Color(0xFF34C759),
+                  tIcon: TIcon.memberCard3d,
+                  label: 'Фінансові налаштування',
+                  onTap: () => showCoachFinancialSettings(context),
+                ),
+                _MenuItem(
+                  tIcon: TIcon.family3d,
                   label: 'Імпорт спортсменів',
                   onTap: () => _showCsvImport(context, ref, user!),
                 ),
                 _MenuItem(
-                  tIcon: TIcon.training3d,
+                  tIcon: TIcon.trainer3d,
                   label: 'Індивідуальні тренування',
                   onTap: () => context.push('/individual-training'),
                 ),
                 _MenuItem(
-                  tIcon: TIcon.motivation3d,
+                  tIcon: TIcon.scroll3d,
                   label: 'Завдання спортсменам',
                   onTap: () => context.push('/assignments'),
                 ),
                 _MenuItem(
-                  tIcon: TIcon.calendar3d,
+                  tIcon: TIcon.dojo3d,
                   label: 'Розклад тренувань',
                   onTap: () => context.push('/schedule'),
                 ),
                 _MenuItem(
-                  tIcon: TIcon.trophy3d,
+                  tIcon: TIcon.award3d,
                   label: 'Типи змагань',
                   onTap: () => _showCompetitionTypes(context, ref, user!),
                 ),
@@ -166,13 +171,12 @@ class SettingsScreen extends ConsumerWidget {
                   onTap: () => _showCoachManagement(context, ref, user!),
                 ),
                 _MenuItem(
-                  tIcon: TIcon.medal3d,
+                  imagePath: 'assets/images/vidacha.png',
                   label: 'Видача досягнень',
                   onTap: () => context.push('/achievements'),
                 ),
                 _MenuItem(
-                  icon: Icons.style,
-                  color: const Color(0xFFFF9500),
+                  imagePath: 'assets/images/mas.png',
                   label: 'Масова здача поясів',
                   onTap: () => context.push('/bulk-belt'),
                 ),
@@ -185,39 +189,34 @@ class SettingsScreen extends ConsumerWidget {
                   ),
                 ),
                 _MenuItem(
-                  icon: Icons.bar_chart,
-                  color: const Color(0xFF30D158),
+                  tIcon: TIcon.dumbbell3d,
                   label: 'Масові фітнес-цілі',
                   onTap: () => context.push('/bulk-fitness-goals'),
                 ),
                 _MenuItem(
-                  icon: Icons.quiz_outlined,
-                  color: const Color(0xFF5E5CE6),
+                  imagePath: 'assets/images/ask.png',
                   label: 'Опитування спортсменів',
                   onTap: () => context.push('/questionnaires'),
                 ),
                 _MenuItem(
-                  icon: Icons.fitness_center_rounded,
-                  color: AppColors.orange,
+                  imagePath: 'assets/images/bibl.png',
                   label: 'Бібліотека вправ',
                   onTap: () => context.push('/exercise-library'),
                 ),
                 _MenuItem(
-                  icon: Icons.history,
-                  color: const Color(0xFF5AC8FA),
+                  imagePath: 'assets/images/export.png',
                   label: 'Експорт даних',
                   onTap: () => _showExportMenu(context, ref),
                 ),
                 _MenuItem(
-                  icon: Icons.restart_alt,
+                  imagePath: 'assets/images/skid_res.png',
                   label: 'Скидання результатів сезону',
                   onTap: () => _showResetDialog(context, ref),
-                  color: AppColors.error,
                 ),
               ],
               if (!isCoach) ...[
                 _MenuItem(
-                  tIcon: TIcon.training3d,
+                  tIcon: TIcon.trainer3d,
                   label: 'Індивідуальні тренування',
                   onTap: () => context.push('/individual-training'),
                 ),
@@ -228,8 +227,7 @@ class SettingsScreen extends ConsumerWidget {
                   onTap: () => _showLinkChild(context, ref, user!),
                 ),
                 _MenuItem(
-                  icon: Icons.quiz_outlined,
-                  color: const Color(0xFF5E5CE6),
+                  imagePath: 'assets/images/ask.png',
                   label: 'Опитування',
                   onTap: () => context.push('/questionnaires'),
                 ),
@@ -577,14 +575,16 @@ class _MenuItem extends StatelessWidget {
   const _MenuItem({
     this.icon,
     this.tIcon,
+    this.imagePath,
     required this.label,
     required this.onTap,
     this.color,
     this.badge,
-  }) : assert(icon != null || tIcon != null);
+  }) : assert(icon != null || tIcon != null || imagePath != null);
 
   final IconData? icon;
   final TIcon? tIcon;
+  final String? imagePath;
   final String label;
   final VoidCallback onTap;
   final Color? color;
@@ -597,7 +597,13 @@ class _MenuItem extends StatelessWidget {
   Widget build(BuildContext context) {
     final c = color ?? AppColors.primary;
     final Widget leading;
-    if (tIcon != null && _is3dIcon(tIcon!)) {
+    if (imagePath != null) {
+      // Custom PNG icon with opaque background — black bg blends into container
+      leading = ClipRRect(
+        borderRadius: BorderRadius.circular(12),
+        child: Image.asset(imagePath!, width: 40, height: 40, fit: BoxFit.cover),
+      );
+    } else if (tIcon != null && _is3dIcon(tIcon!)) {
       // 3D photorealistic icon — clip to rounded square, fill space
       leading = ClipRRect(
         borderRadius: BorderRadius.circular(12),

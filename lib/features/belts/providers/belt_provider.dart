@@ -169,8 +169,8 @@ class BeltNotifier extends StateNotifier<AsyncValue<void>> {
       for (final id in exerciseIds) 'passed.$id': true,
     });
     await _db.collection('children').doc(childId).update({'beltReady': true});
-    AnalyticsService.allExercisesApproved(belt: belt.name);
-    AnalyticsService.beltReadyAchieved(belt: belt.name);
+    try { AnalyticsService.allExercisesApproved(belt: belt.name); } catch (_) {}
+    try { AnalyticsService.beltReadyAchieved(belt: belt.name); } catch (_) {}
   }
 
   /// Read current progress & requirements and sync beltReady field on the child.

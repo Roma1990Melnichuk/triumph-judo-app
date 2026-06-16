@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../core/constants/app_colors.dart';
 import '../../../core/models/food_product_model.dart';
+import '../../../shared/widgets/app_back_button.dart';
 import '../providers/nutrition_provider.dart';
 
 class FoodProductsScreen extends ConsumerStatefulWidget {
@@ -43,11 +44,7 @@ class _FoodProductsScreenState extends ConsumerState<FoodProductsScreen> {
             pinned: true,
             backgroundColor: AppColors.background,
             elevation: 0,
-            leading: IconButton(
-              icon: const Icon(Icons.arrow_back_ios_new,
-                  color: AppColors.textPrimary, size: 20),
-              onPressed: () => context.pop(),
-            ),
+            leading: AppBackButton(onPressed: () => context.pop()),
             flexibleSpace: FlexibleSpaceBar(
               collapseMode: CollapseMode.pin,
               background: Container(

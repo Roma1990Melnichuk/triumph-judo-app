@@ -9,6 +9,7 @@ import '../../../core/models/message_model.dart';
 import '../../../core/models/notification_model.dart';
 import '../../../core/models/user_model.dart';
 import '../../auth/providers/auth_provider.dart';
+import '../../../shared/widgets/app_back_button.dart';
 import '../../team/providers/children_provider.dart';
 import '../providers/message_provider.dart';
 import '../providers/notification_provider.dart';
@@ -18,21 +19,8 @@ final _dateFmt = DateFormat('dd.MM.yyyy HH:mm');
 class NotificationsScreen extends ConsumerWidget {
   const NotificationsScreen({super.key});
 
-  Widget _backButton(BuildContext context) => GestureDetector(
-        onTap: () => context.pop(),
-        child: Container(
-          width: 44,
-          height: 44,
-          decoration: BoxDecoration(
-            color: AppColors.surface2,
-            borderRadius: BorderRadius.circular(12),
-          ),
-          child: const Center(
-            child: Icon(Icons.arrow_back_ios_new_rounded,
-                size: 20, color: AppColors.textPrimary),
-          ),
-        ),
-      );
+  Widget _backButton(BuildContext context) =>
+      AppBackButton(onPressed: () => context.pop());
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {

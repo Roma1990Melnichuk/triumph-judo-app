@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 import '../../../core/constants/app_colors.dart';
+import '../../../shared/widgets/app_back_button.dart';
 import '../../../core/models/questionnaire_model.dart';
 import '../../auth/providers/auth_provider.dart';
 import '../providers/questionnaire_provider.dart';
@@ -185,11 +186,7 @@ class _ParentView extends ConsumerWidget {
             pinned: true,
             backgroundColor: AppColors.background,
             elevation: 0,
-            leading: IconButton(
-              icon: const Icon(Icons.arrow_back_ios_new,
-                  color: AppColors.textPrimary, size: 20),
-              onPressed: () => context.pop(),
-            ),
+            leading: AppBackButton(onPressed: () => context.pop()),
             title: const Text('Опитування',
                 style: TextStyle(
                     fontSize: 20,

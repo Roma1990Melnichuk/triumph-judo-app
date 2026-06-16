@@ -293,6 +293,18 @@ class _GroupsScreenState extends ConsumerState<GroupsScreen> {
                   await ref
                       .read(groupNotifierProvider.notifier)
                       .createGroup(group);
+
+                  if (!context.mounted) return;
+                  final notifierState = ref.read(groupNotifierProvider);
+                  if (notifierState.hasError) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                        content: Text(
+                            'Не вдалось створити групу. Перевірте підключення до мережі.'),
+                        backgroundColor: AppColors.error,
+                      ),
+                    );
+                  }
                 },
                 child: const Text('Зберегти'),
               ),

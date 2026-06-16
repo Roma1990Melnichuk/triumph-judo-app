@@ -3,6 +3,8 @@
 /// коректний рендер з великою кількістю тренерів, базовий рендер екрану.
 library;
 
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:fake_cloud_firestore/fake_cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -231,14 +233,6 @@ void main() {
         tester.view.resetDevicePixelRatio();
       });
 
-      // Suppress pre-existing overflow errors on this screen
-      final handler = FlutterError.onError;
-      FlutterError.onError = (d) {
-        if (d.toString().contains('overflowed')) return;
-        handler?.call(d);
-      };
-      addTearDown(() => FlutterError.onError = handler);
-
       final children = [
         ChildModel(
           id: 'peer1',
@@ -339,14 +333,6 @@ void main() {
         tester.view.resetDevicePixelRatio();
       });
 
-      // Suppress pre-existing overflow errors on this screen
-      final handler = FlutterError.onError;
-      FlutterError.onError = (d) {
-        if (d.toString().contains('overflowed')) return;
-        handler?.call(d);
-      };
-      addTearDown(() => FlutterError.onError = handler);
-
       await _pump(tester, [
         currentUserModelProvider
             .overrideWith((_) => Stream.value(_coach('Іванов'))),
@@ -372,14 +358,6 @@ void main() {
         tester.view.resetDevicePixelRatio();
       });
 
-      // Suppress pre-existing overflow errors on this screen
-      final handler = FlutterError.onError;
-      FlutterError.onError = (d) {
-        if (d.toString().contains('overflowed')) return;
-        handler?.call(d);
-      };
-      addTearDown(() => FlutterError.onError = handler);
-
       await _pump(tester, [
         currentUserModelProvider
             .overrideWith((_) => Stream.value(_coach('Іванов'))),
@@ -395,6 +373,365 @@ void main() {
       await tester.pumpAndSettle(const Duration(milliseconds: 200));
 
       expect(tester.takeException(), isNull);
+    });
+  });
+
+  // ── ChildrenNotifier — addChild ─────────────────────────────────────────────
+
+  group('ChildrenNotifier — addChild', () {
+    ChildModel _makeChild(String id) => ChildModel(
+          id: id,
+          firstName: 'Іван',
+          lastName: 'Петренко',
+          birthYear: 2012,
+          weightCategory: '-40 кг',
+          currentBelt: BeltLevel.white,
+          coachId: 'coach1',
+          coachName: 'Тренер',
+          totalPoints: 0,
+          createdAt: DateTime(2024),
+        );
+
+    test('зберігає дитину у Firestore', () async {
+      final db = FakeFirebaseFirestore();
+      final n = ChildrenNotifier(db);
+
+      await n.addChild(_makeChild('kid1'));
+
+      final doc = await db.collection('children').doc('kid1').get();
+      expect(doc.exists, isTrue);
+      expect(doc['firstName'], 'Іван');
+      expect(doc['lastName'], 'Петренко');
+      expect(doc['birthYear'], 2012);
+    });
+
+    test('різні діти — різні документи', () async {
+      final db = FakeFirebaseFirestore();
+      final n = ChildrenNotifier(db);
+
+      await n.addChild(_makeChild('kid1'));
+      await n.addChild(_makeChild('kid2'));
+      await n.addChild(_makeChild('kid3'));
+
+      final snap = await db.collection('children').get();
+      expect(snap.docs, hasLength(3));
+    });
+
+    test('поля coachId і currentBelt збережені', () async {
+      final db = FakeFirebaseFirestore();
+      final n = ChildrenNotifier(db);
+
+      await n.addChild(_makeChild('kid1'));
+
+      final doc = await db.collection('children').doc('kid1').get();
+      expect(doc['coachId'], 'coach1');
+      expect(doc['currentBelt'], 'white');
+    });
+  });
+
+  // ── ChildrenNotifier — updateChild ──────────────────────────────────────────
+
+  group('ChildrenNotifier — updateChild', () {
+    Future<void> _seedChild(FakeFirebaseFirestore db, String id) async {
+      await db.collection('children').doc(id).set({
+        'firstName': 'Іван',
+        'lastName': 'Старе прізвище',
+        'birthYear': 2012,
+        'weightCategory': '-40 кг',
+        'currentBelt': 'white',
+        'coachId': 'coach1',
+        'coachName': 'Тренер',
+        'totalPoints': 0,
+        'bonusPoints': 0,
+        'beltReady': false,
+        'createdAt': Timestamp.fromDate(DateTime(2024)),
+      });
+    }
+
+    test('оновлює прізвище у Firestore', () async {
+      final db = FakeFirebaseFirestore();
+      await _seedChild(db, 'kid1');
+      final n = ChildrenNotifier(db);
+
+      final updated = ChildModel(
+        id: 'kid1',
+        firstName: 'Іван',
+        lastName: 'Нове прізвище',
+        birthYear: 2012,
+        weightCategory: '-40 кг',
+        currentBelt: BeltLevel.white,
+        coachId: 'coach1',
+        coachName: 'Тренер',
+        totalPoints: 0,
+        createdAt: DateTime(2024),
+      );
+      await n.updateChild(updated);
+
+      final doc = await db.collection('children').doc('kid1').get();
+      expect(doc['lastName'], 'Нове прізвище');
+    });
+
+    test('updateChild не чіпає інших дітей', () async {
+      final db = FakeFirebaseFirestore();
+      await _seedChild(db, 'kid1');
+      await _seedChild(db, 'kid2');
+      final n = ChildrenNotifier(db);
+
+      final updated = ChildModel(
+        id: 'kid1',
+        firstName: 'Іван',
+        lastName: 'Оновлений',
+        birthYear: 2012,
+        weightCategory: '-40 кг',
+        currentBelt: BeltLevel.white,
+        coachId: 'coach1',
+        coachName: 'Тренер',
+        totalPoints: 0,
+        createdAt: DateTime(2024),
+      );
+      await n.updateChild(updated);
+
+      final doc2 = await db.collection('children').doc('kid2').get();
+      expect(doc2['lastName'], 'Старе прізвище');
+    });
+  });
+
+  // ── ChildrenNotifier — deleteChild ──────────────────────────────────────────
+
+  group('ChildrenNotifier — deleteChild', () {
+    Future<void> _seedAll(FakeFirebaseFirestore db, String childId) async {
+      await db.collection('children').doc(childId).set({
+        'firstName': 'Іван', 'lastName': 'Тест', 'birthYear': 2012,
+        'weightCategory': '-40 кг', 'currentBelt': 'white',
+        'coachId': 'coach1', 'coachName': 'Тренер',
+        'totalPoints': 0, 'bonusPoints': 0, 'beltReady': false,
+        'createdAt': Timestamp.fromDate(DateTime(2024)),
+      });
+      await db.collection('competition_results').add({'childId': childId, 'points': 10});
+      await db.collection('belt_progress').doc('${childId}_white').set(
+            {'childId': childId, 'belt': 'white', 'passed': <String, dynamic>{}});
+    }
+
+    test('видаляє дитину з Firestore', () async {
+      final db = FakeFirebaseFirestore();
+      await _seedAll(db, 'kid1');
+      final n = ChildrenNotifier(db);
+
+      await n.deleteChild('kid1');
+
+      expect((await db.collection('children').doc('kid1').get()).exists, isFalse);
+    });
+
+    test('каскадно видаляє competition_results', () async {
+      final db = FakeFirebaseFirestore();
+      await _seedAll(db, 'kid1');
+      final n = ChildrenNotifier(db);
+
+      await n.deleteChild('kid1');
+
+      final results = await db
+          .collection('competition_results')
+          .where('childId', isEqualTo: 'kid1')
+          .get();
+      expect(results.docs, isEmpty);
+    });
+
+    test('каскадно видаляє belt_progress', () async {
+      final db = FakeFirebaseFirestore();
+      await _seedAll(db, 'kid1');
+      final n = ChildrenNotifier(db);
+
+      await n.deleteChild('kid1');
+
+      final progress = await db
+          .collection('belt_progress')
+          .where('childId', isEqualTo: 'kid1')
+          .get();
+      expect(progress.docs, isEmpty);
+    });
+
+    test('deleteChild не чіпає інших дітей', () async {
+      final db = FakeFirebaseFirestore();
+      await _seedAll(db, 'kid1');
+      await _seedAll(db, 'kid2');
+      final n = ChildrenNotifier(db);
+
+      await n.deleteChild('kid1');
+
+      expect((await db.collection('children').doc('kid2').get()).exists, isTrue);
+    });
+  });
+
+  // ── ChildrenNotifier — advanceBelts ─────────────────────────────────────────
+
+  group('ChildrenNotifier — advanceBelts', () {
+    Future<void> _seedChild(FakeFirebaseFirestore db, String id,
+        {BeltLevel belt = BeltLevel.white}) async {
+      await db.collection('children').doc(id).set({
+        'firstName': 'Іван', 'lastName': 'Тест', 'birthYear': 2012,
+        'weightCategory': '-40 кг', 'currentBelt': belt.name,
+        'coachId': 'coach1', 'coachName': 'Тренер',
+        'totalPoints': 0, 'bonusPoints': 0, 'beltReady': true,
+        'createdAt': Timestamp.fromDate(DateTime(2024)),
+      });
+    }
+
+    test('оновлює currentBelt і скидає beltReady', () async {
+      final db = FakeFirebaseFirestore();
+      await _seedChild(db, 'kid1');
+      final n = ChildrenNotifier(db);
+
+      await n.advanceBelts(childIds: ['kid1'], newBelt: BeltLevel.yellow);
+
+      final doc = await db.collection('children').doc('kid1').get();
+      expect(doc['currentBelt'], 'yellow');
+      expect(doc['beltReady'], isFalse);
+    });
+
+    test('одночасно підвищує кілька спортсменів', () async {
+      final db = FakeFirebaseFirestore();
+      for (final id in ['kid1', 'kid2', 'kid3']) {
+        await _seedChild(db, id);
+      }
+      final n = ChildrenNotifier(db);
+
+      await n.advanceBelts(
+          childIds: ['kid1', 'kid2', 'kid3'], newBelt: BeltLevel.whiteYellow);
+
+      for (final id in ['kid1', 'kid2', 'kid3']) {
+        final doc = await db.collection('children').doc(id).get();
+        expect(doc['currentBelt'], 'whiteYellow',
+            reason: '$id should be whiteYellow');
+      }
+    });
+
+    test('пише achievement через AchievementChecker', () async {
+      final db = FakeFirebaseFirestore();
+      await _seedChild(db, 'kid1');
+      final n = ChildrenNotifier(db);
+
+      await n.advanceBelts(childIds: ['kid1'], newBelt: BeltLevel.yellow);
+
+      final snap = await db
+          .collection('achievements')
+          .where('childId', isEqualTo: 'kid1')
+          .get();
+      expect(snap.docs, isNotEmpty);
+    });
+
+    test('стан = AsyncData після advanceBelts', () async {
+      final db = FakeFirebaseFirestore();
+      await _seedChild(db, 'kid1');
+      final n = ChildrenNotifier(db);
+
+      await n.advanceBelts(childIds: ['kid1'], newBelt: BeltLevel.yellow);
+
+      expect(n.state, isA<AsyncData<void>>());
+    });
+  });
+
+  // ── ChildrenNotifier — setBonusPoints ───────────────────────────────────────
+
+  group('ChildrenNotifier — setBonusPoints', () {
+    Future<void> _seedWithPoints(
+        FakeFirebaseFirestore db, String id, int compPoints) async {
+      await db.collection('children').doc(id).set({
+        'firstName': 'Іван', 'lastName': 'Тест', 'birthYear': 2012,
+        'weightCategory': '-40 кг', 'currentBelt': 'white',
+        'coachId': 'coach1', 'coachName': 'Тренер',
+        'totalPoints': compPoints, 'bonusPoints': 0, 'beltReady': false,
+        'createdAt': Timestamp.fromDate(DateTime(2024)),
+      });
+      if (compPoints > 0) {
+        await db.collection('competition_results').add({
+          'childId': id, 'points': compPoints,
+        });
+      }
+    }
+
+    test('оновлює bonusPoints і totalPoints', () async {
+      final db = FakeFirebaseFirestore();
+      await _seedWithPoints(db, 'kid1', 0);
+      final n = ChildrenNotifier(db);
+
+      await n.setBonusPoints('kid1', 50);
+
+      final doc = await db.collection('children').doc('kid1').get();
+      expect(doc['bonusPoints'], 50);
+      expect(doc['totalPoints'], 50);
+    });
+
+    test('totalPoints = competitionPoints + bonus', () async {
+      final db = FakeFirebaseFirestore();
+      await _seedWithPoints(db, 'kid1', 30);
+      final n = ChildrenNotifier(db);
+
+      await n.setBonusPoints('kid1', 20);
+
+      final doc = await db.collection('children').doc('kid1').get();
+      expect(doc['totalPoints'], 50);
+    });
+
+    test('стан = AsyncData після setBonusPoints', () async {
+      final db = FakeFirebaseFirestore();
+      await _seedWithPoints(db, 'kid1', 0);
+      final n = ChildrenNotifier(db);
+
+      await n.setBonusPoints('kid1', 10);
+
+      expect(n.state, isA<AsyncData<void>>());
+    });
+  });
+
+  // ── Cross-role: тренер → спортсмен ─────────────────────────────────────────
+
+  group('Team — cross-role: тренер додає → спортсмен видимий', () {
+    test('тренер додає спортсмена → документ видимий через allChildrenProvider',
+        () async {
+      final db = FakeFirebaseFirestore();
+      final n = ChildrenNotifier(db);
+
+      final child = ChildModel(
+        id: 'kid1',
+        firstName: 'Олена',
+        lastName: 'Бойко',
+        birthYear: 2013,
+        weightCategory: '-36 кг',
+        currentBelt: BeltLevel.white,
+        coachId: 'coach1',
+        coachName: 'Тренер',
+        totalPoints: 0,
+        createdAt: DateTime(2024),
+      );
+      await n.addChild(child);
+
+      final snap = await db.collection('children').get();
+      expect(snap.docs, hasLength(1));
+      expect(snap.docs.first['firstName'], 'Олена');
+      expect(snap.docs.first['lastName'], 'Бойко');
+    });
+
+    test('тренер підвищує пояс → спортсмен отримує ачівку', () async {
+      final db = FakeFirebaseFirestore();
+      await db.collection('children').doc('kid1').set({
+        'firstName': 'Іван', 'lastName': 'Тест', 'birthYear': 2012,
+        'weightCategory': '-40 кг', 'currentBelt': 'white',
+        'coachId': 'coach1', 'coachName': 'Тренер',
+        'totalPoints': 0, 'bonusPoints': 0, 'beltReady': true,
+        'createdAt': Timestamp.fromDate(DateTime(2024)),
+      });
+      final n = ChildrenNotifier(db);
+
+      await n.advanceBelts(childIds: ['kid1'], newBelt: BeltLevel.yellow);
+
+      final achievements = await db
+          .collection('achievements')
+          .where('childId', isEqualTo: 'kid1')
+          .get();
+      expect(achievements.docs, isNotEmpty);
+
+      final doc = await db.collection('children').doc('kid1').get();
+      expect(doc['currentBelt'], 'yellow');
     });
   });
 }

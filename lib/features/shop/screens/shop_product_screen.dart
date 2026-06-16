@@ -8,6 +8,7 @@ import 'package:judo_app/core/models/shop_product_model.dart';
 import 'package:judo_app/features/shop/providers/cart_provider.dart';
 import 'package:judo_app/features/shop/providers/shop_provider.dart';
 import 'package:judo_app/shared/widgets/gradient_button.dart';
+import 'package:judo_app/shared/widgets/app_back_button.dart';
 
 class ShopProductScreen extends ConsumerStatefulWidget {
   const ShopProductScreen({super.key, required this.productId});
@@ -187,18 +188,7 @@ class _ShopProductScreenState extends ConsumerState<ShopProductScreen> {
                 expandedHeight: 300,
                 pinned: true,
                 backgroundColor: AppColors.background,
-                leading: GestureDetector(
-                  onTap: () => context.pop(),
-                  child: Container(
-                    margin: const EdgeInsets.all(8),
-                    decoration: BoxDecoration(
-                      color: AppColors.surface2.withValues(alpha: 0.85),
-                      shape: BoxShape.circle,
-                    ),
-                    child: const Icon(Icons.arrow_back_ios_new,
-                        color: AppColors.textPrimary, size: 18),
-                  ),
-                ),
+                leading: AppBackButton(onPressed: () => context.pop()),
                 actions: [
                   GestureDetector(
                     onTap: () => context.push('/shop/cart'),

@@ -848,18 +848,18 @@ class _MealDot extends StatelessWidget {
 class _ParentFeatureIcons extends StatelessWidget {
   const _ParentFeatureIcons();
 
-  static const _items = [
-    (Icons.person_outline,        'Мої дані',    '/my-data',             [Color(0xFF7A0000), Color(0xFFD50000)]),
-    (Icons.fitness_center,        'Тренування',  '/events',              [Color(0xFFD50000), Color(0xFFFF8A00)]),
-    (Icons.show_chart,            'Прогрес',     '/journey',             [Color(0xFF1565C0), Color(0xFF42A5F5)]),
-    (Icons.emoji_events_outlined, 'Досягнення',  '/achievement-catalog', [Color(0xFF6A1B9A), Color(0xFFAB47BC)]),
+  static const _items = <(IconData?, String?, String, String, List<Color>)>[
+    (Icons.person_outline,        null,                         'Мої дані',   '/my-data',             [Color(0xFF7A0000), Color(0xFFD50000)]),
+    (null,                        'assets/images/fitness.png',  'Тренування', '/events',              [Color(0xFFD50000), Color(0xFFFF8A00)]),
+    (Icons.show_chart,            null,                         'Прогрес',    '/journey',             [Color(0xFF1565C0), Color(0xFF42A5F5)]),
+    (Icons.emoji_events_outlined, null,                         'Досягнення', '/achievement-catalog', [Color(0xFF6A1B9A), Color(0xFFAB47BC)]),
   ];
 
   @override
   Widget build(BuildContext context) {
     return Row(
       children: _items.map((item) {
-        final (icon, label, route, colors) = item;
+        final (icon, assetPath, label, route, colors) = item;
         return Expanded(
           child: GestureDetector(
             onTap: () => context.push(route),
@@ -868,11 +868,12 @@ class _ParentFeatureIcons extends StatelessWidget {
                 Container(
                   width: 54, height: 54,
                   decoration: BoxDecoration(
-                    gradient: LinearGradient(
+                    gradient: assetPath == null ? LinearGradient(
                       colors: colors,
                       begin: Alignment.topLeft,
                       end: Alignment.bottomRight,
-                    ),
+                    ) : null,
+                    color: assetPath != null ? Colors.black : null,
                     borderRadius: BorderRadius.circular(16),
                     boxShadow: [
                       BoxShadow(
@@ -883,7 +884,9 @@ class _ParentFeatureIcons extends StatelessWidget {
                     ],
                   ),
                   child: Center(
-                    child: Icon(icon, size: 28, color: Colors.white),
+                    child: assetPath != null
+                        ? Image.asset(assetPath, width: 54, height: 54)
+                        : Icon(icon, size: 28, color: Colors.white),
                   ),
                 ),
                 const SizedBox(height: 6),

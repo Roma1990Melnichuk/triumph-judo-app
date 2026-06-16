@@ -4,6 +4,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/constants/app_colors.dart';
+import '../../../shared/widgets/app_back_button.dart';
 import '../../../shared/widgets/triumph_icon.dart';
 import '../../auth/providers/auth_provider.dart';
 import '../providers/streak_provider.dart';
@@ -141,20 +142,7 @@ class _JourneyScreenState extends ConsumerState<JourneyScreen>
               padding: const EdgeInsets.fromLTRB(12, 16, 20, 12),
               child: Row(
                 children: [
-                  GestureDetector(
-                    onTap: () => Navigator.canPop(context) ? Navigator.pop(context) : null,
-                    child: Container(
-                      width: 44, height: 44,
-                      decoration: BoxDecoration(
-                        color: AppColors.surface2,
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      child: const Center(
-                        child: Icon(Icons.arrow_back_ios_new_rounded,
-                            size: 20, color: AppColors.textPrimary),
-                      ),
-                    ),
-                  ),
+                  AppBackButton(onPressed: () => Navigator.canPop(context) ? Navigator.pop(context) : null),
                   const SizedBox(width: 12),
                   const Text(
                     'Твій шлях',

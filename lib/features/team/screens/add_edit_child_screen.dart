@@ -15,6 +15,7 @@ import '../../../features/auth/providers/auth_provider.dart';
 import '../../../features/schedule/providers/group_provider.dart';
 import '../providers/children_provider.dart';
 import '../../../shared/widgets/belt_badge.dart';
+import '../../../shared/widgets/belt_level_picker.dart';
 import '../../../shared/widgets/triumph_icon.dart';
 
 class AddEditChildScreen extends ConsumerStatefulWidget {
@@ -499,41 +500,9 @@ class _AddEditChildScreenState extends ConsumerState<AddEditChildScreen> {
                           fontWeight: FontWeight.w600, fontSize: 14),
                     ),
                     const SizedBox(height: 8),
-                    Wrap(
-                      spacing: 8,
-                      runSpacing: 8,
-                      children: BeltLevel.values.map((b) {
-                        final selected = _belt == b;
-                        return GestureDetector(
-                          onTap: () => setState(() => _belt = b),
-                          child: Container(
-                            padding: const EdgeInsets.symmetric(
-                                horizontal: 12, vertical: 6),
-                            decoration: BoxDecoration(
-                              color: selected ? b.color : Colors.white,
-                              borderRadius: BorderRadius.circular(20),
-                              border: Border.all(
-                                color: selected
-                                    ? b.color
-                                    : Colors.grey.shade300,
-                                width: selected ? 2 : 1,
-                              ),
-                            ),
-                            child: Text(
-                              b.displayName,
-                              style: TextStyle(
-                                color: selected
-                                    ? b.textColor
-                                    : AppColors.textPrimary,
-                                fontSize: 12,
-                                fontWeight: selected
-                                    ? FontWeight.bold
-                                    : FontWeight.normal,
-                              ),
-                            ),
-                          ),
-                        );
-                      }).toList(),
+                    BeltLevelPicker(
+                      value: _belt,
+                      onChanged: (b) => setState(() => _belt = b),
                     ),
                     const SizedBox(height: 8),
                     BeltBadge(belt: _belt, size: BeltBadgeSize.large),

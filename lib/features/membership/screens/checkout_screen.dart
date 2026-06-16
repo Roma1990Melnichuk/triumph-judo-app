@@ -2,6 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../core/constants/app_colors.dart';
+import '../../../core/models/payment_card_model.dart';
+import '../../../features/auth/providers/auth_provider.dart';
+import '../../../features/team/providers/children_provider.dart';
+import '../../../shared/widgets/app_back_button.dart';
 import '../providers/membership_provider.dart';
 import '../providers/tariff_provider.dart';
 import '../utils/subscription_date_utils.dart';
@@ -40,28 +44,20 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen>
   late final AnimationController _pulseController;
   late final Animation<double> _pulseAnim;
 
-  static const List<_PaymentMethod> _methods = [
-    _PaymentMethod(
-      icon: Icons.credit_card,
-      label: 'Банківська картка',
-      subtitle: 'Visa, Mastercard, Apple Pay',
-    ),
-    _PaymentMethod(
-      icon: Icons.apple,
-      label: 'Apple Pay',
-      subtitle: '',
-    ),
-    _PaymentMethod(
-      icon: Icons.g_mobiledata,
-      label: 'Google Pay',
-      subtitle: '',
-    ),
-    _PaymentMethod(
+  static List<_PaymentMethod> _methodsFromCards(List<PaymentCard> cards) {
+    final result = cards.map((c) => _PaymentMethod(
+      icon: Icons.credit_card_outlined,
+      label: c.label,
+      subtitle: c.number,
+      holder: c.holder,
+    )).toList();
+    result.add(const _PaymentMethod(
       icon: Icons.account_balance,
       label: 'Готівка в клубі',
       subtitle: 'Оплата на місці',
-    ),
-  ];
+    ));
+    return result;
+  }
 
   @override
   void initState() {
@@ -151,6 +147,16 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen>
 
   @override
   Widget build(BuildContext context) {
+    // Load coach payment cards via child → coachId → coach.paymentCards
+    final childAsync = ref.watch(childByIdProvider(widget.childId));
+    final coachId = childAsync.asData?.value?.coachId ?? '';
+    final coachUser = coachId.isNotEmpty ? ref.watch(coachByIdProvider(coachId)) : null;
+    final methods = _methodsFromCards(coachUser?.paymentCards ?? []);
+    // Clamp selection index when card list changes
+    if (_selectedPaymentIdx >= methods.length) {
+      _selectedPaymentIdx = methods.length - 1;
+    }
+
     return Scaffold(
       backgroundColor: AppColors.background,
       body: SafeArea(
@@ -160,21 +166,7 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen>
               padding: const EdgeInsets.fromLTRB(12, 8, 12, 0),
               child: Row(
                 children: [
-                  GestureDetector(
-                    onTap: () => context.pop(),
-                    child: Container(
-                      width: 44,
-                      height: 44,
-                      decoration: BoxDecoration(
-                        color: AppColors.surface2,
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      child: const Center(
-                        child: Icon(Icons.arrow_back_ios_new_rounded,
-                            size: 20, color: AppColors.textPrimary),
-                      ),
-                    ),
-                  ),
+                  AppBackButton(onPressed: () => context.pop()),
                   const SizedBox(width: 12),
                   const Text(
                     'Оформлення',
@@ -272,11 +264,11 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen>
                     ),
                     child: Column(
                       children: List.generate(
-                        _methods.length,
+                        methods.length,
                         (i) => _PaymentTile(
-                          method: _methods[i],
+                          method: methods[i],
                           selected: i == _selectedPaymentIdx,
-                          isLast: i == _methods.length - 1,
+                          isLast: i == methods.length - 1,
                           onTap: () =>
                               setState(() => _selectedPaymentIdx = i),
                         ),
@@ -516,11 +508,13 @@ class _PaymentMethod {
   final IconData icon;
   final String label;
   final String subtitle;
+  final String holder;
 
   const _PaymentMethod({
     required this.icon,
     required this.label,
     required this.subtitle,
+    this.holder = '',
   });
 }
 
@@ -594,6 +588,14 @@ class _PaymentTile extends StatelessWidget {
                   if (method.subtitle.isNotEmpty)
                     Text(
                       method.subtitle,
+                      style: const TextStyle(
+                        color: AppColors.textSecondary,
+                        fontSize: 11,
+                      ),
+                    ),
+                  if (method.holder.isNotEmpty)
+                    Text(
+                      method.holder,
                       style: const TextStyle(
                         color: AppColors.textSecondary,
                         fontSize: 11,

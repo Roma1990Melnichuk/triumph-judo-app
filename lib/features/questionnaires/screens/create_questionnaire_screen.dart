@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import '../../../core/constants/app_colors.dart';
 import '../../../core/models/questionnaire_model.dart';
 import '../../../shared/widgets/gradient_button.dart';
+import '../../../shared/widgets/app_back_button.dart';
 import '../../auth/providers/auth_provider.dart';
 import '../providers/questionnaire_provider.dart';
 
@@ -100,11 +101,7 @@ class _CreateQuestionnaireScreenState
                 fontSize: 17,
                 fontWeight: FontWeight.w700,
                 color: AppColors.textPrimary)),
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios_new, size: 20,
-              color: AppColors.textPrimary),
-          onPressed: () => context.pop(),
-        ),
+        leading: AppBackButton(onPressed: () => context.pop()),
       ),
       body: ListView(
         padding: const EdgeInsets.fromLTRB(16, 8, 16, 120),

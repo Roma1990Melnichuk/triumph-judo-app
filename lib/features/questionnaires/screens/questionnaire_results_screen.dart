@@ -5,6 +5,7 @@ import 'package:intl/intl.dart';
 import '../../../core/constants/app_colors.dart';
 import '../../../core/models/questionnaire_model.dart';
 import '../providers/questionnaire_provider.dart';
+import '../../../shared/widgets/app_back_button.dart';
 
 class QuestionnaireResultsScreen extends ConsumerWidget {
   const QuestionnaireResultsScreen({super.key, required this.questionnaireId});
@@ -29,11 +30,7 @@ class QuestionnaireResultsScreen extends ConsumerWidget {
             pinned: true,
             backgroundColor: AppColors.background,
             elevation: 0,
-            leading: IconButton(
-              icon: const Icon(Icons.arrow_back_ios_new,
-                  color: AppColors.textPrimary, size: 20),
-              onPressed: () => context.pop(),
-            ),
+            leading: AppBackButton(onPressed: () => context.pop()),
             title: Text(q?.title ?? 'Результати',
                 style: const TextStyle(
                     fontSize: 16,

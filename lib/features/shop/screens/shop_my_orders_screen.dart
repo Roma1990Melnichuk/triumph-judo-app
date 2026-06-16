@@ -7,6 +7,7 @@ import 'package:judo_app/core/constants/app_colors.dart';
 import 'package:judo_app/core/models/shop_order_model.dart';
 import 'package:judo_app/features/shop/providers/order_provider.dart';
 import 'package:judo_app/shared/widgets/gradient_button.dart';
+import 'package:judo_app/shared/widgets/app_back_button.dart';
 
 class ShopMyOrdersScreen extends ConsumerWidget {
   const ShopMyOrdersScreen({super.key});
@@ -21,10 +22,7 @@ class ShopMyOrdersScreen extends ConsumerWidget {
         backgroundColor: AppColors.surface,
         surfaceTintColor: Colors.transparent,
         elevation: 0,
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios_new_rounded, color: AppColors.textPrimary, size: 20),
-          onPressed: () => context.pop(),
-        ),
+        leading: AppBackButton(onPressed: () => context.pop()),
         title: const Text(
           'Мої замовлення',
           style: TextStyle(

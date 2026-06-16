@@ -6,6 +6,7 @@ import '../../../core/constants/belt_levels.dart';
 import '../../../core/models/belt_exercise_model.dart';
 import '../../auth/providers/auth_provider.dart';
 import '../providers/exercise_library_provider.dart';
+import '../../../shared/widgets/app_back_button.dart';
 
 class ExerciseLibraryScreen extends ConsumerStatefulWidget {
   const ExerciseLibraryScreen({super.key});
@@ -56,11 +57,7 @@ class _ExerciseLibraryScreenState
             floating: true,
             backgroundColor: AppColors.background,
             elevation: 0,
-            leading: IconButton(
-              icon: const Icon(Icons.arrow_back_ios_new,
-                  color: AppColors.textPrimary, size: 20),
-              onPressed: () => context.pop(),
-            ),
+            leading: AppBackButton(onPressed: () => context.pop()),
             title: const Text('Бібліотека вправ',
                 style: TextStyle(
                     fontSize: 17,

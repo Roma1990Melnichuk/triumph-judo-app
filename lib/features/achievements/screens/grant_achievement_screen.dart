@@ -366,15 +366,24 @@ class _GrantAchievementScreenState
           TextButton(
             onPressed: () async {
               Navigator.pop(ctx);
-              await ref
-                  .read(achievementNotifierProvider.notifier)
-                  .grant(athlete.id, def.id, coachId,
-                      note: noteCtrl.text.trim());
-              if (mounted) {
-                ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-                  content: Text('${def.emoji} ${def.name} видано!'),
-                  backgroundColor: AppColors.success,
-                ));
+              try {
+                await ref
+                    .read(achievementNotifierProvider.notifier)
+                    .grant(athlete.id, def.id, coachId,
+                        note: noteCtrl.text.trim());
+                if (mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                    content: Text('${def.emoji} ${def.name} видано!'),
+                    backgroundColor: AppColors.success,
+                  ));
+                }
+              } catch (e) {
+                if (mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                    content: Text('Помилка: $e'),
+                    backgroundColor: AppColors.error,
+                  ));
+                }
               }
             },
             style: TextButton.styleFrom(foregroundColor: AppColors.primary),
@@ -399,9 +408,18 @@ class _GrantAchievementScreenState
             style: TextButton.styleFrom(foregroundColor: AppColors.error),
             onPressed: () async {
               Navigator.pop(ctx);
-              await ref
-                  .read(achievementNotifierProvider.notifier)
-                  .revoke(athlete.id, def.id);
+              try {
+                await ref
+                    .read(achievementNotifierProvider.notifier)
+                    .revoke(athlete.id, def.id);
+              } catch (e) {
+                if (mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                    content: Text('Помилка: $e'),
+                    backgroundColor: AppColors.error,
+                  ));
+                }
+              }
             },
             child: const Text('Відкликати'),
           ),

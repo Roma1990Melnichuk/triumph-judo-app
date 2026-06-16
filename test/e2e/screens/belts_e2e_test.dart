@@ -1,6 +1,7 @@
 /// E2E тести для BeltOverviewScreen.
 library;
 
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:fake_cloud_firestore/fake_cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -242,14 +243,6 @@ void main() {
         tester.view.resetDevicePixelRatio();
       });
 
-      // Suppress overflow for pre-existing layout issues on this screen
-      final handler = FlutterError.onError;
-      FlutterError.onError = (d) {
-        if (d.toString().contains('overflowed')) return;
-        handler?.call(d);
-      };
-      addTearDown(() => FlutterError.onError = handler);
-
       final db = FakeFirebaseFirestore();
 
       await tester.pumpWidget(
@@ -288,6 +281,281 @@ void main() {
       await tester.pump(const Duration(milliseconds: 100));
 
       expect(tester.takeException(), isNull);
+    });
+  });
+
+  // ── BeltNotifier — toggleExercise ────────────────────────────────────────────
+
+  group('BeltNotifier — toggleExercise', () {
+    test('зберігає passed.ex1 у belt_progress', () async {
+      final db = FakeFirebaseFirestore();
+      // Seed child and requirements
+      await db.collection('children').doc('kid1').set({
+        'firstName': 'Іван', 'lastName': 'Тест', 'birthYear': 2012,
+        'weightCategory': '-40 кг', 'currentBelt': 'white',
+        'coachId': 'coach1', 'coachName': 'Тренер',
+        'totalPoints': 0, 'bonusPoints': 0, 'beltReady': false,
+        'createdAt': Timestamp.fromDate(DateTime(2024)),
+      });
+      await db.collection('belt_requirements').doc('white').set({
+        'exercises': [
+          {'id': 'ex1', 'name': 'Укемі', 'description': '', 'category': 'technique'},
+        ],
+        'updatedAt': Timestamp.now(),
+        'updatedByCoachId': 'coach1',
+      });
+      final n = BeltNotifier(db);
+
+      await n.toggleExercise(
+          childId: 'kid1', belt: BeltLevel.white, exerciseId: 'ex1', passed: true);
+
+      final doc = await db.collection('belt_progress').doc('kid1_white').get();
+      expect(doc.exists, isTrue);
+      final passed = (doc.data()!['passed'] as Map<String, dynamic>);
+      expect(passed['ex1'], isTrue);
+    });
+
+    test('passed=false — значення стає false', () async {
+      final db = FakeFirebaseFirestore();
+      await db.collection('children').doc('kid1').set({
+        'firstName': 'Іван', 'lastName': 'Тест', 'birthYear': 2012,
+        'weightCategory': '-40 кг', 'currentBelt': 'white',
+        'coachId': 'coach1', 'coachName': 'Тренер',
+        'totalPoints': 0, 'bonusPoints': 0, 'beltReady': false,
+        'createdAt': Timestamp.fromDate(DateTime(2024)),
+      });
+      await db.collection('belt_requirements').doc('white').set({
+        'exercises': [
+          {'id': 'ex1', 'name': 'Укемі', 'description': '', 'category': 'technique'},
+        ],
+        'updatedAt': Timestamp.now(), 'updatedByCoachId': 'coach1',
+      });
+      final n = BeltNotifier(db);
+
+      await n.toggleExercise(
+          childId: 'kid1', belt: BeltLevel.white, exerciseId: 'ex1', passed: true);
+      await n.toggleExercise(
+          childId: 'kid1', belt: BeltLevel.white, exerciseId: 'ex1', passed: false);
+
+      final doc = await db.collection('belt_progress').doc('kid1_white').get();
+      final passed = (doc.data()!['passed'] as Map<String, dynamic>);
+      expect(passed['ex1'], isFalse);
+    });
+
+    test('beltReady = true коли всі вправи виконано', () async {
+      final db = FakeFirebaseFirestore();
+      await db.collection('children').doc('kid1').set({
+        'firstName': 'Іван', 'lastName': 'Тест', 'birthYear': 2012,
+        'weightCategory': '-40 кг', 'currentBelt': 'white',
+        'coachId': 'coach1', 'coachName': 'Тренер',
+        'totalPoints': 0, 'bonusPoints': 0, 'beltReady': false,
+        'createdAt': Timestamp.fromDate(DateTime(2024)),
+      });
+      await db.collection('belt_requirements').doc('white').set({
+        'exercises': [
+          {'id': 'ex1', 'name': 'Укемі', 'description': '', 'category': 'technique'},
+          {'id': 'ex2', 'name': 'Стійка', 'description': '', 'category': 'technique'},
+        ],
+        'updatedAt': Timestamp.now(), 'updatedByCoachId': 'coach1',
+      });
+      final n = BeltNotifier(db);
+
+      await n.toggleExercise(
+          childId: 'kid1', belt: BeltLevel.white, exerciseId: 'ex1', passed: true);
+      await n.toggleExercise(
+          childId: 'kid1', belt: BeltLevel.white, exerciseId: 'ex2', passed: true);
+
+      final child = await db.collection('children').doc('kid1').get();
+      expect(child['beltReady'], isTrue);
+    });
+  });
+
+  // ── BeltNotifier — markAllPassed ─────────────────────────────────────────────
+
+  group('BeltNotifier — markAllPassed', () {
+    test('позначає всі вправи як виконані', () async {
+      final db = FakeFirebaseFirestore();
+      await db.collection('children').doc('kid1').set({
+        'firstName': 'Іван', 'lastName': 'Тест', 'birthYear': 2012,
+        'weightCategory': '-40 кг', 'currentBelt': 'white',
+        'coachId': 'coach1', 'coachName': 'Тренер',
+        'totalPoints': 0, 'bonusPoints': 0, 'beltReady': false,
+        'createdAt': Timestamp.fromDate(DateTime(2024)),
+      });
+      final n = BeltNotifier(db);
+
+      await n.markAllPassed(
+          childId: 'kid1',
+          belt: BeltLevel.white,
+          exerciseIds: ['ex1', 'ex2', 'ex3']);
+
+      final doc = await db.collection('belt_progress').doc('kid1_white').get();
+      final passed = doc.data()!['passed'] as Map<String, dynamic>;
+      expect(passed['ex1'], isTrue);
+      expect(passed['ex2'], isTrue);
+      expect(passed['ex3'], isTrue);
+    });
+
+    test('виставляє beltReady = true на дитині', () async {
+      final db = FakeFirebaseFirestore();
+      await db.collection('children').doc('kid1').set({
+        'firstName': 'Іван', 'lastName': 'Тест', 'birthYear': 2012,
+        'weightCategory': '-40 кг', 'currentBelt': 'white',
+        'coachId': 'coach1', 'coachName': 'Тренер',
+        'totalPoints': 0, 'bonusPoints': 0, 'beltReady': false,
+        'createdAt': Timestamp.fromDate(DateTime(2024)),
+      });
+      final n = BeltNotifier(db);
+
+      await n.markAllPassed(
+          childId: 'kid1', belt: BeltLevel.white, exerciseIds: ['ex1', 'ex2']);
+
+      final child = await db.collection('children').doc('kid1').get();
+      expect(child['beltReady'], isTrue);
+    });
+  });
+
+  // ── BeltNotifier — updateRequirements ────────────────────────────────────────
+
+  group('BeltNotifier — updateRequirements', () {
+    test('зберігає список вправ у belt_requirements', () async {
+      final db = FakeFirebaseFirestore();
+      final n = BeltNotifier(db);
+
+      await n.updateRequirements(
+        BeltLevel.yellow,
+        [
+          const Exercise(id: 'e1', name: 'Укемі назад', description: 'Падіння'),
+          const Exercise(id: 'e2', name: 'Осото-гарі', description: 'Підніжка'),
+        ],
+        'coach1',
+      );
+
+      final doc = await db.collection('belt_requirements').doc('yellow').get();
+      expect(doc.exists, isTrue);
+      final exercises = doc.data()!['exercises'] as List<dynamic>;
+      expect(exercises, hasLength(2));
+      expect((exercises[0] as Map)['id'], 'e1');
+      expect((exercises[1] as Map)['id'], 'e2');
+    });
+
+    test('перезаписує попередні вправи', () async {
+      final db = FakeFirebaseFirestore();
+      await db.collection('belt_requirements').doc('yellow').set({
+        'exercises': [
+          {'id': 'old1', 'name': 'Стара вправа', 'description': '', 'category': 'technique'},
+        ],
+        'updatedAt': Timestamp.now(), 'updatedByCoachId': 'coach1',
+      });
+      final n = BeltNotifier(db);
+
+      await n.updateRequirements(
+        BeltLevel.yellow,
+        [const Exercise(id: 'new1', name: 'Нова вправа', description: '')],
+        'coach1',
+      );
+
+      final doc = await db.collection('belt_requirements').doc('yellow').get();
+      final exercises = doc.data()!['exercises'] as List<dynamic>;
+      expect(exercises, hasLength(1));
+      expect((exercises[0] as Map)['id'], 'new1');
+    });
+
+    test('стан = AsyncData після updateRequirements', () async {
+      final db = FakeFirebaseFirestore();
+      final n = BeltNotifier(db);
+
+      await n.updateRequirements(
+          BeltLevel.white,
+          [const Exercise(id: 'e1', name: 'Вправа', description: '')],
+          'coach1');
+
+      expect(n.state, isA<AsyncData<void>>());
+    });
+  });
+
+  // ── BeltNotifier — addExercise / removeExercise ───────────────────────────────
+
+  group('BeltNotifier — addExercise / removeExercise', () {
+    test('addExercise додає вправу до існуючих', () async {
+      final db = FakeFirebaseFirestore();
+      await db.collection('belt_requirements').doc('white').set({
+        'exercises': [
+          {'id': 'ex1', 'name': 'Укемі', 'description': '', 'category': 'technique'},
+        ],
+        'updatedAt': Timestamp.now(), 'updatedByCoachId': 'coach1',
+      });
+      final n = BeltNotifier(db);
+
+      await n.addExercise(
+        belt: BeltLevel.white,
+        name: 'Осото-гарі',
+        description: 'Підніжка ззовні',
+        category: ExerciseCategory.technique,
+        coachId: 'coach1',
+      );
+
+      final doc = await db.collection('belt_requirements').doc('white').get();
+      final exercises = doc.data()!['exercises'] as List<dynamic>;
+      expect(exercises, hasLength(2));
+      final names = exercises.map((e) => (e as Map)['name'] as String).toList();
+      expect(names, containsAll(['Укемі', 'Осото-гарі']));
+    });
+
+    test('removeExercise видаляє вправу за ID', () async {
+      final db = FakeFirebaseFirestore();
+      await db.collection('belt_requirements').doc('white').set({
+        'exercises': [
+          {'id': 'ex1', 'name': 'Укемі', 'description': '', 'category': 'technique'},
+          {'id': 'ex2', 'name': 'Стійка', 'description': '', 'category': 'technique'},
+        ],
+        'updatedAt': Timestamp.now(), 'updatedByCoachId': 'coach1',
+      });
+      final n = BeltNotifier(db);
+
+      await n.removeExercise(
+          belt: BeltLevel.white, exerciseId: 'ex1', coachId: 'coach1');
+
+      final doc = await db.collection('belt_requirements').doc('white').get();
+      final exercises = doc.data()!['exercises'] as List<dynamic>;
+      expect(exercises, hasLength(1));
+      expect((exercises[0] as Map)['id'], 'ex2');
+    });
+  });
+
+  // ── BeltNotifier — cross-role: тренер затверджує → beltReady ─────────────────
+
+  group('Belts — cross-role flow', () {
+    test(
+        'тренер затверджує всі вправи → beltReady=true видимо через allChildrenProvider',
+        () async {
+      final db = FakeFirebaseFirestore();
+      await db.collection('children').doc('kid1').set({
+        'firstName': 'Іван', 'lastName': 'Тест', 'birthYear': 2012,
+        'weightCategory': '-40 кг', 'currentBelt': 'white',
+        'coachId': 'coach1', 'coachName': 'Тренер',
+        'totalPoints': 0, 'bonusPoints': 0, 'beltReady': false,
+        'createdAt': Timestamp.fromDate(DateTime(2024)),
+      });
+      await db.collection('belt_requirements').doc('white').set({
+        'exercises': [
+          {'id': 'e1', 'name': 'Укемі', 'description': '', 'category': 'technique'},
+          {'id': 'e2', 'name': 'Стійка', 'description': '', 'category': 'technique'},
+        ],
+        'updatedAt': Timestamp.now(), 'updatedByCoachId': 'coach1',
+      });
+      final n = BeltNotifier(db);
+
+      await n.markAllPassed(
+          childId: 'kid1', belt: BeltLevel.white, exerciseIds: ['e1', 'e2']);
+
+      final child = await db.collection('children').doc('kid1').get();
+      expect(child['beltReady'], isTrue);
+
+      final progress = await db.collection('belt_progress').doc('kid1_white').get();
+      final passed = progress.data()!['passed'] as Map<String, dynamic>;
+      expect(passed['e1'], isTrue);
+      expect(passed['e2'], isTrue);
     });
   });
 }

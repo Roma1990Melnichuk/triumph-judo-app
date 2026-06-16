@@ -87,6 +87,12 @@ enum TIcon {
   settings3d,
   home3d,
   rating3d,
+  // 3D settings-feature icons (PNG, opaque bg)
+  financeSetting3d,
+  importAthletes3d,
+  indTraining3d,
+  taskSportsmen3d,
+  typeComp3d,
 }
 
 class TriumphIcon extends StatelessWidget {
@@ -113,6 +119,8 @@ class TriumphIcon extends StatelessWidget {
     TIcon.delete3d, TIcon.edit3d, TIcon.add3d, TIcon.message3d,
     TIcon.settings3d, TIcon.home3d, TIcon.rating3d,
     TIcon.calendar3d,
+    TIcon.financeSetting3d, TIcon.importAthletes3d,
+    TIcon.indTraining3d, TIcon.taskSportsmen3d, TIcon.typeComp3d,
   };
 
   /// True for icons that are PNG with a transparent background.
@@ -225,9 +233,14 @@ class TriumphIcon extends StatelessWidget {
       TIcon.edit3d       => Icons.edit_outlined,
       TIcon.add3d        => Icons.add_circle_outline,
       TIcon.message3d    => Icons.chat_bubble_outline,
-      TIcon.settings3d   => Icons.settings_outlined,
-      TIcon.home3d       => Icons.home_outlined,
-      TIcon.rating3d     => Icons.leaderboard_outlined,
+      TIcon.settings3d        => Icons.settings_outlined,
+      TIcon.home3d            => Icons.home_outlined,
+      TIcon.rating3d          => Icons.leaderboard_outlined,
+      TIcon.financeSetting3d  => Icons.monetization_on_outlined,
+      TIcon.importAthletes3d  => Icons.group_add_outlined,
+      TIcon.indTraining3d     => Icons.sports_kabaddi,
+      TIcon.taskSportsmen3d   => Icons.assignment_outlined,
+      TIcon.typeComp3d        => Icons.emoji_events_outlined,
     };
   }
 

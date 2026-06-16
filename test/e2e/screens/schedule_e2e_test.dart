@@ -176,6 +176,39 @@ void main() {
       expect(tester.takeException(), isNull);
     });
 
+    testWidgets(
+        'діалог створення — заповнити форму і зберегти — група зʼявляється',
+        (tester) async {
+      final db = FakeFirebaseFirestore();
+
+      await tester.pumpWidget(_groupsApp(db));
+      await _pumpData(tester);
+
+      expect(find.text('Груп ще немає'), findsOneWidget);
+
+      // Відкрити діалог через FAB
+      await tester.tap(find.byType(GestureDetector).last);
+      await tester.pumpAndSettle();
+
+      expect(find.text('Нова група'), findsOneWidget);
+
+      // Ввести назву
+      await tester.enterText(find.byType(TextField), 'Тестова група');
+
+      // Обрати хоча б один день (перший FilterChip)
+      await tester.tap(find.byType(FilterChip).first);
+      await tester.pump();
+
+      // Натиснути «Зберегти»
+      await tester.tap(find.text('Зберегти'));
+      await tester.pumpAndSettle(); // dialog dismiss animation
+      await _pumpData(tester);     // Firestore stream update
+
+      expect(find.text('Тестова група'), findsOneWidget);
+      expect(find.text('Груп ще немає'), findsNothing);
+      expect(tester.takeException(), isNull);
+    });
+
     testWidgets('кілька груп — всі відображаються в списку', (tester) async {
       final db = FakeFirebaseFirestore();
       await db.collection('groups').doc('g1').set({
@@ -329,7 +362,7 @@ void main() {
       await tester.pumpWidget(_scheduleApp(db));
       await _pumpData(tester);
 
-      expect(find.text('Тренування A'), findsOneWidget);
+      expect(find.text('Тренування A'), findsWidgets);
       expect(find.text('Тренування Б'), findsWidgets);
       expect(tester.takeException(), isNull);
     });

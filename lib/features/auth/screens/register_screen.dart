@@ -6,6 +6,7 @@ import '../../../core/constants/app_colors.dart';
 import '../../../core/utils/form_validators.dart';
 import '../../../shared/widgets/gradient_button.dart';
 import '../../../shared/widgets/triumph_emblem.dart';
+import '../../../shared/widgets/app_back_button.dart';
 import '../providers/auth_provider.dart';
 
 class RegisterScreen extends ConsumerStatefulWidget {
@@ -96,12 +97,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                     // Back arrow
                     Align(
                       alignment: Alignment.centerLeft,
-                      child: IconButton(
-                        icon: const Icon(Icons.arrow_back_ios,
-                            color: AppColors.textSecondary, size: 20),
-                        onPressed: () => context.go('/auth/login'),
-                        padding: EdgeInsets.zero,
-                      ),
+                      child: AppBackButton(onPressed: () => context.go('/auth/login')),
                     ),
                     const SizedBox(height: 8),
 

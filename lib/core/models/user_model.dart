@@ -1,4 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'payment_card_model.dart';
 
 class UserModel {
   final String uid;
@@ -11,10 +12,14 @@ class UserModel {
   /// Prefer [childIds] for new code.
   final String? childId;
   /// All linked child IDs (parent / guardian view).
-  /// Populated from Firestore `childIds` array; falls back to [childId]
-  /// for documents written before multi-child support.
   final List<String> childIds;
   final String? clubId;
+
+  // ── Coach financial settings ──────────────────────────────────────────────
+  /// Ціна одного індивідуального заняття (грн). 0 = не задано.
+  final double individualPrice;
+  /// Картки/реквізити для оплати. Перша — дефолтна для клієнта.
+  final List<PaymentCard> paymentCards;
 
   const UserModel({
     required this.uid,
@@ -26,12 +31,13 @@ class UserModel {
     this.childId,
     this.childIds = const [],
     this.clubId,
+    this.individualPrice = 0,
+    this.paymentCards = const [],
   });
 
   bool get isCoach  => role == 'coach';
   bool get isParent => role == 'parent';
 
-  /// Returns true if [id] is among the linked children.
   bool ownsChild(String id) => childIds.contains(id) || childId == id;
 
   factory UserModel.fromFirestore(DocumentSnapshot doc) {
@@ -41,6 +47,13 @@ class UserModel {
             ?.map((e) => e as String)
             .toList() ??
         (legacyId != null ? [legacyId] : <String>[]);
+
+    final rawCards = data['paymentCards'] as List<dynamic>? ?? [];
+    final cards = rawCards
+        .whereType<Map<String, dynamic>>()
+        .map(PaymentCard.fromMap)
+        .toList();
+
     return UserModel(
       uid: doc.id,
       email: data['email'] as String? ?? '',
@@ -51,6 +64,9 @@ class UserModel {
       childId: legacyId,
       childIds: ids,
       clubId: data['clubId'] as String?,
+      individualPrice:
+          (data['individualPrice'] as num?)?.toDouble() ?? 0,
+      paymentCards: cards,
     );
   }
 
@@ -60,10 +76,11 @@ class UserModel {
         'role': role,
         if (phone != null && phone!.isNotEmpty) 'phone': phone,
         if (photoUrl != null && photoUrl!.isNotEmpty) 'photoUrl': photoUrl,
-        // Always write the array; keep legacy field for old clients
         'childIds': childIds,
         if (childIds.isNotEmpty) 'childId': childIds.first,
         if (clubId != null) 'clubId': clubId,
+        'individualPrice': individualPrice,
+        'paymentCards': paymentCards.map((c) => c.toMap()).toList(),
       };
 
   UserModel copyWith({
@@ -75,6 +92,8 @@ class UserModel {
     String? clubId,
     bool clearPhone = false,
     bool clearPhoto = false,
+    double? individualPrice,
+    List<PaymentCard>? paymentCards,
   }) =>
       UserModel(
         uid: uid,
@@ -86,5 +105,7 @@ class UserModel {
         childId: childId ?? this.childId,
         childIds: childIds ?? this.childIds,
         clubId: clubId ?? this.clubId,
+        individualPrice: individualPrice ?? this.individualPrice,
+        paymentCards: paymentCards ?? this.paymentCards,
       );
 }

@@ -8,6 +8,7 @@ import 'package:intl/intl.dart';
 import '../../../core/constants/app_colors.dart';
 import '../../../core/models/fitness_goal_model.dart';
 import '../../../core/models/fitness_log_model.dart';
+import '../../../shared/widgets/app_back_button.dart';
 import '../../../shared/widgets/triumph_icon.dart';
 import '../providers/fitness_provider.dart';
 
@@ -58,14 +59,7 @@ class FitnessExerciseDetailScreen extends ConsumerWidget {
             backgroundColor: AppColors.background,
             elevation: 0,
             automaticallyImplyLeading: false,
-            leading: GestureDetector(
-              onTap: () => context.pop(),
-              child: const Icon(
-                Icons.arrow_back_ios_new,
-                color: AppColors.textPrimary,
-                size: 20,
-              ),
-            ),
+            leading: AppBackButton(onPressed: () => context.pop()),
             actions: [
               GestureDetector(
                 onTap: () => _showGoalDialog(context, ref, goal),

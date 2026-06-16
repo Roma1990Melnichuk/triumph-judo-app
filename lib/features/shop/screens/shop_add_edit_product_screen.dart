@@ -10,6 +10,7 @@ import 'package:judo_app/core/constants/app_colors.dart';
 import 'package:judo_app/core/models/shop_product_model.dart';
 import 'package:judo_app/core/utils/cloudinary_upload.dart';
 import 'package:judo_app/features/shop/providers/shop_provider.dart';
+import 'package:judo_app/shared/widgets/app_back_button.dart';
 import 'package:judo_app/shared/widgets/gradient_button.dart';
 
 class ShopAddEditProductScreen extends ConsumerStatefulWidget {
@@ -113,6 +114,7 @@ class _ShopAddEditProductScreenState
       backgroundColor: AppColors.surface,
       foregroundColor: AppColors.textPrimary,
       elevation: 0,
+      leading: AppBackButton(onPressed: () => Navigator.maybePop(context)),
       title: Text(
         _isEdit ? 'Редагувати товар' : 'Додати товар',
         style: const TextStyle(

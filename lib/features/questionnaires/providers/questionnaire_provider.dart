@@ -1,12 +1,14 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/models/questionnaire_model.dart';
+import '../../auth/providers/auth_provider.dart';
 
 // ── Streams ───────────────────────────────────────────────────────────────────
 
 final questionnairesProvider =
     StreamProvider<List<QuestionnaireModel>>((ref) {
-  return FirebaseFirestore.instance
+  return ref
+      .watch(firestoreProvider)
       .collection('questionnaires')
       .orderBy('createdAt', descending: true)
       .snapshots()
@@ -15,7 +17,8 @@ final questionnairesProvider =
 
 final activeQuestionnairesProvider =
     StreamProvider<List<QuestionnaireModel>>((ref) {
-  return FirebaseFirestore.instance
+  return ref
+      .watch(firestoreProvider)
       .collection('questionnaires')
       .where('isActive', isEqualTo: true)
       .orderBy('createdAt', descending: true)
@@ -26,7 +29,8 @@ final activeQuestionnairesProvider =
 final questionnaireResponsesProvider =
     StreamProvider.family<List<QuestionnaireResponseModel>, String>(
         (ref, questionnaireId) {
-  return FirebaseFirestore.instance
+  return ref
+      .watch(firestoreProvider)
       .collection('questionnaire_responses')
       .where('questionnaireId', isEqualTo: questionnaireId)
       .orderBy('submittedAt', descending: true)
@@ -38,7 +42,8 @@ final questionnaireResponsesProvider =
 final childResponsesProvider =
     StreamProvider.family<List<QuestionnaireResponseModel>, String>(
         (ref, childId) {
-  return FirebaseFirestore.instance
+  return ref
+      .watch(firestoreProvider)
       .collection('questionnaire_responses')
       .where('childId', isEqualTo: childId)
       .snapshots()
@@ -50,12 +55,12 @@ final childResponsesProvider =
 
 final questionnaireNotifierProvider =
     StateNotifierProvider<QuestionnaireNotifier, AsyncValue<void>>(
-        (ref) => QuestionnaireNotifier());
+        (ref) => QuestionnaireNotifier(ref.watch(firestoreProvider)));
 
 class QuestionnaireNotifier extends StateNotifier<AsyncValue<void>> {
-  QuestionnaireNotifier() : super(const AsyncValue.data(null));
+  QuestionnaireNotifier(this._db) : super(const AsyncValue.data(null));
 
-  final _db = FirebaseFirestore.instance;
+  final FirebaseFirestore _db;
 
   Future<String> createQuestionnaire({
     required String title,
