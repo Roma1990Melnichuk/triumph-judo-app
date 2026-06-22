@@ -136,6 +136,9 @@ class _TeamListScreenState extends ConsumerState<TeamListScreen> {
       ref: ref,
     );
 
+    final textScale = MediaQuery.textScalerOf(context).scale(1.0).clamp(1.0, 2.0);
+    final appBarExpandedHeight = 80.0 + textScale * 60.0;
+
     return Scaffold(
       backgroundColor: AppColors.background,
       body: CustomScrollView(
@@ -143,7 +146,7 @@ class _TeamListScreenState extends ConsumerState<TeamListScreen> {
         slivers: [
           // ── Sliver app bar with title ──────────────────────────────────
           SliverAppBar(
-            expandedHeight: 100,
+            expandedHeight: appBarExpandedHeight,
             pinned: true,
             backgroundColor: AppColors.background,
             elevation: 0,
@@ -153,17 +156,19 @@ class _TeamListScreenState extends ConsumerState<TeamListScreen> {
               background: Container(
                 color: AppColors.background,
                 child: SafeArea(
-                  child: Padding(
-                    padding: const EdgeInsets.fromLTRB(20, 16, 16, 8),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      mainAxisAlignment: MainAxisAlignment.end,
-                      children: [
-                        Row(
+                  // Stack+Positioned avoids RenderFlex overflow at large textScale
+                  child: Stack(
+                    children: [
+                      Positioned(
+                        left: 20,
+                        right: 16,
+                        bottom: 8,
+                        child: Row(
                           children: [
                             Expanded(
                               child: Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,
+                                mainAxisSize: MainAxisSize.min,
                                 children: [
                                   const Text(
                                     'Команда',
@@ -183,7 +188,7 @@ class _TeamListScreenState extends ConsumerState<TeamListScreen> {
                                 ],
                               ),
                             ),
-                            if (isCoach)
+                            if (isCoach) ...[
                               GestureDetector(
                                 onTap: () {
                                   final filtered = ref.read(filteredChildrenProvider);
@@ -202,7 +207,8 @@ class _TeamListScreenState extends ConsumerState<TeamListScreen> {
                                       color: AppColors.textSecondary, size: 20),
                                 ),
                               ),
-                            const SizedBox(width: 8),
+                              const SizedBox(width: 8),
+                            ],
                             GestureDetector(
                               onTap: () =>
                                   setState(() => _filtersExpanded = !_filtersExpanded),
@@ -234,8 +240,8 @@ class _TeamListScreenState extends ConsumerState<TeamListScreen> {
                             ),
                           ],
                         ),
-                      ],
-                    ),
+                      ),
+                    ],
                   ),
                 ),
               ),
@@ -854,26 +860,29 @@ class _FilterSection extends StatelessWidget {
           Container(
             color: AppColors.surface,
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-            child: Row(
-              children: [
-                _QuickFilterChip(
-                  label: 'Всі',
-                  active: quickFilter == _TeamFilter.all,
-                  onTap: () => onQuickFilterChanged(_TeamFilter.all),
-                ),
-                const SizedBox(width: 8),
-                _QuickFilterChip(
-                  label: 'Юнаки',
-                  active: quickFilter == _TeamFilter.boys,
-                  onTap: () => onQuickFilterChanged(_TeamFilter.boys),
-                ),
-                const SizedBox(width: 8),
-                _QuickFilterChip(
-                  label: 'Дівчата',
-                  active: quickFilter == _TeamFilter.girls,
-                  onTap: () => onQuickFilterChanged(_TeamFilter.girls),
-                ),
-              ],
+            child: SingleChildScrollView(
+              scrollDirection: Axis.horizontal,
+              child: Row(
+                children: [
+                  _QuickFilterChip(
+                    label: 'Всі',
+                    active: quickFilter == _TeamFilter.all,
+                    onTap: () => onQuickFilterChanged(_TeamFilter.all),
+                  ),
+                  const SizedBox(width: 8),
+                  _QuickFilterChip(
+                    label: 'Юнаки',
+                    active: quickFilter == _TeamFilter.boys,
+                    onTap: () => onQuickFilterChanged(_TeamFilter.boys),
+                  ),
+                  const SizedBox(width: 8),
+                  _QuickFilterChip(
+                    label: 'Дівчата',
+                    active: quickFilter == _TeamFilter.girls,
+                    onTap: () => onQuickFilterChanged(_TeamFilter.girls),
+                  ),
+                ],
+              ),
             ),
           ),
 

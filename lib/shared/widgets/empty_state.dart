@@ -21,28 +21,30 @@ class EmptyState extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Center(
-      child: Padding(
-        padding: const EdgeInsets.all(32),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            tIcon != null
-                ? TriumphIcon(tIcon!, size: 64)
-                : Icon(icon, size: 64, color: AppColors.textSecondary),
-            const SizedBox(height: 16),
-            Text(
-              message,
-              textAlign: TextAlign.center,
-              style: const TextStyle(
-                color: AppColors.textSecondary,
-                fontSize: 16,
+      child: SingleChildScrollView(
+        child: Padding(
+          padding: const EdgeInsets.all(32),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              tIcon != null
+                  ? TriumphIcon(tIcon!, size: 64)
+                  : Icon(icon, size: 64, color: AppColors.textSecondary),
+              const SizedBox(height: 16),
+              Text(
+                message,
+                textAlign: TextAlign.center,
+                style: const TextStyle(
+                  color: AppColors.textSecondary,
+                  fontSize: 16,
+                ),
               ),
-            ),
-            if (action != null && actionLabel != null) ...[
-              const SizedBox(height: 24),
-              ElevatedButton(onPressed: action, child: Text(actionLabel!)),
+              if (action != null && actionLabel != null) ...[
+                const SizedBox(height: 24),
+                ElevatedButton(onPressed: action, child: Text(actionLabel!)),
+              ],
             ],
-          ],
+          ),
         ),
       ),
     );

@@ -264,7 +264,7 @@ class ChildCard extends ConsumerWidget {
                         ),
                         const SizedBox(width: 3),
                         Text(
-                          'Відвід.: ${attendanceStats.pct.round()}%',
+                          'Відвідування: ${attendanceStats.pct.round()}%',
                           style: const TextStyle(
                               fontSize: 10,
                               color: AppColors.info,
