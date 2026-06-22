@@ -588,7 +588,9 @@ class _CategoryBreakdown extends ConsumerWidget {
         border: Border.all(color: AppColors.surface3),
       ),
       clipBehavior: Clip.antiAlias,
-      child: Column(
+      child: Material(
+        color: Colors.transparent,
+        child: Column(
         children: entries.asMap().entries.map((outer) {
           final i         = outer.key;
           final cat       = outer.value.key;
@@ -665,12 +667,15 @@ class _CategoryBreakdown extends ConsumerWidget {
                         ),
                   title: Row(
                     children: [
-                      Text(
-                        cat.displayName,
-                        style: const TextStyle(
-                          fontWeight: FontWeight.w500,
-                          fontSize: 14,
-                          color: AppColors.textPrimary,
+                      Flexible(
+                        child: Text(
+                          cat.displayName,
+                          style: const TextStyle(
+                            fontWeight: FontWeight.w500,
+                            fontSize: 14,
+                            color: AppColors.textPrimary,
+                          ),
+                          overflow: TextOverflow.ellipsis,
                         ),
                       ),
                       if (hasAnyVideo) ...[
@@ -821,6 +826,7 @@ class _CategoryBreakdown extends ConsumerWidget {
             ],
           );
         }).toList(),
+        ),
       ),
     );
   }
